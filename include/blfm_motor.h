@@ -7,11 +7,10 @@
  * See LICENSE file for details.
  */
 
-#ifndef BELFHYM_H
-#define BELFHYM_H
+#ifndef BLFM_MOTOR_H
+#define BLFM_MOTOR_H
 
-void belfhym_greet(void);
-void belfhym_init(void);   // Initialize system components
-void belfhym_loop(void);   // Main control loop
+void blfm_motor_init(void);            // Initialize MOTOR sensors
+void blfm_motor_update(void);
 
-#endif // BELFHYM_H
+#endif // BLFM_MOTOR_H

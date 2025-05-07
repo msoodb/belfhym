@@ -92,3 +92,24 @@ belphym/
 ├── Makefile or platformio.ini
 ├── README.md
 
+
+# Core Source Files
+## Module	Purpose
+belfhym.c/h	         Main entry point, init and loop logic
+blfm_imu.c/h	     IMU communication and sensor fusion
+blfm_pid.c/h	     PID controller implementation
+blfm_motor.c/h	     Motor driver and mixing logic
+blfm_radio.c/h	     BLE or RF communication interface
+blfm_utils.c/h	     Math helpers, filters, timing
+blfm_config.c/h	     Configuration, tuning constants
+blfm_failsafe.c/h	 Failsafe and signal timeout handling
+blfm_power.c/h	     Battery monitoring, power logic
+blfm_debug.c/h	     Debug prints, LED blink, telemetry
+
+## Optional / Future Modules
+blfm_altitude.c/h	Altitude hold (barometer or sonar)
+blfm_autopilot.c/h	Autonomous waypoint flight
+blfm_storage.c/h	Persistent config via flash/EEPROM
+blfm_ota.c/h	    Over-the-air firmware updates
+blfm_sensors.c/h	Additional sensors (magnetometer, etc.)
+

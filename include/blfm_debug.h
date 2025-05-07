@@ -7,11 +7,10 @@
  * See LICENSE file for details.
  */
 
-#ifndef BELFHYM_H
-#define BELFHYM_H
+#ifndef BLFM_DEBUG_H
+#define BLFM_DEBUG_H
 
-void belfhym_greet(void);
-void belfhym_init(void);   // Initialize system components
-void belfhym_loop(void);   // Main control loop
+void blfm_debug_init(void);            // Initialize DEBUG sensors
+void blfm_debug_status(void);
 
-#endif // BELFHYM_H
+#endif // BLFM_DEBUG_H

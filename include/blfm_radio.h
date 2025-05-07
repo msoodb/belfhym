@@ -7,11 +7,10 @@
  * See LICENSE file for details.
  */
 
-#ifndef BELFHYM_H
-#define BELFHYM_H
+#ifndef BLFM_RADIO_H
+#define BLFM_RADIO_H
 
-void belfhym_greet(void);
-void belfhym_init(void);   // Initialize system components
-void belfhym_loop(void);   // Main control loop
+void blfm_radio_init(void);            // Initialize RADIO sensors
+void blfm_radio_update(void);
 
-#endif // BELFHYM_H
+#endif // BLFM_RADIO_H
