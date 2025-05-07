@@ -1,4 +1,4 @@
-# Belfhym 🕷️
+# Belfhym
 
 **Belfhym** is a palm-sized autonomous flying machine designed for precision, stealth, and control. Powered by an embedded C flight controller, this ultra-lightweight micro air vehicle (MAV) fuses real-time responsiveness with minimalist engineering.
 
@@ -6,19 +6,19 @@
 
 ---
 
-## ✨ Features
+## Features
 
-- ✅ Real-time flight controller in C  
-- ✅ Sensor fusion (MPU6050/ICM20948)  
-- ✅ 3-axis PID stabilization (roll, pitch, yaw)  
-- ✅ BLE or RF-based remote control interface  
-- ✅ Modular and portable embedded code  
-- ✅ Lightweight, power-optimized architecture  
-- ✅ Failsafe logic and telemetry support  
+- Real-time flight controller in C  
+- Sensor fusion (MPU6050/ICM20948)  
+- 3-axis PID stabilization (roll, pitch, yaw)  
+- BLE or RF-based remote control interface  
+- Modular and portable embedded code  
+- Lightweight, power-optimized architecture  
+- Failsafe logic and telemetry support  
 
 ---
 
-## 📦 Hardware Requirements
+## Hardware Requirements
 
 | Component       | Recommendation / Example     |
 |----------------|-------------------------------|
@@ -31,7 +31,7 @@
 
 ---
 
-## 🛠️ Getting Started
+##  Getting Started
 
 ### 1. Clone the Repo
 
