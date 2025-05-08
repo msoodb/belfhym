@@ -8,3 +8,7 @@
  */
 
 #include "blfm_power.h"
+
+void blfm_power_read_voltage(){}
+void blfm_power_check_threshold() {}
+

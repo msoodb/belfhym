@@ -21,3 +21,8 @@ void blfm_debug_status(void) {
     // Read and process DEBUG data (mocked here)
     printf("DEBUG update\n");
 }
+
+void blfm_debug_print(void){}
+void blfm_debug_led_toggle(void){}
+void blfm_debug_log_flight_data(void) {}
+

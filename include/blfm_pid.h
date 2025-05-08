@@ -11,6 +11,7 @@
 #define BLFM_PID_H
 
 void blfm_pid_init(void);            // Initialize PID sensors
-void blfm_pid_control(void);
+void blfm_pid_update(void);
+void blfm_pid_set_constants(void);
 
 #endif // BLFM_PID_H

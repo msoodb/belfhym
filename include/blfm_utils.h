@@ -10,5 +10,8 @@
 #ifndef BLFM_UTILS_H
 #define BLFM_UTILS_H
 
+void blfm_map(void);
+void blfm_constrain(void);
+void blfm_filter_complementary(void);
 
 #endif // BLFM_UTILS_H

@@ -8,3 +8,16 @@
  */
 
 #include "blfm_utils.h"
+#include <stdio.h>
+
+void blfm_map(void) {
+    printf("MAP initialized\n");  
+}
+
+void blfm_constrain(void) {
+    printf("UTILS constrain\n");  
+}
+
+void blfm_filter_complementary(void) {
+    printf("UTILS filter_complementary\n");  
+}

@@ -43,16 +43,16 @@ void belfhym_loop(void) {
         // Main control loop
         
         // Read IMU data
-        blfm_imu_read_data();
+        blfm_imu_read();
         
         // Apply PID logic
-        blfm_pid_control();
+        blfm_pid_update();
         
         // Update motors based on PID output
         blfm_motor_update();
         
         // Handle radio input
-        blfm_radio_update();
+        blfm_radio_receive();
 
         // Debugging (optional)
         blfm_debug_status();

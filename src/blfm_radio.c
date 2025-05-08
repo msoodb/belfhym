@@ -17,7 +17,7 @@ void blfm_radio_init(void) {
 }
 
 // Placeholder: RADIO update (acceleration, gyro, etc.)
-void blfm_radio_update(void) {
+void blfm_radio_receive(void) {
     // Read and process RADIO data (mocked here)
-    printf("RADIO update\n");
+    printf("RADIO RECEIVE\n");
 }

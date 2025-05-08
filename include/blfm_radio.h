@@ -11,6 +11,6 @@
 #define BLFM_RADIO_H
 
 void blfm_radio_init(void);            // Initialize RADIO sensors
-void blfm_radio_update(void);
+void blfm_radio_receive(void);
 
 #endif // BLFM_RADIO_H

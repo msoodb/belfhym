@@ -10,7 +10,8 @@
 #ifndef BLFM_MOTOR_H
 #define BLFM_MOTOR_H
 
-void blfm_motor_init(void);            // Initialize MOTOR sensors
-void blfm_motor_update(void);
+void blfm_motor_init(void);
+void blfm_motor_set_throttle(void /*motor_id, pwm*/);
+void blfm_motor_update(void /*pid_outputs*/);
 
 #endif // BLFM_MOTOR_H

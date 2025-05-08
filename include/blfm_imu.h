@@ -11,7 +11,7 @@
 #define BLFM_IMU_H
 
 void blfm_imu_init(void);            // Initialize IMU sensors
-void blfm_imu_read_data(void);       // Read IMU data
-void blfm_imu_process_data(void);    // Process IMU data (sensor fusion)
+void blfm_imu_read(void);       // Read IMU data
+void blfm_imu_get_orientation(void);    // Process IMU data (sensor fusion)
 
 #endif // BLFM_IMU_H

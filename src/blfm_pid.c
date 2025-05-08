@@ -17,7 +17,13 @@ void blfm_pid_init(void) {
 }
 
 // Placeholder: Read PID data (acceleration, gyro, etc.)
-void blfm_pid_control(void) {
+void blfm_pid_update(void) {
     // Read and process PID data (mocked here)
     printf("PID update\n");
 }
+
+void blfm_pid_set_constants(void){
+   // Read and process PID data (mocked here)
+    printf("PID SET CONSTANTSN");
+}
+ 

@@ -10,4 +10,7 @@
 #ifndef BLFM_FAILSAFE_H
 #define BLFM_FAILSAFE_H
 
+void blfm_failsafe_check(void);
+void blfm_failsafe_trigger(void);
+  
 #endif // BLFM_FAILSAFE_H
