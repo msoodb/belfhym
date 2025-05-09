@@ -7,7 +7,7 @@
  * See LICENSE file for details.
  */
 
-#include "belfhym.h"
+/*#include "belfhym.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -22,4 +22,13 @@ int main(void) {
     vTaskStartScheduler();
 
     while (1); // Should never reach here
+    }*/
+
+#include "stm32f1xx.h"
+
+
+int main(void) {
+    while (1) {
+        // Do nothing, just loop forever
+    }
 }

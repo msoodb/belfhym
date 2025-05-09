@@ -1,41 +1,24 @@
 #!/bin/bash
 
-# Source and destination
-CMSIS_SRC=~/Projects/CMSIS_5
-DEST=~/Projects/belfhym/CMSIS
-DEVICE_DEST="$DEST/device"
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2025 Masoud Bolhassani
 
-# Create destination folders
-mkdir -p "$DEVICE_DEST"
+CMSIS_CORE=~/Projects/CMSIS_5/CMSIS/Core
+CMSIS_DEVICE=~/Projects/CMSIS_5/CMSIS/Device/ST/STM32F1xx
+DEST=CMSIS
 
-# Files to copy
-FILES_CORE=(
-    "$CMSIS_SRC/CMSIS/Core/Include/core_cm3.h"
-)
+mkdir -p "$DEST"
 
-FILES_DEVICE=(
-    "$CMSIS_SRC/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h"
-    "$CMSIS_SRC/CMSIS/Device/ST/STM32F1xx/Source/Templates/system_stm32f1xx.c"
-)
+cp "$CMSIS_CORE/Include/core_cm3.h" "$DEST/"
+cp "$CMSIS_CORE/Include/cmsis_compiler.h" "$DEST/"
+cp "$CMSIS_CORE/Include/cmsis_gcc.h" "$DEST/"
+cp "$CMSIS_CORE/Include/cmsis_version.h" "$DEST/"
 
-# Copy core files
-for file in "${FILES_CORE[@]}"; do
-    if [[ -f "$file" ]]; then
-        cp "$file" "$DEST/"
-        echo "Copied $(basename "$file")"
-    else
-        echo "Missing: $file"
-    fi
-done
+cp "$CMSIS_DEVICE/Include/system_stm32f1xx.h" "$DEST/"
+cp "$CMSIS_DEVICE/Include/stm32f103xb.h" "$DEST/"
+cp "$CMSIS_DEVICE/Include/stm32f1xx.h" "$DEST/"
 
-# Copy device-specific files
-for file in "${FILES_DEVICE[@]}"; do
-    if [[ -f "$file" ]]; then
-        cp "$file" "$DEVICE_DEST/"
-        echo "Copied $(basename "$file")"
-    else
-        echo "Missing: $file"
-    fi
-done
+cp "$CMSIS_DEVICE/Source/Templates/system_stm32f1xx.c" "$DEST/"
+cp "$CMSIS_DEVICE/Source/Templates/gcc/startup_stm32f103xb.s" "$DEST/"
 
 echo "CMSIS setup complete in: $DEST"
