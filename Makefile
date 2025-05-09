@@ -3,16 +3,17 @@
 
 PROJECT := belfhym
 FREERTOS_DIR = freertos
+CFLAGS_BASE = -Wall -Wextra -O2
+HEADERS_PATH = -I./include -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
 
 # Architecture-dependent compiler and flags
 ifeq ($(TARGET_ARCH),arm)
 CC = arm-none-eabi-gcc
-CFLAGS = -Wall -Wextra -O2 -mcpu=cortex-m3 -mthumb -nostdlib -ffreestanding
-CFLAGS += -I./include -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
+CFLAGS = $(CFLAGS_BASE) -mcpu=cortex-m3 -mthumb -nostdlib -ffreestanding $(HEADERS_PATH)
 LDFLAGS = -Tlt/stm32f103.ld
 else
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -Wunused-result -I./include
+CFLAGS = $(CFLAGS_BASE) -Wunused-result $(HEADERS_PATH)
 LDFLAGS = -lpcap -lncurses
 endif
 
