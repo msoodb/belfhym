@@ -22,16 +22,5 @@
 
 
 int main(void) {
-    belfhym_greet();
-    belfhym_init();
-
-    // Create tasks
-    // Start scheduler
-    vTaskStartScheduler();
-
-    printf("main initialized\n");  
-
-    // Should never reach here
-    for (;;) {}
     return 0;
 }

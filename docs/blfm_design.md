@@ -20,17 +20,43 @@ git clone https://github.com/FreeRTOS/FreeRTOS-Kernel
 ./freertos.sh
 ```
 
+project structure for your STM32F103C8T6 FreeRTOS application in C. 
+This structure will include all the necessary files and directories to get started with FreeRTOS on STM32.
 
-# Project
-belphym/
-├── include/
-├── src/
-├── lib/                    // Optional: third-party drivers (e.g., MPU6050)
-├── firmware/               // Precompiled binaries
-├── board/                  // Board-specific pin definitions
-│   ├── board.h
-├── Makefile or platformio.ini
+belfhym/
+│
+├── Makefile               
 ├── README.md
+├── src/              
+│   ├── belfhym.c
+│   ├── syscalls.c
+│   ├── startup_stm32f103.c
+│   ├── stm32f103_init.c 
+│   ├── FreeRTOSConfig.h
+│   └── peripherals.c
+│
+├── inc/                   # Header files
+│   ├── belfhym.h
+│   ├── syscalls.h
+│   ├── FreeRTOSConfig.h
+│   └── peripherals.h
+│
+├── startup/
+│   └── startup_stm32f103.s
+│
+├── ld/ 
+│   └── stm32f103.ld
+│
+├── CMSIS/                 # CMSIS headers for STM32F1
+│   ├── core_cm3.h
+│   └── device/            # Device-specific headers
+│       ├── system_stm32f10x.c
+│       ├── system_stm32f10x.h
+│       ├── stm32f10x.h
+│       └── stm32f103xb.h
+│
+└── FreeRTOS/              # FreeRTOS kernel source
+    └── [FreeRTOS Kernel files...]
 
 # Core Source Files
 ## Module	Purpose

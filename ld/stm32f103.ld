@@ -1,5 +1,4 @@
-/* stm32f103.ld - Linker script for STM32F103C8T6 (64KB Flash, 20KB RAM) */
-
+/* Linker script for STM32F103C8T6 (64KB Flash, 20KB RAM) */
 ENTRY(Reset_Handler)
 
 MEMORY
@@ -25,9 +24,11 @@ SECTIONS
     KEEP(*(.fini))
   } > FLASH
 
+  /* Initial values for .data in Flash */
   .data : AT (ADDR(.text) + SIZEOF(.text))
   {
     _sdata = .;
+    _sidata = LOADADDR(.data);
     *(.data*)
     _edata = .;
   } > RAM
@@ -39,4 +40,8 @@ SECTIONS
     *(COMMON)
     _ebss = .;
   } > RAM
+
+  . = ALIGN(4);
+  _end = .;
+  PROVIDE(end = .);
 }

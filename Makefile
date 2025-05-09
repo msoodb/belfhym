@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Masoud Bolhassani
 
 PROJECT := belfhym
-FREERTOS_DIR = freertos
+FREERTOS_DIR = FreeRTOS
 CFLAGS_BASE = -Wall -Wextra -O2
 HEADERS_PATH = -I./include -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
 
@@ -10,7 +10,7 @@ HEADERS_PATH = -I./include -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/
 ifeq ($(TARGET_ARCH),arm)
 CC = arm-none-eabi-gcc
 CFLAGS = $(CFLAGS_BASE) -mcpu=cortex-m3 -mthumb -nostdlib -ffreestanding $(HEADERS_PATH)
-LDFLAGS = -Tlt/stm32f103.ld
+LDFLAGS = -Tld/stm32f103.ld
 else
 CC = gcc
 CFLAGS = $(CFLAGS_BASE) -Wunused-result $(HEADERS_PATH)

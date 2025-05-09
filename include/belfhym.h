@@ -7,7 +7,7 @@
  * See LICENSE file for details.
  */
 
-#include "blfm_debug.h"
+#ifndef BELFHYM_H
+#define BELFHYM_H
 
-void blfm_debug_init(void) {}
-
+#endif // BELFHYM_H
