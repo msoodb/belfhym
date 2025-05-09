@@ -15,8 +15,6 @@ FILES_CORE=(
 
 FILES_DEVICE=(
     "$CMSIS_SRC/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h"
-    "$CMSIS_SRC/CMSIS/Device/ST/STM32F1xx/Include/stm32f100xb.h"
-    "$CMSIS_SRC/CMSIS/Device/ST/STM32F1xx/Include/stm32f107xc.h"
     "$CMSIS_SRC/CMSIS/Device/ST/STM32F1xx/Source/Templates/system_stm32f1xx.c"
 )
 

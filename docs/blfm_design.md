@@ -32,7 +32,6 @@ belfhym/
 │   ├── syscalls.c
 │   ├── startup_stm32f103.c
 │   ├── stm32f103_init.c 
-│   ├── FreeRTOSConfig.h
 │   └── peripherals.c
 │
 ├── inc/                   # Header files

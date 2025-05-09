@@ -7,20 +7,19 @@
  * See LICENSE file for details.
  */
 
-#include <stdio.h>
 #include "belfhym.h"
-
-#include "blfm_imu.h"
-#include "blfm_pid.h"
-#include "blfm_motor.h"
-#include "blfm_radio.h"
-#include "blfm_debug.h"
-
-// FreeRTOS headers
 #include "FreeRTOS.h"
 #include "task.h"
 
+void vHelloTask(void *pvParameters) {
+    while (1) {
+        // Placeholder for future printf over UART or LED blink
+    }
+}
 
 int main(void) {
-    return 0;
+    xTaskCreate(vHelloTask, "Hello", 128, NULL, 1, NULL);
+    vTaskStartScheduler();
+
+    while (1); // Should never reach here
 }

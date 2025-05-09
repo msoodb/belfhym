@@ -1,13 +1,13 @@
-/* Linker script for STM32F103C8T6 (64KB Flash, 20KB RAM) */
+/* ld/stm32f103.ld */
 ENTRY(Reset_Handler)
+
+_estack = 0x20005000;  /* top of RAM (20 KB RAM) */
 
 MEMORY
 {
   FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 64K
-  RAM (xrw)  : ORIGIN = 0x20000000, LENGTH = 20K
+  RAM   (rwx): ORIGIN = 0x20000000, LENGTH = 20K
 }
-
-_estack = ORIGIN(RAM) + LENGTH(RAM);
 
 SECTIONS
 {
@@ -20,15 +20,12 @@ SECTIONS
   {
     *(.text*)
     *(.rodata*)
-    KEEP(*(.init))
-    KEEP(*(.fini))
   } > FLASH
 
-  /* Initial values for .data in Flash */
   .data : AT (ADDR(.text) + SIZEOF(.text))
   {
-    _sdata = .;
     _sidata = LOADADDR(.data);
+    _sdata = .;
     *(.data*)
     _edata = .;
   } > RAM
@@ -43,5 +40,4 @@ SECTIONS
 
   . = ALIGN(4);
   _end = .;
-  PROVIDE(end = .);
 }

@@ -15,6 +15,7 @@ bin/
 *.ko
 *.obj
 *.elf
+*.bin
 *.mod*
 *.cmd
 .tmp_versions/
