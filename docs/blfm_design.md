@@ -1,3 +1,26 @@
+
+# firmware
+Your project (e.g. Belfhym) is not meant to run on your Linux system like a normal C program. 
+It's firmware — code that runs directly on a microcontroller (e.g. STM32F103). 
+There’s no operating system, standard C libraries, or system calls like on Linux.
+
+# package
+```sh
+sudo dnf install arm-none-eabi-gcc arm-none-eabi-newlib openocd make git
+```
+
+# install
+To use #include "stm32f1xx.h" without errors, 
+you need to install the STM32 HAL/LL driver headers on your system and set up your project to find them. Here's how to do that:
+
+# FreeRTOS
+```sh
+cd ~/Projects
+git clone https://github.com/FreeRTOS/FreeRTOS-Kernel
+./freertos.sh
+```
+
+
 # Project
 belphym/
 ├── include/

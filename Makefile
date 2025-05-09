@@ -2,18 +2,43 @@
 # Copyright (C) 2025 Masoud Bolhassani
 
 PROJECT := belfhym
+FREERTOS_DIR = freertos
 
+# Architecture-dependent compiler and flags
+ifeq ($(TARGET_ARCH),arm)
+CC = arm-none-eabi-gcc
+CFLAGS = -Wall -Wextra -O2 -mcpu=cortex-m3 -mthumb -nostdlib -ffreestanding
+CFLAGS += -I./include -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
+LDFLAGS = -Tlt/stm32f103.ld
+else
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -I./include
-CFLAGS += $(RPM_OPT_FLAGS)
-CFLAGS += -Wunused-result
+CFLAGS = -Wall -Wextra -O2 -Wunused-result -I./include
 LDFLAGS = -lpcap -lncurses
+endif
+
 SRC_DIR = src
 BUILD_DIR = build
 BIN_DIR = bin
+
+# Source files
 SRC = $(wildcard $(SRC_DIR)/*.c)
-OBJ = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRC))
+
+# FreeRTOS sources (relative to project root)
+FREERTOS_SRC = \
+    $(FREERTOS_DIR)/event_groups.c \
+    $(FREERTOS_DIR)/list.c \
+    $(FREERTOS_DIR)/queue.c \
+    $(FREERTOS_DIR)/stream_buffer.c \
+    $(FREERTOS_DIR)/tasks.c \
+    $(FREERTOS_DIR)/timers.c \
+    $(FREERTOS_DIR)/portable/GCC/ARM_CM3/port.c
+
+SRC += $(FREERTOS_SRC)
+
+# Object files
+OBJ = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC))
 TARGET = $(BIN_DIR)/$(PROJECT)
+
 VERSION := $(shell grep -v '^#' VERSION | head -n 1)
 TAG := v$(VERSION)
 TARBALL := $(PROJECT)-$(VERSION).tar.gz
@@ -27,7 +52,9 @@ all: $(BIN_DIR) $(TARGET)
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET) $(LDFLAGS)
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+# Compile rule for nested source files
+$(BUILD_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR):

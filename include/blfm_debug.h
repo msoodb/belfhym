@@ -10,10 +10,6 @@
 #ifndef BLFM_DEBUG_H
 #define BLFM_DEBUG_H
 
-void blfm_debug_init(void);            // Initialize DEBUG sensors
-void blfm_debug_status(void);
-void blfm_debug_print(void);
-void blfm_debug_led_toggle(void);
-void blfm_debug_log_flight_data(void);
-  
+void blfm_debug_init(void);
+
 #endif // BLFM_DEBUG_H

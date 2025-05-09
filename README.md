@@ -40,3 +40,7 @@ git clone https://github.com/yourname/belfhym.git
 cd belfhym
 make flash
 ```
+
+## command
+bear -- make
+make TARGET_ARCH=arm
