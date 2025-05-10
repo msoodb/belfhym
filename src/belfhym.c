@@ -7,9 +7,10 @@
  * See LICENSE file for details.
  */
 
-/*#include "belfhym.h"
+#include "belfhym.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "stm32f1xx.h"
 
 void vHelloTask(void *pvParameters) {
     while (1) {
@@ -22,13 +23,4 @@ int main(void) {
     vTaskStartScheduler();
 
     while (1); // Should never reach here
-    }*/
-
-#include "stm32f1xx.h"
-
-
-int main(void) {
-    while (1) {
-        // Do nothing, just loop forever
-    }
 }
