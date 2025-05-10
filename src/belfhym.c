@@ -10,17 +10,34 @@
 #include "belfhym.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "stm32f1xx.h"
+#include "blfm_board.h"
 
+/*
+  Blink the LED in vHelloTask
+  The onboard LED on Blue Pill is usually connected to PC13.
+  Add GPIO initialization for PC13, then toggle it inside vHelloTask.
+*/
 void vHelloTask(void *pvParameters) {
+    blfm_board_led_init();
+
     while (1) {
-        // Placeholder for future printf over UART or LED blink
+        blfm_board_led_toggle();
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
 int main(void) {
-    xTaskCreate(vHelloTask, "Hello", 128, NULL, 1, NULL);
-    vTaskStartScheduler();
+  // Optional future initialization: system clocks, peripherals, etc.
+  // blfm_board_init();
 
-    while (1); // Should never reach here
+  // Create LED blink task
+  xTaskCreate(vHelloTask, "Hello", 128, NULL, 1, NULL);
+
+  // Start FreeRTOS scheduler
+  vTaskStartScheduler();
+
+  // Should never reach here
+  while (1)
+    ;
 }
+
