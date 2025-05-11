@@ -7,9 +7,10 @@
  * See LICENSE file for details.
  */
 
-#ifndef BLFM_BOARD_H
-#define BLFM_BOARD_H
+#ifndef BLFM_LED_H
+#define BLFM_LED_H
 
-void blfm_board_init(void);
+void blfm_led_init(void);
+void blfm_led_toggle(void);
 
-#endif // BLFM_BOARD_H
+#endif

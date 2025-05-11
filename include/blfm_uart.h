@@ -7,9 +7,12 @@
  * See LICENSE file for details.
  */
 
-#ifndef BLFM_BOARD_H
-#define BLFM_BOARD_H
+#ifndef BLFM_UART_H
+#define BLFM_UART_H
 
-void blfm_board_init(void);
+#include <stdint.h>
 
-#endif // BLFM_BOARD_H
+void blfm_uart_init(void);
+void blfm_uart_write(const char *msg, uint16_t len);
+
+#endif

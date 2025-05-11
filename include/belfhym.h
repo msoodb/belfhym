@@ -10,6 +10,6 @@
 #ifndef BELFHYM_H
 #define BELFHYM_H
 
-void vHelloTask(void *pvParameters);
+void vLedTask(void *pvParameters);
 
 #endif

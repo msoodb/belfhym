@@ -24,3 +24,9 @@ void *memcpy(void *dest, const void *src, size_t len) {
 void __libc_init_array(void) {
     // No global/static C++ constructors used, safe to leave empty.
 }
+
+size_t strlen(const char *s) {
+    size_t len = 0;
+    while (s[len]) ++len;
+    return len;
+}
