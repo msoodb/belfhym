@@ -2,26 +2,32 @@
 # Copyright (C) 2025 Masoud Bolhassani
 
 PROJECT := belfhym
-FREERTOS_DIR = FreeRTOS
-CMSIS_DIR = CMSIS
-CFLAGS_BASE = -Wall -Wextra -O2
-HEADERS_PATH = -I./include -I$(CMSIS_DIR) -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
 
-# ARM-specific compiler and flags
-CC = arm-none-eabi-gcc
-CFLAGS = $(CFLAGS_BASE) -mcpu=cortex-m3 -mthumb -nostdlib -ffreestanding $(HEADERS_PATH)
-CFLAGS += -DSTM32F103xB
-LDFLAGS = -Tld/stm32f103.ld
+# Directories
+SRC_DIR := src
+BUILD_DIR := build
+BIN_DIR := bin
+INCLUDE_DIR := include
+FREERTOS_DIR := FreeRTOS
+CMSIS_DIR := CMSIS
 
-SRC_DIR = src
-BUILD_DIR = build
-BIN_DIR = bin
+# Toolchain
+CC := arm-none-eabi-gcc
 
-# Source files
-SRC = $(wildcard $(SRC_DIR)/*.c)
+# Flags
+CFLAGS_BASE := -Wall -Wextra -O2
+CFLAGS := $(CFLAGS_BASE) -mcpu=cortex-m3 -mthumb -nostdlib -ffreestanding
+CFLAGS += -DSTM32F103xB -I$(INCLUDE_DIR) -I$(CMSIS_DIR)
+CFLAGS += -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
+LDFLAGS := -Tld/stm32f103.ld
 
-# FreeRTOS sources (relative to project root)
-FREERTOS_SRC = \
+# Source organization
+SRC_SUBDIRS := app core drivers control
+SRC_DIRS := $(addprefix $(SRC_DIR)/,$(SRC_SUBDIRS))
+SRCS := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
+
+# FreeRTOS and CMSIS sources
+FREERTOS_SRC := \
     $(FREERTOS_DIR)/event_groups.c \
     $(FREERTOS_DIR)/list.c \
     $(FREERTOS_DIR)/queue.c \
@@ -31,42 +37,42 @@ FREERTOS_SRC = \
     $(FREERTOS_DIR)/portable/MemMang/heap_4.c \
     $(FREERTOS_DIR)/portable/GCC/ARM_CM3/port.c
 
-# CMSIS sources (relative to project root)
-CMSIS_SRC = \
+CMSIS_SRC := \
     $(CMSIS_DIR)/startup_stm32f103xb.s \
     $(CMSIS_DIR)/system_stm32f1xx.c
 
-SRC += $(FREERTOS_SRC) $(CMSIS_SRC)
+ALL_SRCS := $(SRCS) $(FREERTOS_SRC) $(CMSIS_SRC)
 
-# Object files (mirrored under build/)
-OBJ = $(patsubst %.c,$(BUILD_DIR)/%.o,$(subst ./,,$(SRC)))
-TARGET = $(BIN_DIR)/$(PROJECT)
+# Object files
+OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(filter %.c,$(ALL_SRCS)))
+OBJS += $(patsubst %.s,$(BUILD_DIR)/%.o,$(filter %.s,$(ALL_SRCS)))
 
-# Default build
+# Output binary
+TARGET := $(BIN_DIR)/$(PROJECT)
+
+# Default build target
 all: $(BIN_DIR) $(TARGET)
 
-$(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET) $(LDFLAGS)
+# Linking
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 
-# Pattern rule for object file compilation, supports nested dirs
+# Compilation for .c files
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Pattern rule for object file compilation from .s files
-$(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
+# Compilation for .s files
+$(BUILD_DIR)/%.o: %.s
 	@mkdir -p $(dir $@)
-	$(CC) -c $< -o $@
+	$(CC) -mcpu=cortex-m3 -mthumb -c $< -o $@
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
+# Output dirs
 $(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+	@mkdir -p $@
 
-# Clean build files
+# Cleanup
 clean:
-	rm -f $(TARGET)
 	rm -rf $(BUILD_DIR) $(BIN_DIR)
 
 .PHONY: all clean
