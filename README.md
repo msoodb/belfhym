@@ -81,7 +81,7 @@ bear -- make
 
 - Build for ARM:
 ```bash
-make TARGET_ARCH=arm
+make
 ```
 
 ### License
