@@ -1,48 +1,88 @@
-# Belfhym
+# MoonRover (formerly Belfhym)
 
-**Belfhym** is a palm-sized autonomous flying machine designed for precision, stealth, and control. Powered by an embedded C flight controller, this ultra-lightweight micro air vehicle (MAV) fuses real-time responsiveness with minimalist engineering.
+**MoonRover** is a rugged, autonomous planetary rover designed for remote exploration, scientific payload delivery, and mobility over uneven terrain. Built using embedded C on the STM32F103C8T6 microcontroller, this rover project aims to combine precise control, real-time responsiveness, and modular design for educational and experimental missions.
 
-> *"Born in silence, Belfhym slips through the air with the mind of a machine and the soul of a ghost."*
+> *"Forged for silence, MoonRover crawls across the unknown, sensing, learning, and enduring."*
 
 ---
 
 ## Features
 
-- Real-time flight controller in C  
-- Sensor fusion (MPU6050/ICM20948)  
-- 3-axis PID stabilization (roll, pitch, yaw)  
-- BLE or RF-based remote control interface  
-- Modular and portable embedded code  
-- Lightweight, power-optimized architecture  
-- Failsafe logic and telemetry support  
+- Real-time multitasking with FreeRTOS  
+- Modular embedded C architecture  
+- Sensor integration (IMU, ultrasonic, encoders)  
+- PID-based navigation and motor control  
+- UART-based telemetry and debugging  
+- Expandable interfaces for GPS, RF, BLE  
+- Power-efficient rover firmware for STM32  
 
 ---
 
 ## Hardware Requirements
 
-| Component       | Recommendation / Example     |
-|----------------|-------------------------------|
-| MCU            | STM32F103, STM32L4, RP2040    |
-| IMU            | MPU6050, ICM20948              |
-| Motors         | 4× 6mm brushed coreless        |
-| Power          | 1S LiPo 150–300mAh             |
-| Radio          | NRF24L01+, BLE module          |
-| Frame          | Carbon fiber / 3D-printed      |
+| Component       | Recommendation / Example       |
+|----------------|---------------------------------|
+| MCU            | STM32F103C8T6 (Blue Pill)       |
+| IMU            | MPU6050, ICM20948                |
+| Motors         | 2× or 4× DC motors + drivers     |
+| Power          | 1S/2S Li-ion or LiPo battery     |
+| Sensors        | Ultrasonic, IR, wheel encoders   |
+| Comms          | NRF24L01+, UART/BLE module       |
+| Frame          | Custom chassis / 3D-printed      |
 
 ---
 
-##  Getting Started
+## Project Structure
+moonrover/
+├── Makefile
+├── ld/
+├── CMSIS/
+├── FreeRTOS/
+├── include/
+├── src/
+├── tests/
+└── tools/
 
-### 1. Clone the Repo
+---
+
+## Getting Started
+
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourname/belfhym.git
+git clone https://github.com/msoodb/belfhym.git
 cd belfhym
+```
+
+### 2. Build and Flash
+
+```bash
+make
 make flash
 ```
 
-## command
+
+### 3. Development Environment (Fedora Linux)
+
+- Install toolchain:
+```bash
 sudo dnf install arm-none-eabi-gcc-cs arm-none-eabi-newlib
+```
+
+- Check version:
+```bash
 arm-none-eabi-gcc --version
+```
+
+- Enable Bear for compilation database:
+```bash
 bear -- make
+```
+
+- Build for ARM:
+```bash
 make TARGET_ARCH=arm
+```
+
+### License
+This project is licensed under the GNU General Public License v3. See the LICENSE file for details.
