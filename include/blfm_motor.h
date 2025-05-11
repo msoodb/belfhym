@@ -7,10 +7,12 @@
  * See LICENSE file for details.
  */
 
-#ifndef BLFM_DEBUG_H
-#define BLFM_DEBUG_H
+#ifndef BLFM_MOTOR_H
+#define BLFM_MOTOR_H
 
-void blfm_debug_init(void);
-void blfm_debug_print(const char *msg);
+#include <stdint.h>
+
+void blfm_motor_init(void);
+void blfm_motor_set_pwm(uint16_t duty); // 0-1000 for 0%-100%
 
 #endif

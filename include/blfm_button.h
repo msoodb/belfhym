@@ -7,10 +7,12 @@
  * See LICENSE file for details.
  */
 
-#ifndef BLFM_DEBUG_H
-#define BLFM_DEBUG_H
+#ifndef BLFM_BUTTON_H
+#define BLFM_BUTTON_H
 
-void blfm_debug_init(void);
-void blfm_debug_print(const char *msg);
+#include <stdbool.h>
+
+void blfm_button_init(void);
+bool blfm_button_is_pressed(void);
 
 #endif
