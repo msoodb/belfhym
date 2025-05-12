@@ -14,8 +14,6 @@
 
 static volatile uint32_t blink_rate = 500;
 
-void blfm_led_toggle(void) { GPIOC->ODR ^= GPIO_ODR_ODR13; }
-
 void blfm_led_init(void) {
   RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
   GPIOC->CRH &= ~(GPIO_CRH_MODE13 | GPIO_CRH_CNF13);
@@ -23,6 +21,7 @@ void blfm_led_init(void) {
 }
 
 void blfm_led_set_blink_rate(uint32_t rate_ms) { blink_rate = rate_ms; }
+void blfm_led_toggle(void) { GPIOC->ODR ^= GPIO_ODR_ODR13; }
 
 void blfm_led_blink_task(void *params) {
 
