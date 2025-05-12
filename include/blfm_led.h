@@ -10,7 +10,10 @@
 #ifndef BLFM_LED_H
 #define BLFM_LED_H
 
+#include <stdint.h>
+
 void blfm_led_init(void);
-void blfm_led_toggle(void);
+void blfm_led_set_blink_rate(uint32_t rate_ms);
+void blfm_led_blink_task(void *params);
 
 #endif

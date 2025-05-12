@@ -10,9 +10,8 @@
 #ifndef BLFM_MOTOR_H
 #define BLFM_MOTOR_H
 
-#include <stdint.h>
-
 void blfm_motor_init(void);
-void blfm_motor_set_pwm(uint16_t duty); // 0-1000 for 0%-100%
+void blfm_motor_run(void);
+void blfm_motor_stop(void);
 
 #endif
