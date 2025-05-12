@@ -74,7 +74,7 @@ make clean
 make
 ```
 5. Flash Firmware to Blue Pill
-   - Option 1:
+	- Option 1:
 	 1. Start OpenOCD server:
 	 ```bash
 	 openocd -f interface/stlink.cfg -f target/stm32f1x.cfg
@@ -90,12 +90,16 @@ make
 	 reset run
 	 exit
 	 ```
- - Option 2: 
-   1. Flash with st-flash
-   ```bash
-   st-flash write build/belfhym.bin 0x8000000
-   ```
-   
+	 - Option 2: 
+	 1. Flash with st-flash
+	 ```bash
+	 st-flash write build/belfhym.bin 0x8000000
+	 ```
+    - Option 3:
+	```bash
+	make deploy
+	```
+
 ## Debug or Monitor Output
 1. If your firmware sends serial data via USART1 (PA9/PA10), use your USB-to-Serial adapter:
     PA9 → TX
@@ -106,4 +110,3 @@ make
 	sudo dnf install minicom
 	minicom -D /dev/ttyUSB0 -b 115200
 	```
-
