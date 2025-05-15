@@ -24,7 +24,7 @@ CFLAGS += -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
 LDFLAGS := -T$(LD_SCRIPT)
 
 # Sources
-SRC_SUBDIRS := app core drivers control sensors comms actuators
+SRC_SUBDIRS := actuators app communication control core drivers interface logging logic monitoring power safety sensors
 SRC_DIRS := $(addprefix $(SRC_DIR)/,$(SRC_SUBDIRS))
 USER_SRCS := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
 

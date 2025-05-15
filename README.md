@@ -81,6 +81,20 @@ Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
 +---------------------+
 
 
+├── actuators
+├── app
+├── communication
+├── control
+├── core
+├── drivers
+├── interface
+├── logging
+├── logic
+├── monitoring
+├── power
+├── safety
+└── sensors
+
 
 ## Hardware Requirements
 
