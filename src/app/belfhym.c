@@ -7,26 +7,13 @@
  * See LICENSE file for details.
  */
 
-#include "belfhym.h"
-
-#include "blfm_led.h"
-#include "blfm_motor.h"
-#include "blfm_ultrasonic.h"
-#include "blfm_thermal.h"
-#include "blfm_alarm.h"
-#include "blfm_safety.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "blfm_taskmanager.h"
+
+
 int main(void) {
-    blfm_led_init();
-    blfm_motor_init();
-    blfm_ultrasonic_init();
-    blfm_thermal_init();
-    blfm_alarm_init();
-
-    xTaskCreate(blfm_safety_monitor_task, "Safety", 128, NULL, 2, NULL);
-
-    vTaskStartScheduler();
-    while (1);
+  blfm_taskmanager_start();
+  while (1);
 }

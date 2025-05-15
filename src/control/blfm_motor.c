@@ -1,23 +1,19 @@
 
-#include "blfm_motor.h"
-#include "stm32f1xx.h"
+#include "blfm_types.h"
+#include "FreeRTOS.h"
+#include "queue.h"
 
-#define MOTOR_GPIO GPIOA
-#define MOTOR_PIN 0
+extern QueueHandle_t motorQueue;
 
-void blfm_motor_init(void) {
-    // Enable GPIOA clock
-    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-
-    // Set PA0 as General purpose output push-pull, 2 MHz
-    MOTOR_GPIO->CRL &= ~(GPIO_CRL_MODE0 | GPIO_CRL_CNF0);
-    MOTOR_GPIO->CRL |= GPIO_CRL_MODE0_1;
+void blfm_motor_log_command(const DriveCommand *cmd) {
+    (void)cmd;
 }
 
-void blfm_motor_start(void) {
-    MOTOR_GPIO->ODR |= (1 << MOTOR_PIN); // Set PA0 high
-}
-
-void blfm_motor_stop(void) {
-    MOTOR_GPIO->ODR &= ~(1 << MOTOR_PIN); // Set PA0 low
+void MotorTask(void *params) {
+    DriveCommand cmd;
+    while (1) {
+        if (xQueueReceive(motorQueue, &cmd, portMAX_DELAY) == pdPASS) {
+            blfm_motor_log_command(&cmd);
+        }
+    }
 }

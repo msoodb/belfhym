@@ -17,7 +17,7 @@ static uint16_t map_distance_to_blink_delay(uint16_t mm) {
 
 void blfm_safety_monitor_task(void *params) {
 
-  (void)params;
+  /*(void)params;
   while (1) {
     uint16_t dist = blfm_ultrasonic_get_distance_mm();
     uint16_t delay_ms = map_distance_to_blink_delay(dist);
@@ -33,5 +33,5 @@ void blfm_safety_monitor_task(void *params) {
     }
 
     vTaskDelay(pdMS_TO_TICKS(200));
-  }
+    }*/
 }

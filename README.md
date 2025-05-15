@@ -45,24 +45,40 @@ multitasking environment with well-defined inter-task communication and scheduli
 - CommTask → ManualControl: via Queue<Command> + mode flag
 - Telemetry logging: via MessageBuffer or streaming queue
 
-+----------------+
-|  belfhym.c     |  <-- Entry Point
-+--------+-------+
+                        +--------------------+
+                        |     Scheduler      |  <-- FreeRTOS (manages tasks)
+                        +---------+----------+
+                                  |
+                                  v
+                          +---------------+
+                          |  belfhym.c    |  <-- Entry point
+                          +-------+-------+
+                                  |
+                                  v
+                          +---------------+
+                          |   BrainTask   |  <-- Core decision-making hub
+                          +-------+-------+
+         -----------------/       |        \-------------------------
+        /                         |                                   \
+       v                          v                                    v
++------------------+   +------------------+                 +------------------+
+| UltrasonicTask   |   |     IMUTask      |                 |  ManualControl   |
++------------------+   +------------------+                 +------------------+
+       |                          |                                   |
+       |                          |                                   v
+       |                          \----------------> +------------------+
+       |                                               |    CommTask     |
+       |                                               +--------+--------+
+       |                                                        |
+       v                                                        v
++------------------+                                 +------------------+
+|   SafetyTask     |                                 |  FailsafeTask    |
++--------+---------+                                 +------------------+
          |
          v
 +------------------+       +------------------+       +------------------+
-|   SensorTask     | --->  |  PathFinding     | --->  |   MotorTask      |
+|  PathFinding     | ----> |   MotorTask      | ----> |   LED/DebugTask  |
 +------------------+       +------------------+       +------------------+
-         |                          |                          |
-         v                          v                          v
-+------------------+       +------------------+       +------------------+
-|   SafetyTask     | --->  |  FailsafeTask    |       | LED/DebugTask    |
-+------------------+       +------------------+       +------------------+
-         ^                          ^                          ^
-         |                          |                          |
-+------------------+       +------------------+                |
-|   CommTask       | --->  | ManualControl    | ---------------+
-+------------------+       +------------------+
 
 
 
@@ -95,6 +111,23 @@ multitasking environment with well-defined inter-task communication and scheduli
 - OTA command update or reflash support
 
 ---
+
+
+# Implementation
+
+## Section 01
+break down and implement the first section of your Belfhym project, focusing on this part of the task diagram:
+
++----------------+
+|  belfhym.c     |  <-- Entry Point
++--------+-------+
+         |
+         v
++------------------+       +------------------+       +------------------+
+|   SensorTask     | --->  |  PathFinding     | --->  |   MotorTask      |
++------------------+       +------------------+       +------------------+
+
+
 
 ## Getting Started
 

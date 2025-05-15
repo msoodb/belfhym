@@ -1,9 +1,8 @@
 #ifndef BLFM_ULTRASONIC_H
 #define BLFM_ULTRASONIC_H
 
-#include <stdint.h>
+#include "blfm_types.h"
 
-void blfm_ultrasonic_init(void);
-uint16_t blfm_ultrasonic_get_distance_mm(void);
-
+UltrasonicData read_ultrasonic_mock(void);
+  
 #endif
