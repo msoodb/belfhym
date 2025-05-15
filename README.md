@@ -45,40 +45,30 @@ multitasking environment with well-defined inter-task communication and scheduli
 - CommTask → ManualControl: via Queue<Command> + mode flag
 - Telemetry logging: via MessageBuffer or streaming queue
 
-                        +--------------------+
-                        |     Scheduler      |  <-- FreeRTOS (manages tasks)
-                        +---------+----------+
-                                  |
-                                  v
-                          +---------------+
-                          |  belfhym.c    |  <-- Entry point
-                          +-------+-------+
-                                  |
-                                  v
-                          +---------------+
-                          |   BrainTask   |  <-- Core decision-making hub
-                          +-------+-------+
-         -----------------/       |        \-------------------------
-        /                         |                                   \
-       v                          v                                    v
-+------------------+   +------------------+                 +------------------+
-| UltrasonicTask   |   |     IMUTask      |                 |  ManualControl   |
-+------------------+   +------------------+                 +------------------+
-       |                          |                                   |
-       |                          |                                   v
-       |                          \----------------> +------------------+
-       |                                               |    CommTask     |
-       |                                               +--------+--------+
-       |                                                        |
-       v                                                        v
-+------------------+                                 +------------------+
-|   SafetyTask     |                                 |  FailsafeTask    |
-+--------+---------+                                 +------------------+
++----------------+
+|    main()      |  <-- Entry point: initializes hardware, creates tasks, starts RTOS
++--------+-------+
          |
          v
-+------------------+       +------------------+       +------------------+
-|  PathFinding     | ----> |   MotorTask      | ----> |   LED/DebugTask  |
-+------------------+       +------------------+       +------------------+
++-------------------+
+| blfm_taskmanager  |  <-- Task creation & queue setup
++-------------------+
+         |
+         v
++---------------------+         +-----------------------+         +-----------------------+
+| SensorTask(s)       |         | ControllerTask        |         | ActuatorTask(s)       |
+| (one per sensor)    |         | (aggregates data,     |         | (one per actuator)    |
+| - Read sensor       |         | decision maker)       |         | - Execute commands    |
+| - Send data via     |         | - Reads sensor data   |         | - Send status/feedback|
+|   queues/messages   |         |   from sensor queues  |         |   back if needed      |
++---------------------+         | - Sends commands      |         +-----------------------+
+                                |   to actuator queues  |                  
+                                +-----------------------+
+                                          |
+                                          v
+                                   +---------------+
+                                   | Communication | <-- optional comm. task
+                                   +---------------+
 
 
 
