@@ -45,6 +45,26 @@ multitasking environment with well-defined inter-task communication and scheduli
 - CommTask → ManualControl: via Queue<Command> + mode flag
 - Telemetry logging: via MessageBuffer or streaming queue
 
++----------------+
+|  belfhym.c     |  <-- Entry Point
++--------+-------+
+         |
+         v
++------------------+       +------------------+       +------------------+
+|   SensorTask     | --->  |  PathFinding     | --->  |   MotorTask      |
++------------------+       +------------------+       +------------------+
+         |                          |                          |
+         v                          v                          v
++------------------+       +------------------+       +------------------+
+|   SafetyTask     | --->  |  FailsafeTask    |       | LED/DebugTask    |
++------------------+       +------------------+       +------------------+
+         ^                          ^                          ^
+         |                          |                          |
++------------------+       +------------------+                |
+|   CommTask       | --->  | ManualControl    | ---------------+
++------------------+       +------------------+
+
+
 
 ## Hardware Requirements
 

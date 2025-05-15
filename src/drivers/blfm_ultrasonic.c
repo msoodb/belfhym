@@ -1,5 +1,6 @@
+
 #include "blfm_ultrasonic.h"
-#include "blfm_board.h"  // For GPIO macros
+#include "blfm_board.h"
 #include "stm32f1xx.h"
 #include "FreeRTOS.h"
 #include "task.h"

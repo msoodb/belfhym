@@ -1,4 +1,3 @@
-// blfm_imu.h
 #ifndef BLFM_IMU_H
 #define BLFM_IMU_H
 

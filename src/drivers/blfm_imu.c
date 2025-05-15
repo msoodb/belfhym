@@ -1,4 +1,4 @@
-// blfm_imu.c
+
 #include "blfm_imu.h"
 
 void blfm_imu_init(void) {
