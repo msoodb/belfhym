@@ -45,30 +45,40 @@ multitasking environment with well-defined inter-task communication and scheduli
 - CommTask → ManualControl: via Queue<Command> + mode flag
 - Telemetry logging: via MessageBuffer or streaming queue
 
-+----------------+
-|    main()      |  <-- Entry point: initializes hardware, creates tasks, starts RTOS
-+--------+-------+
-         |
-         v
-+-------------------+
-| blfm_taskmanager  |  <-- Task creation & queue setup
-+-------------------+
-         |
-         v
-+---------------------+         +-----------------------+         +-----------------------+
-| SensorTask(s)       |         | ControllerTask        |         | ActuatorTask(s)       |
-| (one per sensor)    |         | (aggregates data,     |         | (one per actuator)    |
-| - Read sensor       |         | decision maker)       |         | - Execute commands    |
-| - Send data via     |         | - Reads sensor data   |         | - Send status/feedback|
-|   queues/messages   |         |   from sensor queues  |         |   back if needed      |
-+---------------------+         | - Sends commands      |         +-----------------------+
-                                |   to actuator queues  |                  
-                                +-----------------------+
-                                          |
-                                          v
-                                   +---------------+
-                                   | Communication | <-- optional comm. task
-                                   +---------------+
++---------------------+
+|    Main Entry       |   (belfhym.c)
++----------+----------+
+           |
+           v
++---------------------+
+|     System Init     |  (board init, clocks, RTOS)
++----------+----------+
+           |
+           v
++=====================+
+||   Task Manager    ||  ← starts all system tasks
++=====================+
+           |
+           v
++--------------------------------------+
+|         System Services Layer        |
++-------------------+------------------+
+| Sensor Hub        | Actuator Hub     |
+| (all sensors)     | (all motors, LED)|
++-------------------+------------------+
+| Communication     | Logging          |
+| (Manual + Remote) | (Telemetry/Debug)|
++-------------------+------------------+
+| Safety Monitor    | Power Manager    |
++-------------------+------------------+
+
+Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
+
+           |
+           v
++---------------------+
+| Application Logic   | ← Pathfinding, PID, AI, etc.
++---------------------+
 
 
 
