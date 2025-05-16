@@ -14,7 +14,7 @@ create_module() {
 
   cat > "${INCLUDE_DIR}/${MODULE}.h" <<EOF
 
-/*
+/**
  * Copyright (C) 2025 Masoud Bolhassani <masoud.bolhassani@gmail.com>
  *
  * This file is part of Belfhym.
@@ -34,7 +34,7 @@ EOF
 
   cat > "${SRC_DIR}/${MODULE}.c" <<EOF
 
-/*
+/**
  * Copyright (C) 2025 Masoud Bolhassani <masoud.bolhassani@gmail.com>
  *
  * This file is part of Belfhym.
