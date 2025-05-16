@@ -96,6 +96,10 @@ Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
 └── sensors
 
 
+```bash
+cat modules.txt | script/generate_module.sh
+```
+
 ## Hardware Requirements
 
 | Component             | Description                                              |

@@ -29,6 +29,6 @@ for dir in "${DIRS[@]}"; do
   echo "Created: $dir"
 done
 
-mkdir $INCLUDE_DIR
+# mkdir $INCLUDE_DIR
 
 echo "Directory layout created successfully."
