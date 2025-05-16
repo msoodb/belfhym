@@ -13,20 +13,42 @@ create_module() {
   mkdir -p "$SRC_DIR" "$INCLUDE_DIR"
 
   cat > "${INCLUDE_DIR}/${MODULE}.h" <<EOF
+
+/*
+ * Copyright (C) 2025 Masoud Bolhassani <masoud.bolhassani@gmail.com>
+ *
+ * This file is part of Belfhym.
+ *
+ * Belfhym is released under the GNU General Public License v3 (GPL-3.0).
+ * See LICENSE file for details.
+ */
+
 #ifndef ${GUARD}
 #define ${GUARD}
 
 void ${MODULE}_dummy(void);
 
 #endif // ${GUARD}
+
 EOF
 
   cat > "${SRC_DIR}/${MODULE}.c" <<EOF
+
+/*
+ * Copyright (C) 2025 Masoud Bolhassani <masoud.bolhassani@gmail.com>
+ *
+ * This file is part of Belfhym.
+ *
+ * Belfhym is released under the GNU General Public License v3 (GPL-3.0).
+ * See LICENSE file for details.
+ */
+
 #include "${MODULE}.h"
 
 void ${MODULE}_dummy(void) {
     // TODO: Implement ${MODULE}
 }
+
 EOF
 
   echo "✔ Created: ${SRC_DIR}/${MODULE}.c and include/${MODULE}.h"
