@@ -13,7 +13,7 @@
 #include "task.h"
 
 void vSensorTask(void *pvParameters) {
-  (void) pvParameters;
+  (void)pvParameters;
   while (1) {
     // Simulate reading sensor
     vTaskDelay(pdMS_TO_TICKS(100));
@@ -21,7 +21,7 @@ void vSensorTask(void *pvParameters) {
 }
 
 void vMotorTask(void *pvParameters) {
-  (void) pvParameters;
+  (void)pvParameters;
   while (1) {
     // Simulate motor control
     vTaskDelay(pdMS_TO_TICKS(100));
@@ -29,7 +29,7 @@ void vMotorTask(void *pvParameters) {
 }
 
 void vSafetyTask(void *pvParameters) {
-  (void) pvParameters;
+  (void)pvParameters;
   while (1) {
     // Simulate safety monitoring
     vTaskDelay(pdMS_TO_TICKS(100));

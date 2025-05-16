@@ -10,7 +10,11 @@
 
 #include "blfm_logging.h"
 
-void blfm_logging_dummy(void) {
-    // TODO: Implement blfm_logging
+void blfm_logging_init(void) {
+  // Initialize UART or other output interface if needed
 }
 
+void blfm_logging_log(const char *format, ...) {
+  (void) format;
+  // TODO: Implement blfm_logging
+}

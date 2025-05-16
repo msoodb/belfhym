@@ -11,7 +11,10 @@
 #ifndef BLFM_MOTOR_H
 #define BLFM_MOTOR_H
 
-void blfm_motor_dummy(void);
+#include <stdint.h>
+
+void blfm_motor_init(void);
+void blfm_motor_set_speed(uint8_t left, uint8_t right);
 
 #endif // BLFM_MOTOR_H
 

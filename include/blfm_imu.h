@@ -11,7 +11,10 @@
 #ifndef BLFM_IMU_H
 #define BLFM_IMU_H
 
-void blfm_imu_dummy(void);
+#include "blfm_types.h"
+
+void blfm_imu_init(void);
+void blfm_imu_read(blfm_imu_data_t* data);
 
 #endif // BLFM_IMU_H
 

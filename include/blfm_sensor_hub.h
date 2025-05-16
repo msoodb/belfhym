@@ -11,7 +11,8 @@
 #ifndef BLFM_SENSOR_HUB_H
 #define BLFM_SENSOR_HUB_H
 
-void blfm_sensor_hub_dummy(void);
+void blfm_sensor_hub_init(void);
+void blfm_sensor_hub_start(void);
 
 #endif // BLFM_SENSOR_HUB_H
 

@@ -11,7 +11,11 @@
 #ifndef BLFM_LOGGING_H
 #define BLFM_LOGGING_H
 
-void blfm_logging_dummy(void);
+#include <stdarg.h>
+#include <stdint.h>
+
+void blfm_logging_init(void);
+void blfm_logging_log(const char *format, ...);
 
 #endif // BLFM_LOGGING_H
 

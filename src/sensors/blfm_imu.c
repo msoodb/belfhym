@@ -10,7 +10,15 @@
 
 #include "blfm_imu.h"
 
-void blfm_imu_dummy(void) {
-    // TODO: Implement blfm_imu
+void blfm_imu_init(void) {
+  // Initialize IMU sensor (mock implementation)
 }
 
+void blfm_imu_read(blfm_imu_data_t *data) {
+  data->acc_x = 0;
+  data->acc_y = 0;
+  data->acc_z = 0;
+  data->gyro_x = 0;
+  data->gyro_y = 0;
+  data->gyro_z = 0;
+}

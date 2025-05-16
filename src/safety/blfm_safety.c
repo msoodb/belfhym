@@ -10,7 +10,14 @@
 
 #include "blfm_safety.h"
 
-void blfm_safety_dummy(void) {
-    // TODO: Implement blfm_safety
+static int safety_status = 0;
+
+void blfm_safety_init(void) {
+  // TODO: Implement blfm_safety
 }
 
+void blfm_safety_check(void) {
+  // TODO: Implement blfm_safety
+}
+
+int blfm_safety_get_status(void) { return safety_status; }

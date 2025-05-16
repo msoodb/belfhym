@@ -10,7 +10,12 @@
 
 #include "blfm_motor.h"
 
-void blfm_motor_dummy(void) {
-    // TODO: Implement blfm_motor
+void blfm_motor_init(void) {
+  // Initialize motors (mock)
 }
 
+void blfm_motor_set_speed(uint8_t left, uint8_t right) {
+  (void) left;
+  (void) right;
+  // Set motor speeds (mock)
+}

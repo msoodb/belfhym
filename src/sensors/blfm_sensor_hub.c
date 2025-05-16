@@ -9,8 +9,14 @@
  */
 
 #include "blfm_sensor_hub.h"
+#include "blfm_imu.h"
+#include "blfm_ultrasonic.h"
 
-void blfm_sensor_hub_dummy(void) {
-    // TODO: Implement blfm_sensor_hub
+void blfm_sensor_hub_init(void) {
+  blfm_ultrasonic_init();
+  blfm_imu_init();
 }
 
+void blfm_sensor_hub_start(void) {
+  // Start sensor tasks if needed
+}

@@ -10,7 +10,14 @@
 
 #include "blfm_alarm.h"
 
-void blfm_alarm_dummy(void) {
-    // TODO: Implement blfm_alarm
+void blfm_alarm_init(void) {
+  // Initialize alarm (mock)
 }
 
+void blfm_alarm_trigger(void) {
+  // Trigger alarm (mock)
+}
+
+void blfm_alarm_clear(void) {
+  // Clear alarm (mock)
+}

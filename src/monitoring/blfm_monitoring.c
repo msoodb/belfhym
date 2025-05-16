@@ -10,7 +10,15 @@
 
 #include "blfm_monitoring.h"
 
-void blfm_monitoring_dummy(void) {
-    // TODO: Implement blfm_monitoring
+void blfm_monitoring_init(void) {
+  // Initialize monitoring sensors, variables, counters
 }
 
+void blfm_monitoring_task(void *params) {
+  (void)params;
+  // TODO: Implement blfm_monitoring
+}
+
+int blfm_monitoring_check_health(void) {
+  return 0;
+}

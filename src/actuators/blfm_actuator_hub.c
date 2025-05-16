@@ -9,8 +9,14 @@
  */
 
 #include "blfm_actuator_hub.h"
+#include "blfm_alarm.h"
+#include "blfm_motor.h"
 
-void blfm_actuator_hub_dummy(void) {
-    // TODO: Implement blfm_actuator_hub
+void blfm_actuator_hub_init(void) {
+  blfm_motor_init();
+  blfm_alarm_init();
 }
 
+void blfm_actuator_hub_start(void) {
+  // Start actuator-related operations (mock)
+}
