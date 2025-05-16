@@ -97,7 +97,8 @@ Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
 
 
 ```bash
-cat modules.txt | script/generate_module.sh
+script/structure.sh
+cat modules.txt | script/modules.sh
 ```
 
 ## Hardware Requirements

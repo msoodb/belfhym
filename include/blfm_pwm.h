@@ -11,7 +11,10 @@
 #ifndef BLFM_PWM_H
 #define BLFM_PWM_H
 
-void blfm_pwm_dummy(void);
+#include <stdint.h>
+
+void blfm_pwm_init(uint8_t channel);
+void blfm_pwm_set_duty(uint8_t channel, uint16_t duty);
 
 #endif // BLFM_PWM_H
 

@@ -11,7 +11,11 @@
 #ifndef BLFM_DELAY_H
 #define BLFM_DELAY_H
 
-void blfm_delay_dummy(void);
+#include <stdint.h>
+
+void blfm_delay_init(void);
+void blfm_delay_ms(uint32_t ms);
+void blfm_delay_us(uint32_t us);
 
 #endif // BLFM_DELAY_H
 

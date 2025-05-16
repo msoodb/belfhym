@@ -11,7 +11,10 @@
 #ifndef BLFM_BUTTON_H
 #define BLFM_BUTTON_H
 
-void blfm_button_dummy(void);
+#include <stdint.h>
+
+void blfm_button_init(uint32_t port, uint32_t pin);
+int blfm_button_is_pressed(uint32_t port, uint32_t pin);
 
 #endif // BLFM_BUTTON_H
 

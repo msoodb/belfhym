@@ -10,7 +10,16 @@
 
 #include "blfm_delay.h"
 
-void blfm_delay_dummy(void) {
-    // TODO: Implement blfm_delay
+void blfm_delay_init(void) {
+  // TODO: initialize delay mechanism (SysTick or timer)
 }
 
+void blfm_delay_ms(uint32_t ms) {
+  (void) ms;
+  // TODO: blocking delay for ms milliseconds
+}
+
+void blfm_delay_us(uint32_t us) {
+  (void) us;
+  // TODO: blocking delay for us microseconds
+}

@@ -10,7 +10,9 @@
 
 #include "blfm_board.h"
 
-void blfm_board_dummy(void) {
-    // TODO: Implement blfm_board
-}
+void blfm_board_init(void) {
+    // Initialize system clock, watchdog (if needed), and core peripherals
+    // Placeholder: real implementation depends on CMSIS and MCU specifics
+    // For now, this is a dummy init
+ }
 
