@@ -16,38 +16,58 @@
  */
 
 #include "blfm_taskmanager.h"
+#include "blfm_actuator_hub.h"
+#include "blfm_controller.h"
+#include "blfm_sensor_hub.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "blfm_sensor_hub.h"
-#include "blfm_actuator_hub.h"  // Actuator hub managing motors, alarms, etc.
+#define SENSOR_HUB_TASK_STACK 128
+#define ACTUATOR_HUB_TASK_STACK 128
+#define CONTROLLER_TASK_STACK 128
 
-// Sensor Hub Task: runs sensor hub polling if needed
+#define SENSOR_HUB_TASK_PRIORITY 2
+#define ACTUATOR_HUB_TASK_PRIORITY 2
+#define CONTROLLER_TASK_PRIORITY 3
+
 static void vSensorHubTask(void *pvParameters) {
-    (void)pvParameters;
-    for (;;) {
-        blfm_sensor_hub_poll();  // Centralized polling of all sensors
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
+  (void)pvParameters;
+  for (;;) {
+    blfm_sensor_hub_poll();
+    vTaskDelay(pdMS_TO_TICKS(100));
+  }
 }
 
-// Actuator Hub Task: runs actuator hub processing
 static void vActuatorHubTask(void *pvParameters) {
-    (void)pvParameters;
-    for (;;) {
-        // TODO: actuator hub logic: motor control, alarm triggering, etc.
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
+  (void)pvParameters;
+  for (;;) {
+    blfm_actuator_hub_update();
+    vTaskDelay(pdMS_TO_TICKS(50));
+  }
+}
+
+static void vControllerTask(void *pvParameters) {
+  (void)pvParameters;
+  for (;;) {
+    blfm_controller_run();
+    vTaskDelay(pdMS_TO_TICKS(100));
+  }
 }
 
 void blfm_taskmanager_setup(void) {
-    blfm_sensor_hub_init();
-    blfm_actuator_hub_init();
+  // Initialize modules
+  blfm_sensor_hub_init();
+  blfm_actuator_hub_init();
+  blfm_controller_init();
 
-    xTaskCreate(vSensorHubTask, "SensorHub", 128, NULL, 2, NULL);
-    xTaskCreate(vActuatorHubTask, "ActuatorHub", 128, NULL, 2, NULL);
+  // Create tasks
+  xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
+              SENSOR_HUB_TASK_PRIORITY, NULL);
+  xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
+              ACTUATOR_HUB_TASK_PRIORITY, NULL);
+  xTaskCreate(vControllerTask, "Controller", CONTROLLER_TASK_STACK, NULL,
+              CONTROLLER_TASK_PRIORITY, NULL);
 }
 
-void blfm_taskmanager_start(void) {
-    vTaskStartScheduler();
-}
+void blfm_taskmanager_start(void) { vTaskStartScheduler(); }

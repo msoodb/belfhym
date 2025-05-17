@@ -9,26 +9,41 @@
  */
 
 #include "blfm_sensor_hub.h"
-#include "blfm_ultrasonic.h"
+#include "FreeRTOS.h"
 #include "blfm_imu.h"
+#include "blfm_ultrasonic.h"
+#include "semphr.h"
+
+static blfm_sensor_data_t g_sensor_data;
+static SemaphoreHandle_t sensor_data_mutex;
 
 void blfm_sensor_hub_init(void) {
-    // Initialize all individual sensors
-    blfm_ultrasonic_init();
-    blfm_imu_init();
+  // Initialize all individual sensors
+  blfm_ultrasonic_init();
+  blfm_imu_init();
 }
 
 void blfm_sensor_hub_start(void) {
-    // Placeholder for starting sensor operations if needed
-    // For example: start timers or enable interrupts for sensors
+  // Placeholder for starting sensor operations if needed
+  // For example: start timers or enable interrupts for sensors
 }
 
 // Optional: if you want a poll function to centralize sensor polling
 void blfm_sensor_hub_poll(void) {
-    // Example: just read sensor data here if polling-based
-    // uint16_t distance = blfm_ultrasonic_get_distance();
-    // blfm_imu_data_t imu_data;
-    // blfm_imu_get_data(&imu_data);
-    
-    // For now, just placeholders without doing anything
+  // Poll ultrasonic
+  g_sensor_data.ultrasonic.distance_mm = blfm_ultrasonic_get_distance();
+
+  // Poll IMU
+  blfm_imu_read(&g_sensor_data.imu);
+
+  // Optional: notify other components
+}
+
+bool blfm_sensor_hub_get_data(blfm_sensor_data_t *out_data) {
+  if (xSemaphoreTake(sensor_data_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+    *out_data = g_sensor_data;
+    xSemaphoreGive(sensor_data_mutex);
+    return true;
+  }
+  return false;
 }

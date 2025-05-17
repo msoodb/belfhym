@@ -11,6 +11,8 @@
 #ifndef BLFM_ACTUATOR_HUB_H
 #define BLFM_ACTUATOR_HUB_H
 
+#include "blfm_types.h"
+
 void blfm_actuator_hub_init(void);
 void blfm_actuator_hub_start(void);
 void blfm_actuator_hub_update(void);

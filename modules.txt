@@ -8,10 +8,10 @@ actuators/blfm_motor
 actuators/blfm_alarm
 communication/blfm_radio
 communication/blfm_uart
+control/blfm_controller
 control/blfm_pathfinder
 control/blfm_pid
 core/blfm_board
-core/blfm_controller
 drivers/blfm_gpio
 drivers/blfm_pwm
 drivers/blfm_delay

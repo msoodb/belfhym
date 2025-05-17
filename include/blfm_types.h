@@ -32,6 +32,14 @@ typedef struct {
 } blfm_ultrasonic_data_t;
 
 /**
+ * @brief Sensor dat
+ */
+typedef struct {
+    blfm_ultrasonic_data_t ultrasonic;
+    blfm_imu_data_t imu;
+} blfm_sensor_data_t;
+
+/**
  * @brief Motor control command (speed and direction)
  * Speed range 0-255 (PWM), direction 0=stop,1=forward,2=reverse
  */

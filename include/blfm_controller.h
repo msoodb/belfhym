@@ -11,7 +11,10 @@
 #ifndef BLFM_CONTROLLER_H
 #define BLFM_CONTROLLER_H
 
-void blfm_controller_dummy(void);
+#include "blfm_types.h"
+
+void blfm_controller_init(void);
+void blfm_controller_run(void);
 
 #endif // BLFM_CONTROLLER_H
 
