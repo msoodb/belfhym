@@ -13,6 +13,7 @@
 
 void blfm_sensor_hub_init(void);
 void blfm_sensor_hub_start(void);
+void blfm_sensor_hub_poll(void);
 
 #endif // BLFM_SENSOR_HUB_H
 

@@ -9,14 +9,26 @@
  */
 
 #include "blfm_sensor_hub.h"
-#include "blfm_imu.h"
 #include "blfm_ultrasonic.h"
+#include "blfm_imu.h"
 
 void blfm_sensor_hub_init(void) {
-  blfm_ultrasonic_init();
-  blfm_imu_init();
+    // Initialize all individual sensors
+    blfm_ultrasonic_init();
+    blfm_imu_init();
 }
 
 void blfm_sensor_hub_start(void) {
-  // Start sensor tasks if needed
+    // Placeholder for starting sensor operations if needed
+    // For example: start timers or enable interrupts for sensors
+}
+
+// Optional: if you want a poll function to centralize sensor polling
+void blfm_sensor_hub_poll(void) {
+    // Example: just read sensor data here if polling-based
+    // uint16_t distance = blfm_ultrasonic_get_distance();
+    // blfm_imu_data_t imu_data;
+    // blfm_imu_get_data(&imu_data);
+    
+    // For now, just placeholders without doing anything
 }

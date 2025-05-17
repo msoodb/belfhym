@@ -15,6 +15,8 @@ void blfm_imu_init(void) {
 }
 
 void blfm_imu_read(blfm_imu_data_t *data) {
+  if (!data) return;
+  
   data->acc_x = 0;
   data->acc_y = 0;
   data->acc_z = 0;

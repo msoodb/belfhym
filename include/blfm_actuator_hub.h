@@ -13,6 +13,7 @@
 
 void blfm_actuator_hub_init(void);
 void blfm_actuator_hub_start(void);
+void blfm_actuator_hub_update(void);
 
 #endif // BLFM_ACTUATOR_HUB_H
 

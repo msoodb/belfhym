@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2025 Masoud Bolhassani <masoud.bolhassani@gmail.com>
  *
@@ -8,38 +7,47 @@
  * See LICENSE file for details.
  */
 
+/**
+ * @file blfm_taskmanager.c
+ * @brief FreeRTOS task setup and startup manager.
+ *
+ * Registers and launches key tasks, such as sensor polling,
+ * actuator control, and safety monitoring.
+ */
+
 #include "blfm_taskmanager.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
-void vSensorTask(void *pvParameters) {
-  (void)pvParameters;
-  while (1) {
-    // Simulate reading sensor
-    vTaskDelay(pdMS_TO_TICKS(100));
-  }
+#include "blfm_sensor_hub.h"
+#include "blfm_actuator_hub.h"  // Actuator hub managing motors, alarms, etc.
+
+// Sensor Hub Task: runs sensor hub polling if needed
+static void vSensorHubTask(void *pvParameters) {
+    (void)pvParameters;
+    for (;;) {
+        blfm_sensor_hub_poll();  // Centralized polling of all sensors
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
 }
 
-void vMotorTask(void *pvParameters) {
-  (void)pvParameters;
-  while (1) {
-    // Simulate motor control
-    vTaskDelay(pdMS_TO_TICKS(100));
-  }
-}
-
-void vSafetyTask(void *pvParameters) {
-  (void)pvParameters;
-  while (1) {
-    // Simulate safety monitoring
-    vTaskDelay(pdMS_TO_TICKS(100));
-  }
+// Actuator Hub Task: runs actuator hub processing
+static void vActuatorHubTask(void *pvParameters) {
+    (void)pvParameters;
+    for (;;) {
+        // TODO: actuator hub logic: motor control, alarm triggering, etc.
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
 }
 
 void blfm_taskmanager_setup(void) {
-  xTaskCreate(vSensorTask, "Sensor", 128, NULL, 2, NULL);
-  xTaskCreate(vMotorTask, "Motor", 128, NULL, 2, NULL);
-  xTaskCreate(vSafetyTask, "Safety", 128, NULL, 3, NULL);
+    blfm_sensor_hub_init();
+    blfm_actuator_hub_init();
+
+    xTaskCreate(vSensorHubTask, "SensorHub", 128, NULL, 2, NULL);
+    xTaskCreate(vActuatorHubTask, "ActuatorHub", 128, NULL, 2, NULL);
 }
 
-void blfm_taskmanager_start(void) { vTaskStartScheduler(); }
+void blfm_taskmanager_start(void) {
+    vTaskStartScheduler();
+}

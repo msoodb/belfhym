@@ -20,3 +20,9 @@ void blfm_actuator_hub_init(void) {
 void blfm_actuator_hub_start(void) {
   // Start actuator-related operations (mock)
 }
+
+void blfm_actuator_hub_update(void) {
+  // Placeholder: Update/control actuators centrally
+  // e.g. control motor speed, alarm state  
+}
+
