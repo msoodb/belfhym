@@ -9,35 +9,32 @@
  */
 
 #include "blfm_gpio.h"
+#include "stm32f1xx.h"
 
 void blfm_gpio_config_output(uint32_t port, uint32_t pin) {
-  (void) port;
-  (void) pin;
-  // TODO: configure pin as output
+    GPIO_TypeDef *gpio = (GPIO_TypeDef *) port;
+    gpio->CRL &= ~(0xF << (pin * 4));
+    gpio->CRL |=  (0x3 << (pin * 4));  // General purpose output push-pull, 50 MHz
 }
 
 void blfm_gpio_config_input(uint32_t port, uint32_t pin) {
-  (void) port;
-  (void) pin;
-  // TODO: configure pin as input
+    GPIO_TypeDef *gpio = (GPIO_TypeDef *) port;
+    gpio->CRL &= ~(0xF << (pin * 4));
+    gpio->CRL |=  (0x4 << (pin * 4));  // Input with pull-up / pull-down
+    gpio->ODR |=  (1 << pin);          // Enable pull-up
 }
 
 void blfm_gpio_set_pin(uint32_t port, uint32_t pin) {
-  (void) port;
-  (void) pin;
-  // TODO: set GPIO pin high
+    GPIO_TypeDef *gpio = (GPIO_TypeDef *) port;
+    gpio->BSRR = (1 << pin);
 }
 
 void blfm_gpio_clear_pin(uint32_t port, uint32_t pin) {
-  (void) port;
-  (void) pin;
-  // TODO: set GPIO pin low
+    GPIO_TypeDef *gpio = (GPIO_TypeDef *) port;
+    gpio->BRR = (1 << pin);
 }
 
 int blfm_gpio_read_pin(uint32_t port, uint32_t pin) {
-  (void) port;
-  (void) pin;
-  // TODO: return pin level (0 or 1)
-  return 0;
+    GPIO_TypeDef *gpio = (GPIO_TypeDef *) port;
+    return (gpio->IDR & (1 << pin)) ? 1 : 0;
 }
-

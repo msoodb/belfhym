@@ -12,9 +12,10 @@
 #define BLFM_IMU_H
 
 #include "blfm_types.h"
+#include <stdint.h>
 
 void blfm_imu_init(void);
-void blfm_imu_read(blfm_imu_data_t* data);
+void blfm_imu_read(blfm_imu_data_t *data);
 
 #endif // BLFM_IMU_H
 

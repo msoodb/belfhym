@@ -9,10 +9,9 @@
  */
 
 #include "blfm_board.h"
+#include "blfm_i2c.h"
 
 void blfm_board_init(void) {
-    // Initialize system clock, watchdog (if needed), and core peripherals
-    // Placeholder: real implementation depends on CMSIS and MCU specifics
-    // For now, this is a dummy init
- }
-
+  // [PLL and system clock setup as before...]
+  blfm_i2c_init();
+}

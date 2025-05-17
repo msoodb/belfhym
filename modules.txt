@@ -12,6 +12,7 @@ control/blfm_controller
 control/blfm_pathfinder
 control/blfm_pid
 core/blfm_board
+core/blfm_i2c
 drivers/blfm_gpio
 drivers/blfm_pwm
 drivers/blfm_delay
