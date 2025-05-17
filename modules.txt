@@ -1,6 +1,7 @@
 app/belfhym
 app/blfm_taskmanager
 sensors/blfm_sensor_hub
+sensors/blfm_temperature
 sensors/blfm_imu
 sensors/blfm_ultrasonic
 actuators/blfm_actuator_hub

@@ -7,6 +7,7 @@
  * Belfhym is released under the GNU General Public License v3 (GPL-3.0).
  * See LICENSE file for details.
  */
+
 #ifndef BLFM_TYPES_H
 #define BLFM_TYPES_H
 
