@@ -24,8 +24,10 @@ multitasking environment with well-defined inter-task communication and scheduli
 
 1. Task Architecture
 
+This table outlines the tasks in the system, their responsibilities, priorities, and communication mechanisms.
+
 | Task Name         | Responsibility                               | Priority | Communication                    |
-| ----------------- | -------------------------------------------- | -------- | -------------------------------- |
+|------------------|----------------------------------------------|----------|----------------------------------|
 | **SensorTask**    | Polls ultrasonic, IMU, thermal sensors       | Med      | Sends readings via **queues**    |
 | **MotorTask**     | Drives motors using PID control              | High     | Gets target direction from queue |
 | **PathFinding**   | Receives sensor input, computes direction    | Med      | Queue input/output               |
@@ -45,6 +47,7 @@ multitasking environment with well-defined inter-task communication and scheduli
 - CommTask → ManualControl: via Queue<Command> + mode flag
 - Telemetry logging: via MessageBuffer or streaming queue
 
+```
 +---------------------+
 |    Main Entry       |   (belfhym.c)
 +----------+----------+
@@ -73,13 +76,11 @@ multitasking environment with well-defined inter-task communication and scheduli
 +-------------------+------------------+
 
 Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
-
            |
            v
 +---------------------+
 | Application Logic   | ← Pathfinding, PID, AI, etc.
 +---------------------+
-
 
 ├── actuators
 ├── app
@@ -94,6 +95,7 @@ Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
 ├── power
 ├── safety
 └── sensors
+```
 
 
 ```bash
