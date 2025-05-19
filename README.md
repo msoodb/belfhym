@@ -52,7 +52,7 @@ This table outlines the tasks in the system, their responsibilities, priorities,
 - CommTask → ManualControl: via Queue<Command> + mode flag
 - Telemetry logging: via MessageBuffer or streaming queue
 
-```
+
 +---------------------+
 |    Main Entry       |   (belfhym.c)
 +----------+----------+
@@ -100,7 +100,6 @@ Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
 ├── power
 ├── safety
 └── sensors
-```
 
 
 ```bash
@@ -137,22 +136,6 @@ cat modules.txt | script/modules.sh
 - OTA command update or reflash support
 
 ---
-
-
-# Implementation
-
-## Section 01
-break down and implement the first section of your Belfhym project, focusing on this part of the task diagram:
-
-+----------------+
-|  belfhym.c     |  <-- Entry Point
-+--------+-------+
-         |
-         v
-+------------------+       +------------------+       +------------------+
-|   SensorTask     | --->  |  PathFinding     | --->  |   MotorTask      |
-+------------------+       +------------------+       +------------------+
-
 
 
 ## Getting Started
