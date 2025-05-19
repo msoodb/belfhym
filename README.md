@@ -1,9 +1,14 @@
 # Belfhym: FreeRTOS-Based Lunar Rover Robot
 
-Belfhym is a modular, real-time lunar rover robot powered by FreeRTOS and CMSIS, designed for autonomous terrain navigation, 
-multi-sensor fusion, real-time telemetry, and manual override via remote command.
-Built for the STM32F103C8T6 (Blue Pill), Belfhym integrates multiple control and sensing subsystems into a clean, 
-multitasking environment with well-defined inter-task communication and scheduling policies.
+**Belfhym** is a modular, real-time lunar rover robot powered by **FreeRTOS** and **CMSIS**, designed for:
+
+- Autonomous terrain navigation  
+- Multi-sensor fusion  
+- Real-time telemetry  
+- Manual override via remote command  
+
+  
+Built for the **STM32F103C8T6 (Blue Pill)**, Belfhym integrates multiple control and sensing subsystems into a clean, multitasking environment with well-defined inter-task communication and scheduling policies.
 
 ---
 
