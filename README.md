@@ -52,7 +52,7 @@ This table outlines the tasks in the system, their responsibilities, priorities,
 - CommTask → ManualControl: via Queue<Command> + mode flag
 - Telemetry logging: via MessageBuffer or streaming queue
 
-
+```
 +---------------------+
 |    Main Entry       |   (belfhym.c)
 +----------+----------+
@@ -100,9 +100,10 @@ Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
 ├── power
 ├── safety
 └── sensors
-
+```
 
 ```bash
+bear -- make
 script/structure.sh
 cat modules.txt | script/modules.sh
 ```
@@ -124,9 +125,7 @@ cat modules.txt | script/modules.sh
 | **Button**            | For mode toggle / emergency stop                         |
 | **Power Source**      | Li-ion battery pack with regulation                      |
 
-
 ---
-
 
 ## Future Additions
 
@@ -140,6 +139,14 @@ cat modules.txt | script/modules.sh
 
 ## Getting Started
 
+
+### Prerequisites toolchain for Development Environment (Fedora Linux)
+
+```bash
+sudo dnf install arm-none-eabi-gcc-cs arm-none-eabi-newlib
+arm-none-eabi-gcc --version
+```
+
 ### 1. Clone the Repository
 
 ```bash
@@ -152,29 +159,6 @@ cd belfhym
 ```bash
 make
 make flash
-```
-
-
-### 3. Development Environment (Fedora Linux)
-
-- Install toolchain:
-```bash
-sudo dnf install arm-none-eabi-gcc-cs arm-none-eabi-newlib
-```
-
-- Check version:
-```bash
-arm-none-eabi-gcc --version
-```
-
-- Enable Bear for compilation database:
-```bash
-bear -- make
-```
-
-- Build for ARM:
-```bash
-make
 ```
 
 ### License
