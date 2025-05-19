@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 
+void blfm_gpio_init(void);
 void blfm_gpio_config_output(uint32_t port, uint32_t pin);
 void blfm_gpio_config_input(uint32_t port, uint32_t pin);
 void blfm_gpio_set_pin(uint32_t port, uint32_t pin);

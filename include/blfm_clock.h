@@ -8,14 +8,9 @@
  * See LICENSE file for details.
  */
 
-#ifndef BLFM_UART_H
-#define BLFM_UART_H
+#ifndef BLFM_CLOCK_H
+#define BLFM_CLOCK_H
 
-#include <stdint.h>
+void blfm_clock_init(void);
 
-void blfm_uart_init(void);
-void blfm_uart_send_u8(uint8_t val);
-void blfm_uart_send_u32(uint32_t val);
-
-#endif // BLFM_UART_H
-
+#endif // BLFM_CLOCK_H

@@ -11,6 +11,16 @@
 #include "blfm_gpio.h"
 #include "stm32f1xx.h"
 
+void blfm_gpio_init(void) {
+  // Enable GPIOA, GPIOB, and AFIO
+  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN |
+                  RCC_APB2ENR_IOPBEN |
+                  RCC_APB2ENR_AFIOEN;
+
+  // Optional: disable JTAG to free PB3/PB4/PB5 (but keep SWD)
+  AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_JTAGDISABLE;
+}
+
 void blfm_gpio_config_output(uint32_t port, uint32_t pin) {
     GPIO_TypeDef *gpio = (GPIO_TypeDef *) port;
     gpio->CRL &= ~(0xF << (pin * 4));
