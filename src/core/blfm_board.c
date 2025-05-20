@@ -12,8 +12,8 @@
 #include "blfm_i2c.h"
 
 void blfm_board_init(void) {
-  blfm_clock_init();
-  blfm_gpio_init();
-  blfm_uart_init();
+  //blfm_clock_init();
+  //blfm_gpio_init();
+  //blfm_uart_init();
   blfm_i2c_init();
 }

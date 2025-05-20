@@ -23,6 +23,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "stm32f1xx.h" // For direct register access
+
 #define SENSOR_HUB_TASK_STACK 128
 #define ACTUATOR_HUB_TASK_STACK 128
 #define CONTROLLER_TASK_STACK 128
@@ -30,6 +32,30 @@
 #define SENSOR_HUB_TASK_PRIORITY 2
 #define ACTUATOR_HUB_TASK_PRIORITY 2
 #define CONTROLLER_TASK_PRIORITY 3
+
+
+#define LED_TASK_STACK 128
+#define LED_TASK_PRIORITY 1
+
+static void led_init(void) {
+  // Enable GPIOC clock
+  RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+
+  // Clear MODE13[1:0] and CNF13[1:0]
+  GPIOC->CRH &= ~(GPIO_CRH_MODE13 | GPIO_CRH_CNF13);
+
+  // MODE13 = 0b10: Output mode, max speed 2 MHz
+  // CNF13  = 0b00: General purpose output push-pull
+  GPIOC->CRH |= (0b10 << GPIO_CRH_MODE13_Pos);
+}
+
+static void vLedBlinkTask(void *pvParameters) {
+  (void)pvParameters;
+  for (;;) {
+    GPIOC->ODR ^= GPIO_ODR_ODR13;  // Toggle LED
+    vTaskDelay(pdMS_TO_TICKS(200));
+  }
+}
 
 static void vSensorHubTask(void *pvParameters) {
   (void)pvParameters;
@@ -57,17 +83,20 @@ static void vControllerTask(void *pvParameters) {
 
 void blfm_taskmanager_setup(void) {
   // Initialize modules
-  blfm_sensor_hub_init();
-  blfm_actuator_hub_init();
-  blfm_controller_init();
-
+  //blfm_sensor_hub_init();
+  //blfm_actuator_hub_init();
+  //blfm_controller_init();
+  led_init(); // Initialize LED pin
+    
   // Create tasks
-  xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
+  xTaskCreate(vLedBlinkTask, "LEDBlink", LED_TASK_STACK, NULL,
+              LED_TASK_PRIORITY, NULL);
+  /*xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
               SENSOR_HUB_TASK_PRIORITY, NULL);
   xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
               ACTUATOR_HUB_TASK_PRIORITY, NULL);
   xTaskCreate(vControllerTask, "Controller", CONTROLLER_TASK_STACK, NULL,
-              CONTROLLER_TASK_PRIORITY, NULL);
+  CONTROLLER_TASK_PRIORITY, NULL);*/
 }
 
 void blfm_taskmanager_start(void) { vTaskStartScheduler(); }

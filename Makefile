@@ -97,8 +97,10 @@ else ifeq ($(METHOD),gdb)
 	                  -ex "load" \
 	                  -ex "monitor reset run" \
 	                  -ex "quit"
+else ifeq ($(METHOD),serial)
+	stm32flash -w $(BIN_FILE) -v -g 0x8000000 /dev/ttyUSB0
 else
-	$(error Unknown METHOD: $(METHOD). Use METHOD=stlink|openocd|gdb)
+	$(error Unknown METHOD: $(METHOD). Use METHOD=stlink|openocd|gdb|serial)
 endif
 
 # Clean build artifacts
