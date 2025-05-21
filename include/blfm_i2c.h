@@ -40,4 +40,6 @@ int blfm_i2c_write_byte(uint8_t addr, uint8_t reg, uint8_t data);
  */
 int blfm_i2c_read_bytes(uint8_t addr, uint8_t reg, uint8_t *buf, size_t len);
 
+int blfm_i2c_write_byte_simple(uint8_t addr, uint8_t data);
+
 #endif // BLFM_I2C_H

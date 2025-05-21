@@ -127,3 +127,32 @@ int blfm_i2c_read_bytes(uint8_t addr, uint8_t reg, uint8_t *buf, size_t len) {
 
   return 0;
 }
+
+int blfm_i2c_write_byte_simple(uint8_t addr, uint8_t data) {
+  // Start condition
+  I2C1->CR1 |= I2C_CR1_START;
+  if (blfm_i2c_wait_event(I2C_SR1_SB))
+    return -1;
+
+  (void)I2C1->SR1;
+  I2C1->DR = addr << 1; // Write address
+  if (blfm_i2c_wait_event(I2C_SR1_ADDR))
+    return -1;
+
+  (void)I2C1->SR1;
+  (void)I2C1->SR2;
+
+  // Send the data
+  I2C1->DR = data;
+  if (blfm_i2c_wait_event(I2C_SR1_TXE))
+    return -1;
+
+  // Wait for BTF (Byte transfer finished)
+  while (!(I2C1->SR1 & I2C_SR1_BTF)) {
+  }
+
+  // Stop condition
+  I2C1->CR1 |= I2C_CR1_STOP;
+
+  return 0;
+}

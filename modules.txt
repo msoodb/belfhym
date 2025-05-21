@@ -7,6 +7,7 @@ sensors/blfm_ultrasonic
 actuators/blfm_actuator_hub
 actuators/blfm_motor
 actuators/blfm_alarm
+actuators/blfm_led
 communication/blfm_radio
 communication/blfm_uart
 control/blfm_controller

@@ -12,18 +12,26 @@
 #include "FreeRTOS.h"
 #include "blfm_alarm.h"
 #include "blfm_motor.h"
+#include "blfm_led.h"
+#include "blfm_display.h"
 #include "semphr.h"
 
-static QueueHandle_t motor_cmd_queue;
+#define BLFM_LED_TASK_STACK 128
+#define BLFM_LED_TASK_PRIORITY 1
+
+//static QueueHandle_t motor_cmd_queue;
 
 void blfm_actuator_hub_init(void) {
-  motor_cmd_queue = xQueueCreate(4, sizeof(blfm_motor_command_t));
+  //motor_cmd_queue = xQueueCreate(4, sizeof(blfm_motor_command_t));
   blfm_motor_init();
   blfm_alarm_init();
+  blfm_led_init();
+  //blfm_display_init();
 }
 
 void blfm_actuator_hub_start(void) {
-  // Start actuator-related operations (mock)
+  //blfm_display_test_message();
+  xTaskCreate(vActuatorLedTask, "ActuatorLED", BLFM_LED_TASK_STACK, NULL, BLFM_LED_TASK_PRIORITY, NULL);
 }
 
 void blfm_actuator_hub_update(void) {
@@ -31,7 +39,16 @@ void blfm_actuator_hub_update(void) {
   // e.g. control motor speed, alarm state
 }
 
-void blfm_actuator_hub_task(void *params) {
+static void vActuatorLedTask(void *pvParameters) {
+  (void)pvParameters;
+  for (;;) {
+    blfm_led_onboard_toggle();
+    blfm_led_external_toggle();
+    vTaskDelay(pdMS_TO_TICKS(500));
+  }
+}
+
+/*void blfm_actuator_hub_task(void *params) {
   (void)params;
   blfm_motor_command_t cmd;
   for (;;) {
@@ -44,3 +61,4 @@ void blfm_actuator_hub_task(void *params) {
 void blfm_actuator_hub_send_motor_command(blfm_motor_command_t *cmd) {
   xQueueSend(motor_cmd_queue, cmd, 0);
 }
+*/
