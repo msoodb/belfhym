@@ -27,6 +27,7 @@
  * launches the FreeRTOS task manager. If the scheduler starts
  * successfully, execution should never return from `vTaskStartScheduler()`.
  */
+
 int main(void) {
   // Initialize system clocks, peripherals, and low-level hardware
   blfm_board_init();
@@ -42,3 +43,5 @@ int main(void) {
     // Optional: enter low-power sleep or log error state
   }
 }
+
+

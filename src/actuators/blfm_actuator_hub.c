@@ -25,6 +25,7 @@
 // blfm_display.c or a shared header
 char g_lcd_display_line1[17] = "Init...";        // max 16 chars + null
 char g_lcd_display_line2[17] = "Please wait..."; // default
+uint32_t delay_ms = 100;
 
 // static QueueHandle_t motor_cmd_queue;
 
@@ -50,16 +51,15 @@ void blfm_actuator_hub_update(void) {
 static void vActuatorLedTask(void *pvParameters) {
   (void)pvParameters;
   for (;;) {
-    blfm_led_onboard_toggle();
     blfm_led_external_toggle();
-    vTaskDelay(pdMS_TO_TICKS(500));
+    vTaskDelay(pdMS_TO_TICKS(delay_ms));
   }
 }
 
 static void vActuatorDisplayTask(void *pvParameters) {
   (void)pvParameters;
   blfm_display_startup_sequence();
-  vTaskDelete(NULL); // Done, delete self
+  vTaskDelete(NULL);
 }
 
 static void vDisplayUpdateTask(void *pvParameters) {

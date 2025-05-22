@@ -21,7 +21,7 @@
 #define LED_EXTERNAL_PIN 5
 
 void blfm_led_init(void) {
-  blfm_gpio_config_output((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
+  //blfm_gpio_config_output((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
   blfm_gpio_config_output((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
 }
 
