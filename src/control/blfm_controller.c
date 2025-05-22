@@ -38,3 +38,6 @@ void blfm_controller_run(void) {
     // blfm_actuator_hub_send_motor_command(&motor_cmd);
   }
 }
+
+void blfm_controller_start(void) {
+}

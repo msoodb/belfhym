@@ -67,15 +67,12 @@ void blfm_taskmanager_setup(void) {
   // Start tasks inside modules
   //blfm_sensor_hub_start();
   blfm_actuator_hub_start();
-  //blfm_controller_start();     // if you split controller similarly
+  //blfm_controller_start();
 
   // Create tasks
-  /*xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
-    SENSOR_HUB_TASK_PRIORITY, NULL);*/
-  /*xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
-    ACTUATOR_HUB_TASK_PRIORITY, NULL);*/
-  /*xTaskCreate(vControllerTask, "Controller", CONTROLLER_TASK_STACK, NULL,
-    CONTROLLER_TASK_PRIORITY, NULL);*/
+  //xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL, SENSOR_HUB_TASK_PRIORITY, NULL);
+  xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL, ACTUATOR_HUB_TASK_PRIORITY, NULL);
+  //xTaskCreate(vControllerTask, "Controller", CONTROLLER_TASK_STACK, NULL, CONTROLLER_TASK_PRIORITY, NULL);
 }
 
 void blfm_taskmanager_start(void) { vTaskStartScheduler(); }

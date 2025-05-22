@@ -19,6 +19,7 @@ void blfm_actuator_hub_update(void);
 
 static void vActuatorLedTask(void *pvParameters);
 static void vActuatorDisplayTask(void *pvParameters);
+static void vDisplayUpdateTask(void *pvParameters);
 
 #endif // BLFM_ACTUATOR_HUB_H
 

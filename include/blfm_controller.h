@@ -15,6 +15,7 @@
 
 void blfm_controller_init(void);
 void blfm_controller_run(void);
+void blfm_controller_start(void);
 
 #endif // BLFM_CONTROLLER_H
 

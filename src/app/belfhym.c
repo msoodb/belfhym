@@ -18,6 +18,7 @@
 
 #include "blfm_taskmanager.h"
 #include "blfm_board.h"
+#include "blfm_alarm.h"
 
 /**
  * @brief Main function: Initializes hardware and starts RTOS task management.
@@ -27,17 +28,17 @@
  * successfully, execution should never return from `vTaskStartScheduler()`.
  */
 int main(void) {
-    // Initialize system clocks, peripherals, and low-level hardware
-    blfm_board_init();
+  // Initialize system clocks, peripherals, and low-level hardware
+  blfm_board_init();
 
-    // Set up all RTOS tasks and any necessary synchronization primitives
-    blfm_taskmanager_setup();
+  // Set up all RTOS tasks and any necessary synchronization primitives
+  blfm_taskmanager_setup();
 
-    // Start the FreeRTOS scheduler (does not return)
-    blfm_taskmanager_start();
+  // Start the FreeRTOS scheduler (does not return)
+  blfm_taskmanager_start();
 
-    // Should never reach here if RTOS is running correctly
-    while (1) {
-        // Optional: enter low-power sleep or log error state
-    }
+  // Should never reach here if RTOS is running correctly
+  while (1) {
+    // Optional: enter low-power sleep or log error state
+  }
 }
