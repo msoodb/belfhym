@@ -10,6 +10,7 @@
 #include "blfm_display.h"
 #include "stm32f1xx.h"
 #include "FreeRTOS.h"
+#include "blfm_gpio.h"
 #include "task.h"
 
 #define LCD_GPIO GPIOA
@@ -27,27 +28,33 @@ static void lcd_send_command(uint8_t cmd);
 static void lcd_send_data(uint8_t data);
 
 void blfm_display_init(void) {
-    // Enable GPIOA
+    // Enable GPIOA clock
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
 
-    // Configure PA0–PA5 as output push-pull, 2 MHz
-    for (int pin = 0; pin <= 5; pin++) {
-        LCD_GPIO->CRL &= ~(0xF << (pin * 4));
-        LCD_GPIO->CRL |=  (0x2 << (pin * 4)); // Output, push-pull, 2 MHz
-    }
+    // Configure LCD pins as output
+    blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_RS_PIN);
+    blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_E_PIN);
+    blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_D4_PIN);
+    blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_D5_PIN);
+    blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_D6_PIN);
+    blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_D7_PIN);
+}
+
+void blfm_display_startup_sequence(void) {
+    // Must be called after FreeRTOS scheduler started because of vTaskDelay
 
     vTaskDelay(pdMS_TO_TICKS(50)); // Wait for power-up
 
-    // 4-bit init sequence
+    // LCD 4-bit init sequence
     lcd_write_nibble(0x03); vTaskDelay(pdMS_TO_TICKS(5));
     lcd_write_nibble(0x03); vTaskDelay(pdMS_TO_TICKS(5));
     lcd_write_nibble(0x03); vTaskDelay(pdMS_TO_TICKS(5));
     lcd_write_nibble(0x02); vTaskDelay(pdMS_TO_TICKS(5)); // 4-bit mode
 
-    lcd_send_command(0x28); // 4-bit, 2-line, 5x8
+    lcd_send_command(0x28); // 4-bit, 2-line, 5x8 font
     lcd_send_command(0x0C); // Display ON, cursor OFF
     lcd_send_command(0x06); // Entry mode
-    lcd_send_command(0x01); // Clear
+    lcd_send_command(0x01); // Clear display
     vTaskDelay(pdMS_TO_TICKS(5));
 }
 

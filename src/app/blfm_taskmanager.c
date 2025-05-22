@@ -72,8 +72,8 @@ void blfm_taskmanager_setup(void) {
   // Create tasks
   /*xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
     SENSOR_HUB_TASK_PRIORITY, NULL);*/
-  xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
-              ACTUATOR_HUB_TASK_PRIORITY, NULL);
+  /*xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
+    ACTUATOR_HUB_TASK_PRIORITY, NULL);*/
   /*xTaskCreate(vControllerTask, "Controller", CONTROLLER_TASK_STACK, NULL,
     CONTROLLER_TASK_PRIORITY, NULL);*/
 }

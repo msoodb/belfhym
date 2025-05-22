@@ -11,6 +11,7 @@
 #define BLFM_DISPLAY_H
 
 void blfm_display_init(void);
+void blfm_display_startup_sequence(void);
 void blfm_display_test_message(void);
 
 #endif // BLFM_DISPLAY_H

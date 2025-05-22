@@ -19,19 +19,23 @@
 #define BLFM_LED_TASK_STACK 128
 #define BLFM_LED_TASK_PRIORITY 1
 
+#define BLFM_DISPLAY_TASK_STACK 256
+#define BLFM_DISPLAY_TASK_PRIORITY 2
+
 //static QueueHandle_t motor_cmd_queue;
 
 void blfm_actuator_hub_init(void) {
   //motor_cmd_queue = xQueueCreate(4, sizeof(blfm_motor_command_t));
   //blfm_motor_init();
   //blfm_alarm_init();
+  blfm_display_init();
   blfm_led_init();
-  //blfm_display_init();
 }
 
 void blfm_actuator_hub_start(void) {
   //blfm_display_test_message();
   xTaskCreate(vActuatorLedTask, "ActuatorLED", BLFM_LED_TASK_STACK, NULL, BLFM_LED_TASK_PRIORITY, NULL);
+  xTaskCreate(vActuatorDisplayTask, "ActuatorLCD", BLFM_DISPLAY_TASK_STACK, NULL, BLFM_DISPLAY_TASK_PRIORITY, NULL);
 }
 
 void blfm_actuator_hub_update(void) {
@@ -46,6 +50,12 @@ static void vActuatorLedTask(void *pvParameters) {
     blfm_led_external_toggle();
     vTaskDelay(pdMS_TO_TICKS(500));
   }
+}
+
+static void vActuatorDisplayTask(void *pvParameters) {
+    (void)pvParameters;
+    blfm_display_startup_sequence();
+    vTaskDelete(NULL); // Done, delete self
 }
 
 /*void blfm_actuator_hub_task(void *params) {

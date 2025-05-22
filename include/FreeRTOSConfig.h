@@ -45,6 +45,7 @@
 #define xPortSysTickHandler SysTick_Handler
 
 #define INCLUDE_vTaskDelay 1
+#define INCLUDE_vTaskDelete 1
 #define INCLUDE_xSemaphoreGetMutexHolder 1
 #define INCLUDE_vTaskSuspend 1
 
