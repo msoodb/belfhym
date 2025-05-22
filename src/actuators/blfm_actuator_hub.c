@@ -19,7 +19,7 @@
 #define BLFM_LED_TASK_STACK 128
 #define BLFM_LED_TASK_PRIORITY 1
 
-#define BLFM_DISPLAY_TASK_STACK 256
+#define BLFM_DISPLAY_TASK_STACK 512
 #define BLFM_DISPLAY_TASK_PRIORITY 2
 
 // blfm_display.c or a shared header
@@ -40,7 +40,7 @@ void blfm_actuator_hub_init(void) {
 void blfm_actuator_hub_start(void) {
   xTaskCreate(vActuatorLedTask, "ActuatorLED", BLFM_LED_TASK_STACK, NULL, BLFM_LED_TASK_PRIORITY, NULL);
   xTaskCreate(vActuatorDisplayTask, "ActuatorDisplay", BLFM_DISPLAY_TASK_STACK, NULL, BLFM_DISPLAY_TASK_PRIORITY, NULL);
-  //xTaskCreate(vDisplayUpdateTask, "DisplayUpdate", BLFM_DISPLAY_TASK_STACK, NULL, BLFM_DISPLAY_TASK_PRIORITY, NULL);
+  xTaskCreate(vDisplayUpdateTask, "DisplayUpdate", BLFM_DISPLAY_TASK_STACK, NULL, BLFM_DISPLAY_TASK_PRIORITY, NULL);
 }
 
 void blfm_actuator_hub_update(void) {
@@ -64,7 +64,7 @@ static void vActuatorDisplayTask(void *pvParameters) {
 
 static void vDisplayUpdateTask(void *pvParameters) {
   (void)pvParameters;
-
+  vTaskDelete(NULL);
   for (;;) {
     blfm_lcd_send_command(0x80); // Line 1
     const char *ptr1 = g_lcd_display_line1;
@@ -75,7 +75,6 @@ static void vDisplayUpdateTask(void *pvParameters) {
     const char *ptr2 = g_lcd_display_line2;
     while (*ptr2)
       blfm_lcd_send_data(*ptr2++);
-
     vTaskDelay(pdMS_TO_TICKS(1000)); // Update every 1 second
     }
 }
