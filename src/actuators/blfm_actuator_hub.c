@@ -23,8 +23,8 @@
 
 void blfm_actuator_hub_init(void) {
   //motor_cmd_queue = xQueueCreate(4, sizeof(blfm_motor_command_t));
-  blfm_motor_init();
-  blfm_alarm_init();
+  //blfm_motor_init();
+  //blfm_alarm_init();
   blfm_led_init();
   //blfm_display_init();
 }

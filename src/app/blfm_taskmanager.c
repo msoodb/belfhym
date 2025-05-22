@@ -63,7 +63,7 @@ void blfm_taskmanager_setup(void) {
   //blfm_sensor_hub_init();
   blfm_actuator_hub_init();
   //blfm_controller_init();
-
+  
   // Start tasks inside modules
   //blfm_sensor_hub_start();
   blfm_actuator_hub_start();

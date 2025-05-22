@@ -10,8 +10,6 @@
 #ifndef BLFM_DISPLAY_H
 #define BLFM_DISPLAY_H
 
-#include <stdint.h>
-
 void blfm_display_init(void);
 void blfm_display_test_message(void);
 
