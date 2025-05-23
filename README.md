@@ -129,6 +129,14 @@ script/structure.sh
 cat modules.txt | script/modules.sh
 ```
 
+
+## WARNING
+FreeRTOS/portable/GCC/ARM_CM3/port.c
+```code 
+const portISR_t * const pxVectorTable = portSCB_VTOR_REG;
+(void)pxVectorTable;  // Suppress unused variable warning added by me.
+```
+
 ## Hardware Requirements
 
 | Component             | Description                                              |

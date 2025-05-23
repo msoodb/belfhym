@@ -10,9 +10,6 @@
 
 #include "blfm_alarm.h"
 
-static void blfm_alarm_trigger(void);
-static void blfm_alarm_clear(void);
-
 void blfm_alarm_init(void) {}
 
 void blfm_alarm_apply(const blfm_alarm_command_t *cmd) {
