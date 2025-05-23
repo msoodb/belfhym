@@ -9,87 +9,26 @@
  */
 
 #include "blfm_actuator_hub.h"
-#include "FreeRTOS.h"
-#include "blfm_alarm.h"
+#include "blfm_motor.h"
 #include "blfm_display.h"
 #include "blfm_led.h"
-#include "blfm_motor.h"
-#include "semphr.h"
-
-#define BLFM_LED_TASK_STACK 128
-#define BLFM_LED_TASK_PRIORITY 1
-
-#define BLFM_DISPLAY_TASK_STACK 512
-#define BLFM_DISPLAY_TASK_PRIORITY 2
-
-// blfm_display.c or a shared header
-char g_lcd_display_line1[17] = "Init...";        // max 16 chars + null
-char g_lcd_display_line2[17] = "Please wait..."; // default
-uint32_t delay_ms = 100;
-
-// static QueueHandle_t motor_cmd_queue;
+#include "blfm_alarm.h"
+#include "blfm_radio.h"
 
 void blfm_actuator_hub_init(void) {
-  // motor_cmd_queue = xQueueCreate(4, sizeof(blfm_motor_command_t));
-  // blfm_motor_init();
-  // blfm_alarm_init();
+  blfm_motor_init();
   blfm_display_init();
   blfm_led_init();
+  blfm_alarm_init();
+  blfm_radio_init();
 }
 
-void blfm_actuator_hub_start(void) {
-  xTaskCreate(vActuatorLedTask, "ActuatorLED", BLFM_LED_TASK_STACK, NULL, BLFM_LED_TASK_PRIORITY, NULL);
-  xTaskCreate(vActuatorDisplayTask, "ActuatorDisplay", BLFM_DISPLAY_TASK_STACK, NULL, BLFM_DISPLAY_TASK_PRIORITY, NULL);
-  xTaskCreate(vDisplayUpdateTask, "DisplayUpdate", BLFM_DISPLAY_TASK_STACK, NULL, BLFM_DISPLAY_TASK_PRIORITY, NULL);
-}
+void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
+  if (!cmd) return;
 
-void blfm_actuator_hub_update(void) {
-  // Placeholder: Update/control actuators centrally
-  // e.g. control motor speed, alarm state
+  blfm_motor_apply(&cmd->motor);
+  blfm_display_apply(&cmd->display);
+  blfm_led_apply(cmd->led);
+  blfm_alarm_apply(&cmd->alarm);
+  blfm_radio_apply(&cmd->radio);
 }
-
-static void vActuatorLedTask(void *pvParameters) {
-  (void)pvParameters;
-  for (;;) {
-    blfm_led_external_toggle();
-    vTaskDelay(pdMS_TO_TICKS(delay_ms));
-  }
-}
-
-static void vActuatorDisplayTask(void *pvParameters) {
-  (void)pvParameters;
-  blfm_display_startup_sequence();
-  vTaskDelete(NULL);
-}
-
-static void vDisplayUpdateTask(void *pvParameters) {
-  (void)pvParameters;
-  vTaskDelete(NULL);
-  for (;;) {
-    blfm_lcd_send_command(0x80); // Line 1
-    const char *ptr1 = g_lcd_display_line1;
-    while (*ptr1)
-      blfm_lcd_send_data(*ptr1++);
-
-    blfm_lcd_send_command(0xC0); // Line 2
-    const char *ptr2 = g_lcd_display_line2;
-    while (*ptr2)
-      blfm_lcd_send_data(*ptr2++);
-    vTaskDelay(pdMS_TO_TICKS(1000)); // Update every 1 second
-    }
-}
-
-/*void blfm_actuator_hub_task(void *params) {
-  (void)params;
-  blfm_motor_command_t cmd;
-  for (;;) {
-    if (xQueueReceive(motor_cmd_queue, &cmd, portMAX_DELAY) == pdTRUE) {
-      blfm_motor_set_speed(cmd.speed, cmd.speed); // left/right same for now
-    }
-  }
-}
-
-void blfm_actuator_hub_send_motor_command(blfm_motor_command_t *cmd) {
-  xQueueSend(motor_cmd_queue, cmd, 0);
-}
-*/

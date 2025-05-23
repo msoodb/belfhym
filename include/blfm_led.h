@@ -11,13 +11,10 @@
 #ifndef BLFM_LED_H
 #define BLFM_LED_H
 
-#include <stdint.h>
+#include "blfm_types.h"
 
 void blfm_led_init(void);
-void blfm_led_onboard_toggle(void);
-void blfm_led_external_toggle(void);
-void blfm_led_external_on(void);
-void blfm_led_external_off(void);
+void blfm_led_apply(const blfm_led_command_t cmd);
 
 #endif // BLFM_ALARM_H
 

@@ -12,10 +12,11 @@
 #define BLFM_ALARM_H
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "blfm_types.h"
 
 void blfm_alarm_init(void);
-void blfm_alarm_trigger(void);
-void blfm_alarm_clear(void);
+void blfm_alarm_apply(const blfm_alarm_command_t *cmd);
 
 #endif // BLFM_ALARM_H
 

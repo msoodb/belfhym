@@ -10,14 +10,32 @@
 
 #include "blfm_alarm.h"
 
-void blfm_alarm_init(void) {
-  // Initialize alarm (mock)
-}
+static void blfm_alarm_trigger(void);
+static void blfm_alarm_clear(void);
 
-void blfm_alarm_trigger(void) {
-  // Trigger alarm (mock)
-}
+void blfm_alarm_init(void) {}
 
-void blfm_alarm_clear(void) {
-  // Clear alarm (mock)
+void blfm_alarm_apply(const blfm_alarm_command_t *cmd) {
+  if (!cmd || !cmd->active) {
+    // Turn alarm off
+    // e.g., hardware_stop_alarm();
+    return;
+  }
+
+  // Implement different alarm patterns based on pattern_id, duration, volume
+  // Example placeholder:
+  switch (cmd->pattern_id) {
+    case 1: // short beep
+      // hardware_beep_short(cmd->volume);
+      break;
+    case 2: // long beep
+      // hardware_beep_long(cmd->volume);
+      break;
+    case 3: // continuous beep
+      // hardware_beep_continuous(cmd->volume, cmd->duration_ms);
+      break;
+    default:
+      // default beep or no action
+      break;
+  }
 }

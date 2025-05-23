@@ -1,172 +1,121 @@
 
-# firmware
-Your project (e.g. Belfhym) is not meant to run on your Linux system like a normal C program. 
-It's firmware — code that runs directly on a microcontroller (e.g. STM32F103). 
-There’s no operating system, standard C libraries, or system calls like on Linux.
+# Architectural Responsibilities
 
-# package
-```sh
-sudo dnf install arm-none-eabi-gcc arm-none-eabi-newlib openocd make git
+## Sensor Hub Task: 
+	Periodically polls sensor data and sends it to the controller via a queue.
+## Controller Task: 
+	Receives sensor data, processes it, creates actuator commands, and sends them via another queue. 
+## Actuator Hub Task: 
+	Waits for and applies actuator commands.
+
+---
+
+# Belfhym Actuator Subsystem
+
+## Overview
+
+The actuator subsystem in the Belfhym project is designed to handle all output-related components, including:
+
+* Motor control
+* LCD display output
+* LED status indication
+* Alarm (e.g., buzzer)
+* Radio transmission
+
+This subsystem is modular, extensible, and real-time capable, leveraging FreeRTOS tasks and queues for asynchronous operation.
+
+---
+
+## Components
+
+### 1. `blfm_actuator_hub`
+
+Acts as the central manager for all actuators.
+
+#### Functions:
+
+* `blfm_actuator_hub_init()`: Initializes all actuators.
+* `blfm_actuator_hub_start()`: Creates and starts one FreeRTOS task per actuator.
+* `blfm_actuator_hub_send_command(cmd)`: Sends a composite command structure to individual actuator queues.
+
+### 2. Command Structure
+
+```c
+typedef struct {
+  blfm_motor_command_t motor;
+  blfm_display_command_t display;
+  blfm_led_state_t led;
+  blfm_alarm_state_t alarm;
+  blfm_radio_command_t radio;
+} blfm_actuator_command_t;
 ```
 
-# install
-To use #include "stm32f1xx.h" without errors, 
-you need to install the STM32 HAL/LL driver headers on your system and set up your project to find them. Here's how to do that:
+Each field corresponds to one actuator module.
 
-# FreeRTOS
-```sh
-cd ~/Projects
-git clone https://github.com/FreeRTOS/FreeRTOS-Kernel
-./freertos.sh
+### 3. Task Architecture
+
+Each actuator (motor, display, LED, alarm, radio) has:
+
+* Its own queue (length 1, latest command always wins)
+* Its own FreeRTOS task
+
+#### General Task Loop Pattern:
+
+```c
+for (;;) {
+  command_t cmd;
+  if (xQueueReceive(queue, &cmd, portMAX_DELAY)) {
+    apply_command(&cmd);
+  }
+}
 ```
 
-project structure for your STM32F103C8T6 FreeRTOS application in C. 
-This structure will include all the necessary files and directories to get started with FreeRTOS on STM32.
+### 4. Initialization and Application
 
-belfhym/
-│
-├── Makefile               
-├── README.md
-├── src/              
-│   ├── belfhym.c
-│   ├── syscalls.c
-│   ├── startup_stm32f103.c
-│   ├── stm32f103_init.c 
-│   └── peripherals.c
-│
-├── inc/                   # Header files
-│   ├── belfhym.h
-│   ├── syscalls.h
-│   ├── FreeRTOSConfig.h
-│   └── peripherals.h
-│
-├── startup/
-│   └── startup_stm32f103.s
-│
-├── ld/ 
-│   └── stm32f103.ld
-│
-├── CMSIS/                 # CMSIS headers for STM32F1
-│   ├── core_cm3.h
-│   └── device/            # Device-specific headers
-│       ├── system_stm32f10x.c
-│       ├── system_stm32f10x.h
-│       ├── stm32f10x.h
-│       └── stm32f103xb.h
-│
-└── FreeRTOS/              # FreeRTOS kernel source
-    └── [FreeRTOS Kernel files...]
+Each module follows a consistent interface:
 
-# Core Source Files
-## Module	Purpose
-belfhym.c/h	         Main entry point, init and loop logic
-blfm_imu.c/h	     IMU communication and sensor fusion
-blfm_pid.c/h	     PID controller implementation
-blfm_motor.c/h	     Motor driver and mixing logic
-blfm_radio.c/h	     BLE or RF communication interface
-blfm_utils.c/h	     Math helpers, filters, timing
-blfm_config.c/h	     Configuration, tuning constants
-blfm_failsafe.c/h	 Failsafe and signal timeout handling
-blfm_power.c/h	     Battery monitoring, power logic
-blfm_debug.c/h	     Debug prints, LED blink, telemetry
+```c
+void blfm_<module>_init(void);
+void blfm_<module>_apply(const <module>_command_t *cmd);
+```
 
-## Optional / Future Modules
-blfm_altitude.c/h	Altitude hold (barometer or sonar)
-blfm_autopilot.c/h	Autonomous waypoint flight
-blfm_storage.c/h	Persistent config via flash/EEPROM
-blfm_ota.c/h	    Over-the-air firmware updates
-blfm_sensors.c/h	Additional sensors (magnetometer, etc.)
+---
 
+## Example Flow
 
+```c
+// From controller:
+blfm_actuator_command_t cmd = {
+  .motor = { .speed = 128, .direction = 1 },
+  .display = { .line1 = "GO", .line2 = "128 mm" },
+  .led = LED_ON,
+  .alarm = ALARM_OFF,
+  .radio = { .message = "Status OK" }
+};
 
-           +-----------------+
-           |   blfm_main     |
-           +--------+--------+
-                    |
-     +--------------+--------------+
-     |              |              |
-+----v----+   +-----v----+   +-----v-----+
-| blfm_imu|   | blfm_pid |   | blfm_radio|
-+----+----+   +-----+----+   +-----+-----+
-     |              |              |
-     +-----+  +-----v----+   +-----v-----+
-           |  | blfm_motor|   | blfm_failsafe |
-           |  +-----+-----+   +--------------+
-     +-----v----+   |
-     | blfm_power|   |
-     +-----+-----+   |
-           |         |
-     +-----v-----+   |
-     | blfm_debug|<--+
-     +-----------+
+blfm_actuator_hub_send_command(&cmd);
+```
 
-# Sources
+### Internally:
 
-## Core Module Responsibilities & How to Complete
-1. blfm_main.c/h
-   Role: Orchestrates everything: calls *_init() at startup and loops in *_update() functions.
-   Start Here: You've already done this with belfhym.c/h.
+* Each command segment is copied to the respective actuator's queue.
+* Tasks run independently and apply the commands.
 
-2. blfm_imu.c/h
-   Role: Communicates with the IMU over I2C, reads accelerometer/gyro, runs complementary or Kalman filter.
-   Key functions:
-	   blfm_imu_init()
-	   blfm_imu_read()
-	   blfm_imu_get_orientation()
+---
 
-3. blfm_pid.c/h
-   Role: Accepts target and measured angles; computes PID output for each axis.
-   Key functions:
-	   blfm_pid_init()
-	   blfm_pid_update(axis, target, measured)
-	   blfm_pid_set_constants(...)
+## Benefits
 
-4. blfm_motor.c/h
-   Role: Maps PID outputs to motor PWM; applies mixing logic (e.g., quad-X).
-   Key functions:
-	   blfm_motor_init()
-	   blfm_motor_set_throttle(motor_id, pwm)
-	   blfm_motor_update(pid_outputs)
+* **Modular**: Easy to extend or modify individual actuators
+* **Real-Time Safe**: Uses FreeRTOS queues for timing independence
+* **Scalable**: Supports additional actuators without redesign
+* **Decoupled**: Controller and actuators operate asynchronously
 
-5. blfm_radio.c/h
-   Role: Handles incoming commands (via BLE or RF).
-   Key functions:
-	   blfm_radio_init()
-	   blfm_radio_receive(command_struct*)
+---
 
-6. blfm_utils.c/h
-   Role: Reusable math functions, filters, timing utilities.
-   Functions:
-	   blfm_map(), blfm_constrain(), blfm_filter_complementary(), etc.
+## Next Steps
 
-7. blfm_config.c/h
-   Role: Central place for constants: PID gains, IMU offsets, channel maps.
-   Includes:
-	   Defines for PID constants, radio channels, battery thresholds, etc.
+Consider documenting:
 
-8. blfm_failsafe.c/h
-   Role: Watches for signal loss or bad inputs, kills motors if needed.
-   Key functions:
-	   blfm_failsafe_check()
-	   blfm_failsafe_trigger()
-
-9. blfm_power.c/h
-   Role: Monitors battery voltage via ADC, triggers low-batt warning.
-   Key functions:
-	   blfm_power_read_voltage()
-	   blfm_power_check_threshold()
-
-10. blfm_debug.c/h
-	Role: Debug print (via UART), LED blinking, log data.
-	Key functions:
-		blfm_debug_print()
-		blfm_debug_led_toggle()
-		blfm_debug_log_flight_data()
-
-## Future / Optional Module Strategy
-1. blfm_altitude: Use barometer/sonar to maintain height.
-2. blfm_autopilot: Waypoint-based logic for autonomous flight.
-3. blfm_storage: Store PID constants, config, IMU offsets.
-4. blfm_ota: BLE-based firmware update (requires bootloader).
-5. blfm_sensors: Integrate magnetometer or GPS for advanced navigation.
-
+* Sensor subsystem
+* Controller logic
+* Communication architecture between subsystems

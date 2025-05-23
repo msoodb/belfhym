@@ -10,11 +10,11 @@
 #ifndef BLFM_DISPLAY_H
 #define BLFM_DISPLAY_H
 
+#include "blfm_types.h"
 #include <stdint.h>
 
 void blfm_display_init(void);
 void blfm_display_startup_sequence(void);
-void blfm_lcd_send_command(uint8_t cmd);
-void blfm_lcd_send_data(uint8_t data);
+void blfm_display_apply(const blfm_display_command_t *cmd);
 
 #endif // BLFM_DISPLAY_H

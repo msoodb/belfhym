@@ -11,7 +11,10 @@
 #ifndef BLFM_RADIO_H
 #define BLFM_RADIO_H
 
-void blfm_radio_dummy(void);
+#include "blfm_types.h"
+
+void blfm_radio_init(void);
+void blfm_radio_apply(const blfm_radio_command_t *cmd);
 
 #endif // BLFM_RADIO_H
 

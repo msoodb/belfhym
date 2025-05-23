@@ -10,7 +10,12 @@
 
 #include "blfm_radio.h"
 
-void blfm_radio_dummy(void) {
+void blfm_radio_init(void) {
     // TODO: Implement blfm_radio
+}
+
+void blfm_radio_apply(const blfm_radio_command_t *cmd){
+  if (!cmd ) return;
+  return;
 }
 

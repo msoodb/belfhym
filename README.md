@@ -52,6 +52,27 @@ This table outlines the tasks in the system, their responsibilities, priorities,
 - CommTask → ManualControl: via Queue<Command> + mode flag
 - Telemetry logging: via MessageBuffer or streaming queue
 
+
+
+3. Conceptual Communication Flow
+```
+[ Sensors ] → [ Sensor Hub ] → [ Controller ] → [ Actuator Hub ] → [ Actuators ]
+```
+- Sensors: Collect raw data from environment (IMU, Ultrasonic, etc.)
+- Sensor Hub: Polls sensors, aggregates and timestamps data
+- Controller: Performs logic decisions (PID, pathfinding, safety checks)
+- Actuator Hub: Receives commands and routes them to the appropriate actuator
+- Actuators: Motor, LED, Alarm, Display, etc.
+
+4. Data Flow and Task Design (FreeRTOS)
+   1. Tasks
+	  - SensorTask: Reads raw sensor data, sends it to SensorDataQueue.
+	  - ControllerTask: Receives from SensorDataQueue, processes data, sends output to ControlCommandQueue.
+	  - ActuatorTask: Reads from ControlCommandQueue, executes actuator commands.
+	2. Queues
+	  - SensorDataQueue: Transmits blfm_sensor_data_t (struct with all sensor data).
+	  - ControlCommandQueue: Transmits blfm_actuator_command_t (per-actuator commands).
+
 ```
 +---------------------+
 |    Main Entry       |   (belfhym.c)

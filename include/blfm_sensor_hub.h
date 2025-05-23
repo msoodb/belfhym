@@ -12,12 +12,9 @@
 #define BLFM_SENSOR_HUB_H
 
 #include "blfm_types.h"
-#include <stdbool.h>
 
 void blfm_sensor_hub_init(void);
-void blfm_sensor_hub_start(void);
-void blfm_sensor_hub_poll(void);
-bool blfm_sensor_hub_get_data(blfm_sensor_data_t *out_data);
+bool blfm_sensor_hub_read(blfm_sensor_data_t *out);
 
 #endif // BLFM_SENSOR_HUB_H
 

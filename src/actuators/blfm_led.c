@@ -21,6 +21,25 @@
 #define LED_EXTERNAL_PIN 5
 
 void blfm_led_init(void) {
+  // Init GPIO or PWM for LED
+}
+
+void blfm_led_apply(const blfm_led_command_t cmd) {
+  switch (cmd.mode) {
+  case BLFM_LED_MODE_OFF:
+    // Turn LED off
+    break;
+  case BLFM_LED_MODE_ON:
+    // Turn LED on with brightness cmd.brightness
+    break;
+  case BLFM_LED_MODE_BLINK:
+    // Blink LED with speed cmd.blink_speed_ms, pattern cmd.pattern_id,
+    // brightness cmd.brightness
+    break;
+  }
+}
+
+/*void blfm_led_init(void) {
   //blfm_gpio_config_output((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
   blfm_gpio_config_output((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
 }
@@ -39,4 +58,4 @@ void blfm_led_external_on(void) {
 
 void blfm_led_external_off(void) {
   blfm_gpio_clear_pin((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
-}
+  }*/

@@ -14,8 +14,8 @@
 #include "blfm_types.h"
 
 void blfm_controller_init(void);
-void blfm_controller_run(void);
-void blfm_controller_start(void);
+void blfm_controller_process(const blfm_sensor_data_t *in,
+                             blfm_actuator_command_t *out);
 
 #endif // BLFM_CONTROLLER_H
 

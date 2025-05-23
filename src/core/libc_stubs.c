@@ -30,6 +30,14 @@ void *memcpy(void *dest, const void *src, size_t len) {
     return dest;
 }
 
+// Minimal strcpy implementation (assumes dest is large enough)
+char *strcpy(char *dest, const char *src) {
+    char *d = dest;
+    while ((*d++ = *src++))
+        ;
+    return dest;
+}
+
 // Minimal __libc_init_array (does nothing)
 void __libc_init_array(void) {
     // No global/static C++ constructors used, safe to leave empty.

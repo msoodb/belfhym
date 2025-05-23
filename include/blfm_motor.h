@@ -11,10 +11,10 @@
 #ifndef BLFM_MOTOR_H
 #define BLFM_MOTOR_H
 
-#include <stdint.h>
+#include "blfm_types.h"
 
 void blfm_motor_init(void);
-void blfm_motor_set_speed(uint8_t left, uint8_t right);
+void blfm_motor_apply(const blfm_motor_command_t *cmd);
 
 #endif // BLFM_MOTOR_H
 

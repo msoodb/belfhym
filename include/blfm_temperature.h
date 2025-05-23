@@ -12,9 +12,9 @@
 #define BLFM_TEMPERATURE_H
 
 #include <stdbool.h>
-#include <stdint.h>
+#include "blfm_types.h"
 
 void blfm_temperature_init(void);
-bool blfm_temperature_read(int32_t *temperature_mC);
+bool blfm_temperature_read(blfm_temperature_data_t *temp);
 
 #endif // BLFM_TEMPERATURE_H

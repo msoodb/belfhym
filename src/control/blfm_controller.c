@@ -7,37 +7,86 @@
  * Belfhym is released under the GNU General Public License v3 (GPL-3.0).
  * See LICENSE file for details.
  */
-#include "FreeRTOS.h"
-#include "task.h"
 
-#include "blfm_actuator_hub.h"
 #include "blfm_controller.h"
-#include "blfm_sensor_hub.h"
+#include <stdbool.h>
+
+extern char *strcpy(char *dest, const char *src);
 
 void blfm_controller_init(void) {
-  // Nothing needed for now
+  // Reserved for future initialization
 }
 
-void blfm_controller_run(void) {
-  blfm_sensor_data_t sensor_data;
+// Fill 'out' based on 'in'
+void blfm_controller_process(const blfm_sensor_data_t *in,
+                             blfm_actuator_command_t *out) {
+  if (!in || !out)
+    return;
 
-  // Try to get the latest sensor data from sensor hub
-  if (blfm_sensor_hub_get_data(&sensor_data)) {
-    blfm_motor_command_t motor_cmd = {0};
+  // Default motor values
+  out->motor.speed = 0;
+  out->motor.direction = 0;
 
-    // Basic decision logic: stop if obstacle detected closer than 200 mm
-    if (sensor_data.ultrasonic.distance_mm < 200) {
-      motor_cmd.speed = 0;
-      motor_cmd.direction = 0; // stop
-    } else {
-      motor_cmd.speed = 128;
-      motor_cmd.direction = 1; // forward
-    }
-
-    // Send command to actuator hub
-    // blfm_actuator_hub_send_motor_command(&motor_cmd);
+  if (in->ultrasonic.distance_mm >= 200) {
+    out->motor.speed = 128;
+    out->motor.direction = 1;
   }
+
+  out->led.mode = BLFM_LED_MODE_ON;
+
+  if (in->ultrasonic.distance_mm < 100) {
+    out->alarm.active = true;
+    out->alarm.pattern_id = 1;
+    out->alarm.duration_ms = 500;
+    out->alarm.volume = 10;
+  } else {
+    out->alarm.active = false;
+  }
+
+  // Build display line1 = "Dist: xxx mm"
+  char buf1[17] = {0};
+  strcpy(buf1, "Dist: ");
+  int dist = in->ultrasonic.distance_mm;
+  int pos = 6;
+
+  if (dist >= 100) {
+    buf1[pos++] = '0' + (dist / 100) % 10;
+    buf1[pos++] = '0' + (dist / 10) % 10;
+    buf1[pos++] = '0' + dist % 10;
+  } else if (dist >= 10) {
+    buf1[pos++] = '0' + (dist / 10) % 10;
+    buf1[pos++] = '0' + dist % 10;
+  } else {
+    buf1[pos++] = '0' + dist;
+  }
+
+  strcpy(&buf1[pos], " mm");
+
+  // Build display line2 = "Speed: xxx"
+  char buf2[17] = {0};
+  strcpy(buf2, "Speed: ");
+  int speed = out->motor.speed;
+  pos = 7;
+
+  if (speed >= 100) {
+    buf2[pos++] = '0' + (speed / 100) % 10;
+    buf2[pos++] = '0' + (speed / 10) % 10;
+    buf2[pos++] = '0' + speed % 10;
+  } else if (speed >= 10) {
+    buf2[pos++] = '0' + (speed / 10) % 10;
+    buf2[pos++] = '0' + speed % 10;
+  } else {
+    buf2[pos++] = '0' + speed;
+  }
+
+  buf2[pos] = '\0';
+
+  // Copy to display command
+  strcpy(out->display.line1, buf1);
+  strcpy(out->display.line2, buf2);
 }
 
+// No RTOS task here - Task Manager controls execution
 void blfm_controller_start(void) {
+  // Reserved for RTOS task or loop launch
 }

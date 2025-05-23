@@ -21,8 +21,8 @@ void blfm_imu_init(void) {
   blfm_i2c_write_byte(MPU6050_ADDR, MPU6050_REG_PWR_MGMT, 0x00);
 }
 
-void blfm_imu_read(blfm_imu_data_t *data) {
-  if (!data) return;
+bool blfm_imu_read(blfm_imu_data_t *data) {
+  if (!data) return false;
 
   uint8_t raw[14];
   blfm_i2c_read_bytes(MPU6050_ADDR, MPU6050_REG_ACCEL_X, raw, 14);
@@ -34,4 +34,6 @@ void blfm_imu_read(blfm_imu_data_t *data) {
   data->gyro_x = (int16_t)(raw[8] << 8 | raw[9]);
   data->gyro_y = (int16_t)(raw[10] << 8 | raw[11]);
   data->gyro_z = (int16_t)(raw[12] << 8 | raw[13]);
+
+  return true;
 }

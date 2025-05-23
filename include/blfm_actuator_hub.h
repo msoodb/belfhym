@@ -14,12 +14,7 @@
 #include "blfm_types.h"
 
 void blfm_actuator_hub_init(void);
-void blfm_actuator_hub_start(void);
-void blfm_actuator_hub_update(void);
-
-static void vActuatorLedTask(void *pvParameters);
-static void vActuatorDisplayTask(void *pvParameters);
-static void vDisplayUpdateTask(void *pvParameters);
+void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd);
 
 #endif // BLFM_ACTUATOR_HUB_H
 

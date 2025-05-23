@@ -10,12 +10,23 @@
 
 #include "blfm_motor.h"
 
+static void blfm_motor_set_speed(uint8_t speed);
+static void blfm_motor_set_direction(uint8_t direction);
+
 void blfm_motor_init(void) {
-  // Initialize motors (mock)
 }
 
-void blfm_motor_set_speed(uint8_t left, uint8_t right) {
-  (void) left;
-  (void) right;
-  // Set motor speeds (mock)
+void blfm_motor_apply(const blfm_motor_command_t *cmd) {
+  if (!cmd) return;
+  blfm_motor_set_speed(cmd->speed);
+  blfm_motor_set_direction(cmd->direction);
+}
+
+
+static void blfm_motor_set_speed(uint8_t speed) {
+  (void) speed;
+}
+
+static void blfm_motor_set_direction(uint8_t direction) {
+  (void) direction;
 }
