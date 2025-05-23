@@ -20,15 +20,18 @@
 #include "blfm_actuator_hub.h"
 #include "blfm_controller.h"
 #include "blfm_types.h"
+#include "blfm_led.h"
+
+#include "blfm_debug.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 
 // --- Task Configuration ---
-#define SENSOR_HUB_TASK_STACK     128
-#define CONTROLLER_TASK_STACK     128
-#define ACTUATOR_HUB_TASK_STACK   128
+#define SENSOR_HUB_TASK_STACK     512
+#define CONTROLLER_TASK_STACK     512
+#define ACTUATOR_HUB_TASK_STACK   512
 
 #define SENSOR_HUB_TASK_PRIORITY     2
 #define CONTROLLER_TASK_PRIORITY     3
@@ -50,22 +53,24 @@ void blfm_taskmanager_setup(void) {
   blfm_controller_init();
   blfm_actuator_hub_init();
 
+  blfm_debug_init();
+  
   // Create queues
   xSensorDataQueue = xQueueCreate(5, sizeof(blfm_sensor_data_t));
   configASSERT(xSensorDataQueue != NULL);
 
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
-
+  
   // Create tasks
   xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
               SENSOR_HUB_TASK_PRIORITY, NULL);
-
+  
   xTaskCreate(vControllerTask, "Controller", CONTROLLER_TASK_STACK, NULL,
               CONTROLLER_TASK_PRIORITY, NULL);
-
+  
   xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
-              ACTUATOR_HUB_TASK_PRIORITY, NULL);
+  ACTUATOR_HUB_TASK_PRIORITY, NULL);
 }
 
 void blfm_taskmanager_start(void) {

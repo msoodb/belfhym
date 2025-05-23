@@ -11,7 +11,12 @@
 #ifndef BLFM_DEBUG_H
 #define BLFM_DEBUG_H
 
-void blfm_debug_dummy(void);
+void blfm_debug_init(void);
+
+void blfm_debug_onbard_on(void);
+void blfm_debug_onbard_off(void);
+void blfm_debug_external_on(void);
+void blfm_debug_external_off(void);
 
 #endif // BLFM_DEBUG_H
 

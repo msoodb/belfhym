@@ -9,6 +9,7 @@
  */
 
 #include "blfm_controller.h"
+#include "blfm_types.h"
 #include <stdbool.h>
 
 extern char *strcpy(char *dest, const char *src);
@@ -32,7 +33,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     out->motor.direction = 1;
   }
 
-  out->led.mode = BLFM_LED_MODE_ON;
+  out->led.mode = BLFM_LED_MODE_BLINK;
 
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
