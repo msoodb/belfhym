@@ -36,8 +36,11 @@ void blfm_ultrasonic_init(void) {
 bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
   if (!data)
     return false;
+
+  data->distance_mm = 50;
+  return true;
  
-  uint32_t start, end, duration;
+  /*uint32_t start, end, duration;
 
   blfm_gpio_clear_pin(TRIG_PORT, TRIG_PIN);
   delay_us(2);
@@ -59,5 +62,5 @@ bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
   uint32_t us = duration / (SystemCoreClock / 1000000);
   data->distance_mm = (uint16_t)(us / 58);
   
-  return true;
+  return true;*/
 }

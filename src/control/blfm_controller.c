@@ -22,14 +22,9 @@ void blfm_controller_init(void) {
 void blfm_controller_process(const blfm_sensor_data_t *in,
                              blfm_actuator_command_t *out) {
 
-  //if (!in || !out)
-  //  return;
+  if (!in || !out)
+    return;
 
-  out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 50;
-  return;
-  
-  /*
   // Default motor values
   out->motor.speed = 0;
   out->motor.direction = 0;
@@ -39,8 +34,8 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     out->motor.direction = 1;
   }
 
-  out->led.mode = BLFM_LED_MODE_ON;
-  out->led.blink_speed_ms = 10;
+  out->led.mode = BLFM_LED_MODE_BLINK;
+  out->led.blink_speed_ms = in->ultrasonic.distance_mm;
 
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
@@ -92,7 +87,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   // Copy to display command
   strcpy(out->display.line1, buf1);
   strcpy(out->display.line2, buf2);
-  */
 }
 
 // No RTOS task here - Task Manager controls execution
