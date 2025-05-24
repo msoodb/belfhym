@@ -79,8 +79,6 @@ static void vSensorHubTask(void *pvParameters) {
   (void)pvParameters;
   blfm_sensor_data_t sensor_data;
 
-  sensor_data.ultrasonic.distance_mm = 50;
-
   for (;;) {
     if (blfm_sensor_hub_read(&sensor_data)) {
       xQueueSendToBack(xSensorDataQueue, &sensor_data, 0);

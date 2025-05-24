@@ -39,11 +39,11 @@ void blfm_gpio_config_input(uint32_t port, uint32_t pin) {
 
   if (pin < 8) {
     gpio->CRL &= ~(0xF << (pin * 4));
-    gpio->CRL |= (0x8 << (pin * 4)); // Input with pull-up/pull-down
+    gpio->CRL |= (0x4 << (pin * 4)); // Input floating
   } else {
     uint32_t shift = (pin - 8) * 4;
     gpio->CRH &= ~(0xF << shift);
-    gpio->CRH |= (0x8 << shift); // Input with pull-up/pull-down
+    gpio->CRH |= (0x4 << (pin * 4)); // Input floating
   }
 
   // Enable pull-up by default

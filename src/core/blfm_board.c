@@ -16,6 +16,14 @@
 void blfm_board_init(void) {
   blfm_clock_init();
   blfm_gpio_init();
+
+   // Enable DWT cycle counter for timing
+  if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // Enable trace & debug
+  }
+  DWT->CYCCNT = 0;              // Reset counter
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;  // Enable cycle counter
+
   //blfm_uart_init();
   blfm_i2c_init();
 }

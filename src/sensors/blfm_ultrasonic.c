@@ -15,9 +15,9 @@
 #include "stm32f1xx.h"
 #include "task.h"
 
-#define TRIG_PORT GPIOB_BASE
+#define TRIG_PORT GPIOB
 #define TRIG_PIN 6
-#define ECHO_PORT GPIOB_BASE
+#define ECHO_PORT GPIOB
 #define ECHO_PIN 3
 
 #define ULTRASONIC_TASK_STACK_SIZE 256
@@ -34,11 +34,20 @@ static void delay_us(uint32_t us) {
 }
 
 static void vUltrasonicTask(void *pvParameters);
+static bool wait_for_pin(uint32_t port, uint32_t pin, int target_state,
+                         uint32_t timeout_ms);
 
 void blfm_ultrasonic_init(void) {
-  blfm_gpio_config_output(TRIG_PORT, TRIG_PIN);
-  blfm_gpio_config_input(ECHO_PORT, ECHO_PIN);
-  blfm_gpio_clear_pin(TRIG_PORT, TRIG_PIN);
+  blfm_gpio_config_output((uint32_t)TRIG_PORT, TRIG_PIN);
+  blfm_gpio_config_input((uint32_t)ECHO_PORT, ECHO_PIN);
+  blfm_gpio_clear_pin((uint32_t)TRIG_PORT, TRIG_PIN);
+
+  // Enable DWT cycle counter
+  if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  }
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
   if (ultrasonic_data_queue == NULL) {
     ultrasonic_data_queue =
@@ -66,39 +75,47 @@ bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
     return true;
   }
   return false;
-  
+}
+
+static bool wait_for_pin(uint32_t port, uint32_t pin, int target_state, uint32_t timeout_ms) {
+  uint32_t start = DWT->CYCCNT;
+  uint32_t timeout_cycles = (SystemCoreClock / 1000) * timeout_ms;
+
+  while (blfm_gpio_read_pin(port, pin) != target_state) {
+    if ((DWT->CYCCNT - start) > timeout_cycles) {
+      return false;
+    }
+  }
+  return true;
 }
 
 static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
   if (!data)
     return false;
 
-  data->distance_mm = 1000;
-  return true;
+  uint32_t start, end, duration;
 
-  /*uint32_t start, end, duration;
-
-  blfm_gpio_clear_pin(TRIG_PORT, TRIG_PIN);
+  blfm_gpio_clear_pin((uint32_t)TRIG_PORT, TRIG_PIN);
   delay_us(2);
-  blfm_gpio_set_pin(TRIG_PORT, TRIG_PIN);
+  blfm_gpio_set_pin((uint32_t)TRIG_PORT, TRIG_PIN);
   delay_us(10);
-  blfm_gpio_clear_pin(TRIG_PORT, TRIG_PIN);
+  blfm_gpio_clear_pin((uint32_t)TRIG_PORT, TRIG_PIN);
 
-  while (!blfm_gpio_read_pin(ECHO_PORT, ECHO_PIN))
-    ;
-
+  if (!wait_for_pin((uint32_t)ECHO_PORT, ECHO_PIN, 1, 30)) {
+    return false;
+  }
   start = DWT->CYCCNT;
 
-  while (blfm_gpio_read_pin(ECHO_PORT, ECHO_PIN))
-    ;
-
+  if (!wait_for_pin((uint32_t)ECHO_PORT, ECHO_PIN, 0, 30)) {
+    return false;
+  }
   end = DWT->CYCCNT;
 
   duration = end - start;
   uint32_t us = duration / (SystemCoreClock / 1000000);
   data->distance_mm = (uint16_t)(us / 58);
 
-  return true;*/
+  return true;
 }
 
 static void vUltrasonicTask(void *pvParameters) {
