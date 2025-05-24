@@ -62,9 +62,7 @@ void blfm_led_init(void) {
 void blfm_led_apply(const blfm_led_command_t *cmd) {
   if (!cmd || !led_command_queue)
     return;
-  //blfm_led_command_t cmd2 = {.mode = BLFM_LED_MODE_BLINK, .blink_speed_ms = 50};
-
-  xQueueOverwrite(led_command_queue, &cmd);
+  xQueueOverwrite(led_command_queue, cmd);
 }
 
 static void blfm_led_onboard_on(void) {
@@ -93,8 +91,8 @@ static void blfm_led_external_toggle(void) {
 
 static void vLedTask(void *pvParameters) {
   (void)pvParameters;
-  blfm_led_command_t current_cmd = {.mode = BLFM_LED_MODE_BLINK,
-                                    .blink_speed_ms = 500};
+  blfm_led_command_t current_cmd = {.mode = BLFM_LED_MODE_OFF,
+                                    .blink_speed_ms = 200};
   TickType_t last_toggle_tick = xTaskGetTickCount();
   bool led_state = false;
 
@@ -108,13 +106,11 @@ static void vLedTask(void *pvParameters) {
 
     switch (current_cmd.mode) {
     case BLFM_LED_MODE_OFF:
-      blfm_led_onboard_off();
       blfm_led_external_off();
       led_state = false;
       break;
 
     case BLFM_LED_MODE_ON:
-      blfm_led_onboard_on();
       blfm_led_external_on();
       led_state = true;
       break;
@@ -125,10 +121,8 @@ static void vLedTask(void *pvParameters) {
           pdMS_TO_TICKS(current_cmd.blink_speed_ms)) {
         led_state = !led_state;
         if (led_state) {
-          blfm_led_onboard_on();
           blfm_led_external_on();
         } else {
-          blfm_led_onboard_off();
           blfm_led_external_off();
         }
         last_toggle_tick = now;
@@ -137,7 +131,6 @@ static void vLedTask(void *pvParameters) {
     }
 
     default:
-      blfm_led_onboard_off();
       blfm_led_external_off();
       led_state = false;
       break;

@@ -12,10 +12,11 @@
 #include "blfm_gpio.h"
 #include "stm32f1xx.h"
 
-#define TRIG_PORT GPIOA_BASE
-#define TRIG_PIN 1
-#define ECHO_PORT GPIOA_BASE
-#define ECHO_PIN 2
+#define TRIG_PORT GPIOB_BASE
+#define TRIG_PIN 6
+
+#define ECHO_PORT GPIOB_BASE
+#define ECHO_PIN 3
 
 static void delay_us(uint32_t us) {
   for (uint32_t i = 0; i < us * 8; ++i) {
@@ -35,8 +36,8 @@ void blfm_ultrasonic_init(void) {
 bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
   if (!data)
     return false;
-
-  /* uint32_t start, end, duration;
+ 
+  uint32_t start, end, duration;
 
   blfm_gpio_clear_pin(TRIG_PORT, TRIG_PIN);
   delay_us(2);
@@ -57,8 +58,6 @@ bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
   duration = end - start;
   uint32_t us = duration / (SystemCoreClock / 1000000);
   data->distance_mm = (uint16_t)(us / 58);
-  */
-  data->distance_mm = 10;
   
   return true;
 }

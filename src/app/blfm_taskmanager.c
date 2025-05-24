@@ -16,27 +16,25 @@
  */
 
 #include "blfm_taskmanager.h"
-#include "blfm_config.h"
-#include "blfm_sensor_hub.h"
 #include "blfm_actuator_hub.h"
 #include "blfm_controller.h"
+#include "blfm_sensor_hub.h"
 #include "blfm_types.h"
-#include "blfm_led.h"
 
 #include "blfm_debug.h"
 
 #include "FreeRTOS.h"
-#include "task.h"
 #include "queue.h"
+#include "task.h"
 
 // --- Task Configuration ---
-#define SENSOR_HUB_TASK_STACK     512
-#define CONTROLLER_TASK_STACK     512
-#define ACTUATOR_HUB_TASK_STACK   512
+#define SENSOR_HUB_TASK_STACK 256
+#define CONTROLLER_TASK_STACK 256
+#define ACTUATOR_HUB_TASK_STACK 256
 
-#define SENSOR_HUB_TASK_PRIORITY     2
-#define CONTROLLER_TASK_PRIORITY     3
-#define ACTUATOR_HUB_TASK_PRIORITY   2
+#define SENSOR_HUB_TASK_PRIORITY 2
+#define CONTROLLER_TASK_PRIORITY 2
+#define ACTUATOR_HUB_TASK_PRIORITY 2
 
 // --- Queues ---
 static QueueHandle_t xSensorDataQueue = NULL;
@@ -54,14 +52,13 @@ void blfm_taskmanager_setup(void) {
   blfm_controller_init();
   blfm_actuator_hub_init();
 
-  //blfm_debug_init();
-  
   // Create queues
   xSensorDataQueue = xQueueCreate(5, sizeof(blfm_sensor_data_t));
   configASSERT(xSensorDataQueue != NULL);
 
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
+  
   
   // Create tasks
   xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
@@ -71,18 +68,18 @@ void blfm_taskmanager_setup(void) {
               CONTROLLER_TASK_PRIORITY, NULL);
   
   xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
-    ACTUATOR_HUB_TASK_PRIORITY, NULL);
+              ACTUATOR_HUB_TASK_PRIORITY, NULL);
 }
 
-void blfm_taskmanager_start(void) {
-  vTaskStartScheduler();
-}
+void blfm_taskmanager_start(void) { vTaskStartScheduler(); }
 
 // --- Task Implementations ---
 
 static void vSensorHubTask(void *pvParameters) {
   (void)pvParameters;
   blfm_sensor_data_t sensor_data;
+
+  sensor_data.ultrasonic.distance_mm = 50;
 
   for (;;) {
     if (blfm_sensor_hub_read(&sensor_data)) {
@@ -98,10 +95,11 @@ static void vControllerTask(void *pvParameters) {
   blfm_actuator_command_t command;
 
   for (;;) {
-    if (xQueueReceive(xSensorDataQueue, &sensor_data, pdMS_TO_TICKS(10)) == pdPASS) {
+    if (xQueueReceive(xSensorDataQueue, &sensor_data, pdMS_TO_TICKS(10)) ==
+        pdPASS) {
       blfm_controller_process(&sensor_data, &command);
       xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-    }
+    }      
     vTaskDelay(pdMS_TO_TICKS(50));
   }
 }
@@ -109,11 +107,45 @@ static void vControllerTask(void *pvParameters) {
 static void vActuatorHubTask(void *pvParameters) {
   (void)pvParameters;
   blfm_actuator_command_t command;
- 
+
   for (;;) {
-    if (xQueueReceive(xActuatorCmdQueue, &command, pdMS_TO_TICKS(10)) == pdPASS) {
+    if (xQueueReceive(xActuatorCmdQueue, &command, pdMS_TO_TICKS(10)) ==
+        pdPASS) {
       blfm_actuator_hub_apply(&command);
     }
     vTaskDelay(pdMS_TO_TICKS(50));
   }
 }
+
+/*static void vSensorHubTask(void *pvParameters) {
+  (void)pvParameters;
+  blfm_sensor_data_t sensor_data;
+
+  for (;;) {
+    sensor_data.ultrasonic.distance_mm = 50;
+    vTaskDelay(pdMS_TO_TICKS(50));
+  }
+  }*/
+
+/*static void vControllerTask(void *pvParameters) {
+  (void)pvParameters;
+  blfm_actuator_command_t command;
+
+  for (;;) {
+    command.led.blink_speed_ms = 20;
+    vTaskDelay(pdMS_TO_TICKS(50));
+  }
+  }*/
+
+/*static void vActuatorHubTask(void *pvParameters) {
+  (void)pvParameters;
+  blfm_actuator_command_t command;
+
+  for (;;) {
+    command.led.blink_speed_ms = 100;
+    command.led.mode = BLFM_LED_MODE_BLINK;
+    blfm_actuator_hub_apply(&command);
+    vTaskDelay(pdMS_TO_TICKS(50));
+  }
+}
+*/

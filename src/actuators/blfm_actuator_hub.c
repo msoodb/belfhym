@@ -20,34 +20,33 @@
 #include "blfm_types.h"
 
 void blfm_actuator_hub_init(void) {
-  blfm_motor_init();
+  //blfm_motor_init();
 
-#if BLFM_LCD_ATTACHED
-  blfm_display_init();
-#endif
+  //#if BLFM_LCD_ATTACHED
+  //blfm_display_init();
+  //#endif
     
 #if BLFM_LED_ATTACHED
   blfm_led_init();
 #endif
   
-  blfm_alarm_init();
-  blfm_radio_init();
+  //blfm_alarm_init();
+  //blfm_radio_init();
 }
 
 void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
   if (!cmd) return;
 
-  blfm_motor_apply(&cmd->motor);
+  //blfm_motor_apply(&cmd->motor);
 
-#if BLFM_LCD_ATTACHED
-  blfm_display_apply(&cmd->display);
-#endif
+  //#if BLFM_LCD_ATTACHED
+  //blfm_display_apply(&cmd->display);
+  //#endif
   
 #if BLFM_LED_ATTACHED
   blfm_led_apply(&cmd->led);
 #endif
   
-  blfm_alarm_apply(&cmd->alarm);
-  blfm_radio_apply(&cmd->radio);
+  //blfm_alarm_apply(&cmd->alarm);
+  //blfm_radio_apply(&cmd->radio);
 }
-

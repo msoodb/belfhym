@@ -22,6 +22,10 @@ void blfm_sensor_hub_init(void) {
 }
 
 bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
+
+  &out->ultrasonic.distance_mm - 50;
+  return true;
+  ;
   if (!out) return false;
 
   bool ok_ultrasonic = blfm_ultrasonic_read(&out->ultrasonic);
