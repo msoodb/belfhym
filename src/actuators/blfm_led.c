@@ -42,13 +42,15 @@ void blfm_led_init(void) {
 
   current_cmd.mode = BLFM_LED_MODE_BLINK;
   current_cmd.blink_speed_ms = 500;
- 
+
   xTaskCreate(vLedTask, "LEDTask", 256, NULL, 1, NULL);
 }
 
 void blfm_led_apply(const blfm_led_command_t cmd) {
+  taskENTER_CRITICAL();
   current_cmd = cmd;
   last_toggle_tick = xTaskGetTickCount();
+  taskEXIT_CRITICAL();
 }
 
 static void blfm_led_onboard_on(void) {
@@ -71,9 +73,16 @@ static void vLedTask(void *pvParameters) {
   (void)pvParameters;
 
   for (;;) {
-    if (current_cmd.mode == BLFM_LED_MODE_BLINK) {
+    blfm_led_command_t local_cmd;
+
+    // Copy under protection
+    taskENTER_CRITICAL();
+    local_cmd = current_cmd;
+    taskEXIT_CRITICAL();
+
+    if (local_cmd.mode == BLFM_LED_MODE_BLINK) {
       TickType_t now = xTaskGetTickCount();
-      if (now - last_toggle_tick >= pdMS_TO_TICKS(current_cmd.blink_speed_ms)) {
+      if (now - last_toggle_tick >= pdMS_TO_TICKS(local_cmd.blink_speed_ms)) {
         led_state = !led_state;
 
         if (led_state) {

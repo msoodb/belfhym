@@ -14,6 +14,9 @@
 #include "blfm_led.h"
 #include "blfm_alarm.h"
 #include "blfm_radio.h"
+#include "blfm_types.h"
+
+#include "blfm_types.h"
 
 void blfm_actuator_hub_init(void) {
   blfm_motor_init();

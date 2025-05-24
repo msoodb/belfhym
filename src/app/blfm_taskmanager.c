@@ -108,11 +108,11 @@ static void vControllerTask(void *pvParameters) {
 static void vActuatorHubTask(void *pvParameters) {
   (void)pvParameters;
   blfm_actuator_command_t command;
-
+  
   for (;;) {
     if (xQueueReceive(xActuatorCmdQueue, &command, pdMS_TO_TICKS(10)) == pdPASS) {
       blfm_actuator_hub_apply(&command);
-    }
+    }    
     vTaskDelay(pdMS_TO_TICKS(50));
   }
 }
