@@ -14,7 +14,6 @@
 #include "blfm_types.h"
 
 void blfm_led_init(void);
-void blfm_led_apply(const blfm_led_command_t cmd);
+void blfm_led_apply(const blfm_led_command_t *cmd);
 
 #endif // BLFM_ALARM_H
-

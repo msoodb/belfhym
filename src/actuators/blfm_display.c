@@ -27,6 +27,7 @@ static void lcd_write_nibble(uint8_t nibble);
 static void lcd_busy_delay(void);
 static void blfm_lcd_send_command(uint8_t cmd);
 static void blfm_lcd_send_data(uint8_t data);
+static void safe_delay_ms(uint32_t ms);
 
 void blfm_display_init(void) {
   RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
@@ -112,17 +113,28 @@ static void blfm_lcd_send_command(uint8_t cmd) {
   LCD_GPIO->BRR = (1 << LCD_RS_PIN); // RS = 0 for command
   lcd_write_nibble(cmd >> 4);
   lcd_write_nibble(cmd & 0x0F);
-  vTaskDelay(pdMS_TO_TICKS(2));
+  safe_delay_ms(2);
 }
 
 static void blfm_lcd_send_data(uint8_t data) {
   LCD_GPIO->BSRR = (1 << LCD_RS_PIN); // RS = 1 for data
   lcd_write_nibble(data >> 4);
   lcd_write_nibble(data & 0x0F);
-  vTaskDelay(pdMS_TO_TICKS(2));
+  safe_delay_ms(2);
 }
 
 static void lcd_busy_delay(void) {
   for (volatile int i = 0; i < 10000; i++)
     __asm__("nop");
+}
+
+static void safe_delay_ms(uint32_t ms) {
+  if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+    vTaskDelay(pdMS_TO_TICKS(ms));
+  } else {
+    // Blocking busy wait if scheduler not running
+    for (volatile uint32_t i = 0; i < ms * 8000; i++) {
+      __asm__("nop");
+    }
+  }
 }

@@ -58,7 +58,7 @@ bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
   uint32_t us = duration / (SystemCoreClock / 1000000);
   data->distance_mm = (uint16_t)(us / 58);
   */
-  data->distance_mm = 100;
+  data->distance_mm = 10;
   
   return true;
 }

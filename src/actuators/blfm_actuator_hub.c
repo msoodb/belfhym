@@ -23,7 +23,7 @@ void blfm_actuator_hub_init(void) {
   blfm_motor_init();
 
 #if BLFM_LCD_ATTACHED
-    blfm_display_init();
+  blfm_display_init();
 #endif
     
 #if BLFM_LED_ATTACHED
@@ -40,11 +40,11 @@ void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
   blfm_motor_apply(&cmd->motor);
 
 #if BLFM_LCD_ATTACHED
- /blfm_display_apply(&cmd->display);
+  blfm_display_apply(&cmd->display);
 #endif
   
 #if BLFM_LED_ATTACHED
-  blfm_led_apply(cmd->led);
+  blfm_led_apply(&cmd->led);
 #endif
   
   blfm_alarm_apply(&cmd->alarm);

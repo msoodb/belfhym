@@ -35,7 +35,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   }
 
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 100;
+  out->led.blink_speed_ms = 1000; //in->ultrasonic.distance_mm;
 
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;

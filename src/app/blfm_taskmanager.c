@@ -54,7 +54,7 @@ void blfm_taskmanager_setup(void) {
   blfm_controller_init();
   blfm_actuator_hub_init();
 
-  blfm_debug_init();
+  //blfm_debug_init();
   
   // Create queues
   xSensorDataQueue = xQueueCreate(5, sizeof(blfm_sensor_data_t));
@@ -71,7 +71,7 @@ void blfm_taskmanager_setup(void) {
               CONTROLLER_TASK_PRIORITY, NULL);
   
   xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
-  ACTUATOR_HUB_TASK_PRIORITY, NULL);
+    ACTUATOR_HUB_TASK_PRIORITY, NULL);
 }
 
 void blfm_taskmanager_start(void) {
@@ -109,11 +109,11 @@ static void vControllerTask(void *pvParameters) {
 static void vActuatorHubTask(void *pvParameters) {
   (void)pvParameters;
   blfm_actuator_command_t command;
-  
+ 
   for (;;) {
     if (xQueueReceive(xActuatorCmdQueue, &command, pdMS_TO_TICKS(10)) == pdPASS) {
       blfm_actuator_hub_apply(&command);
-    }    
+    }
     vTaskDelay(pdMS_TO_TICKS(50));
   }
 }

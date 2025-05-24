@@ -2,7 +2,7 @@
 #define BLFM_CONFIG_H
 
 /* === Hardware presence flags === */
-#define BLFM_LCD_ATTACHED             0   // Set to 1 if LCD is connected
+#define BLFM_LCD_ATTACHED             1   // Set to 1 if LCD is connected
 #define BLFM_ULTRASONIC_ATTACHED      1   // Set to 0 if no ultrasonic sensor
 #define BLFM_LED_ATTACHED             1   // Assume onboard LED is always present
 

@@ -48,5 +48,6 @@
 #define INCLUDE_vTaskDelete 1
 #define INCLUDE_xSemaphoreGetMutexHolder 1
 #define INCLUDE_vTaskSuspend 1
+#define INCLUDE_xTaskGetSchedulerState    1
 
 #endif /* FREERTOS_CONFIG_H */

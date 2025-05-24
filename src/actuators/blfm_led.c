@@ -12,8 +12,13 @@
 #include "FreeRTOS.h"
 #include "blfm_gpio.h"
 #include "blfm_types.h"
+#include "queue.h"
 #include "stm32f1xx.h"
 #include "task.h"
+
+#define LED_TASK_STACK_SIZE 512
+#define LED_TASK_PRIORITY 2
+#define LED_QUEUE_LENGTH 5
 
 // Onboard LED: PC13
 #define LED_ONBOARD_PORT GPIOC
@@ -26,31 +31,38 @@
 // Internal state for blinking
 #define LED_TASK_INTERVAL_MS 10
 
-static blfm_led_command_t current_cmd = {0};
-static TickType_t last_toggle_tick = 0;
-static BaseType_t led_state = 0;
-
 static void blfm_led_onboard_on(void);
 static void blfm_led_onboard_off(void);
+static void blfm_led_onboard_toggle(void);
 static void blfm_led_external_on(void);
 static void blfm_led_external_off(void);
+static void blfm_led_external_toggle(void);
 static void vLedTask(void *pvParameters);
+
+static QueueHandle_t led_command_queue = NULL;
+static TaskHandle_t led_task_handle = NULL;
 
 void blfm_led_init(void) {
   blfm_gpio_config_output((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
   blfm_gpio_config_output((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
 
-  current_cmd.mode = BLFM_LED_MODE_BLINK;
-  current_cmd.blink_speed_ms = 500;
+  if (led_command_queue == NULL) {
+    led_command_queue =
+        xQueueCreate(LED_QUEUE_LENGTH, sizeof(blfm_led_command_t));
+    configASSERT(led_command_queue != NULL);
+  }
 
-  xTaskCreate(vLedTask, "LEDTask", 256, NULL, 1, NULL);
+  if (led_task_handle == NULL) {
+    BaseType_t result = xTaskCreate(vLedTask, "LEDTask", LED_TASK_STACK_SIZE,
+                                    NULL, LED_TASK_PRIORITY, &led_task_handle);
+    configASSERT(result == pdPASS);
+  }
 }
 
-void blfm_led_apply(const blfm_led_command_t cmd) {
-  taskENTER_CRITICAL();
-  current_cmd = cmd;
-  last_toggle_tick = xTaskGetTickCount();
-  taskEXIT_CRITICAL();
+void blfm_led_apply(const blfm_led_command_t *cmd) {
+  if (!cmd || !led_command_queue)
+    return;
+  xQueueOverwrite(led_command_queue, cmd);
 }
 
 static void blfm_led_onboard_on(void) {
@@ -61,42 +73,57 @@ static void blfm_led_onboard_off(void) {
   blfm_gpio_set_pin((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
 }
 
+static void blfm_led_onboard_toggle(void) {
+  blfm_gpio_toggle_pin((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
+}
+
 static void blfm_led_external_on(void) {
   blfm_gpio_set_pin((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
 }
 
 static void blfm_led_external_off(void) {
   blfm_gpio_clear_pin((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
-}
+ }
 
+static void blfm_led_external_toggle(void) {
+  blfm_gpio_toggle_pin((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
+}
+ 
 static void vLedTask(void *pvParameters) {
   (void)pvParameters;
-
+  blfm_led_command_t current_cmd = {.mode = BLFM_LED_MODE_OFF,
+                                    .blink_speed_ms = 50};
   for (;;) {
-    blfm_led_command_t local_cmd;
+    blfm_led_command_t received_cmd;
 
-    // Copy under protection
-    taskENTER_CRITICAL();
-    local_cmd = current_cmd;
-    taskEXIT_CRITICAL();
-
-    if (local_cmd.mode == BLFM_LED_MODE_BLINK) {
-      TickType_t now = xTaskGetTickCount();
-      if (now - last_toggle_tick >= pdMS_TO_TICKS(local_cmd.blink_speed_ms)) {
-        led_state = !led_state;
-
-        if (led_state) {
-          blfm_led_onboard_on();
-          blfm_led_external_on();
-        } else {
-          blfm_led_onboard_off();
-          blfm_led_external_off();
-        }
-
-        last_toggle_tick = now;
-      }
+    // Non-blocking receive, if a command available, update current_cmd
+    if (xQueueReceive(led_command_queue, &received_cmd, 0) == pdPASS) {
+      current_cmd = received_cmd;
     }
 
-    vTaskDelay(pdMS_TO_TICKS(LED_TASK_INTERVAL_MS));
+    switch (current_cmd.mode) {
+    case BLFM_LED_MODE_OFF:
+      blfm_led_onboard_off();
+      blfm_led_external_off();
+      break;
+
+    case BLFM_LED_MODE_ON:
+      blfm_led_onboard_on();
+      blfm_led_external_on();
+      break;
+
+    case BLFM_LED_MODE_BLINK:
+      blfm_led_onboard_toggle();
+      blfm_led_external_toggle();
+      break;
+      
+    default:
+      // Unknown mode — turn off LED to be safe
+      blfm_led_onboard_off();
+      blfm_led_external_off();
+      break;
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(current_cmd.blink_speed_ms)); // Delay 1000 ms
   }
 }
