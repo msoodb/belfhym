@@ -16,6 +16,7 @@
  */
 
 #include "blfm_taskmanager.h"
+#include "blfm_config.h"
 #include "blfm_sensor_hub.h"
 #include "blfm_actuator_hub.h"
 #include "blfm_controller.h"
