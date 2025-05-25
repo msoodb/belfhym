@@ -12,11 +12,8 @@
 #define BLFM_DEBUG_H
 
 void blfm_debug_init(void);
-
-void blfm_debug_onbard_on(void);
-void blfm_debug_onbard_off(void);
-void blfm_debug_external_on(void);
-void blfm_debug_external_off(void);
+void test_single_pin_on_port(void);
+void test_all_pins_on_port(void);
 
 #endif // BLFM_DEBUG_H
 

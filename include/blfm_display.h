@@ -13,6 +13,8 @@
 #include "blfm_types.h"
 #include <stdint.h>
 
+void test_single_pin_on_port(void);
+void test_all_pins_on_port(void);
 void blfm_display_init(void);
 void blfm_display_startup_sequence(void);
 void blfm_display_apply(const blfm_display_command_t *cmd);

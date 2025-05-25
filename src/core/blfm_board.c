@@ -12,6 +12,7 @@
 #include "blfm_clock.h"
 #include "blfm_gpio.h"
 #include "blfm_i2c.h"
+#include "blfm_uart.h"
 
 void blfm_board_init(void) {
   blfm_clock_init();
@@ -24,6 +25,6 @@ void blfm_board_init(void) {
   DWT->CYCCNT = 0;              // Reset counter
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;  // Enable cycle counter
 
-  //blfm_uart_init();
+  blfm_uart_init();
   blfm_i2c_init();
 }

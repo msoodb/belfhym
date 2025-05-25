@@ -18,7 +18,6 @@
 
 #include "blfm_taskmanager.h"
 #include "blfm_board.h"
-#include "blfm_debug.h"
 
 /**
  * @brief Main function: Initializes hardware and starts RTOS task management.
@@ -29,6 +28,7 @@
  */
 
 int main(void) {
+
   // Initialize system clocks, peripherals, and low-level hardware
   blfm_board_init();
   
