@@ -34,26 +34,8 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     out->motor.direction = 1;
   }
 
-  // Parameters (tweak to your liking)
-  const uint16_t min_distance_mm = 50;    // Minimum distance expected (e.g., 5 cm)
-  const uint16_t max_distance_mm = 2000;  // Maximum distance expected (e.g., 2 meters)
-
-  const uint16_t min_blink_ms = 100;      // Fastest blink speed (100 ms)
-  const uint16_t max_blink_ms = 1000;     // Slowest blink speed (1000 ms)
-
-  uint16_t distance = in->ultrasonic.distance_mm;
-
-  // Clamp distance to expected range
-  if (distance < min_distance_mm) distance = min_distance_mm;
-  if (distance > max_distance_mm) distance = max_distance_mm;
-
-  // Map distance linearly to blink speed range
-  uint16_t blink_speed_ms = max_blink_ms - 
-                         ((distance - min_distance_mm) * (max_blink_ms - min_blink_ms)) / 
-                         (max_distance_mm - min_distance_mm);
- 
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = in->ultrasonic.distance_mm; //blink_speed_ms;
+  out->led.blink_speed_ms = in->ultrasonic.distance_mm;
 
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;

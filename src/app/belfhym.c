@@ -43,5 +43,3 @@ int main(void) {
     // Optional: enter low-power sleep or log error state
   }
 }
-
-

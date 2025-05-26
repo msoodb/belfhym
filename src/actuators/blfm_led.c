@@ -31,12 +31,8 @@
 // Internal state for blinking
 #define LED_TASK_INTERVAL_MS 10
 
-static void blfm_led_onboard_on(void);
-static void blfm_led_onboard_off(void);
-static void blfm_led_onboard_toggle(void);
 static void blfm_led_external_on(void);
 static void blfm_led_external_off(void);
-static void blfm_led_external_toggle(void);
 static void vLedTask(void *pvParameters);
 
 static QueueHandle_t led_command_queue = NULL;
@@ -56,6 +52,7 @@ void blfm_led_init(void) {
     BaseType_t result = xTaskCreate(vLedTask, "LEDTask", LED_TASK_STACK_SIZE,
                                     NULL, LED_TASK_PRIORITY, &led_task_handle);
     configASSERT(result == pdPASS);
+    if (result != pdPASS) {}
   }
 }
 
@@ -65,28 +62,12 @@ void blfm_led_apply(const blfm_led_command_t *cmd) {
   xQueueOverwrite(led_command_queue, cmd);
 }
 
-static void blfm_led_onboard_on(void) {
-  blfm_gpio_clear_pin((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
-}
-
-static void blfm_led_onboard_off(void) {
-  blfm_gpio_set_pin((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
-}
-
-static void blfm_led_onboard_toggle(void) {
-  blfm_gpio_toggle_pin((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
-}
-
 static void blfm_led_external_on(void) {
   blfm_gpio_set_pin((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
 }
 
 static void blfm_led_external_off(void) {
   blfm_gpio_clear_pin((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
-}
-
-static void blfm_led_external_toggle(void) {
-  blfm_gpio_toggle_pin((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
 }
 
 static void vLedTask(void *pvParameters) {

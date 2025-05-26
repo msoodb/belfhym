@@ -60,6 +60,7 @@ void blfm_ultrasonic_init(void) {
         vUltrasonicTask, "UltrasonicTask", ULTRASONIC_TASK_STACK_SIZE, NULL,
         ULTRASONIC_TASK_PRIORITY, &ultrasonic_task_handle);
     configASSERT(result == pdPASS);
+    if (result != pdPASS) {}
   }
 }
 

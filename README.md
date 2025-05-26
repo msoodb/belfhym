@@ -2,11 +2,10 @@
 
 **Belfhym** is a modular, real-time lunar rover robot powered by **FreeRTOS** and **CMSIS**, designed for:
 
-- Autonomous terrain navigation  
-- Multi-sensor fusion  
-- Real-time telemetry  
-- Manual override via remote command  
-
+- Autonomous terrain navigation
+- Multi-sensor fusion
+- Real-time telemetry
+- Manual override via remote command
   
 Built for the **STM32F103C8T6 (Blue Pill)**, Belfhym integrates multiple control and sensing subsystems into a clean, multitasking environment with well-defined inter-task communication and scheduling policies.
 
@@ -30,6 +29,7 @@ Built for the **STM32F103C8T6 (Blue Pill)**, Belfhym integrates multiple control
 1. Task Architecture
 
 This table outlines the tasks in the system, their responsibilities, priorities, and communication mechanisms.
+**This section needs to be updated!**
 
 | Task Name         | Responsibility                               | Priority | Communication                    |
 |------------------|----------------------------------------------|----------|----------------------------------|
@@ -44,7 +44,7 @@ This table outlines the tasks in the system, their responsibilities, priorities,
 
 
 2. Inter-Task Communication
-
+**This section needs to be updated!**
 - SensorTask → PathFinding: via Queue<SensorPacket>
 - PathFinding → MotorTask: via Queue<DriveCommand>
 - Safety events (thermal, power): via EventGroup or TaskNotify
@@ -108,27 +108,7 @@ Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
 | Application Logic   | ← Pathfinding, PID, AI, etc.
 +---------------------+
 
-├── actuators
-├── app
-├── communication
-├── control
-├── core
-├── drivers
-├── interface
-├── logging
-├── logic
-├── monitoring
-├── power
-├── safety
-└── sensors
 ```
-
-```bash
-bear -- make
-script/structure.sh
-cat modules.txt | script/modules.sh
-```
-
 
 ## WARNING
 FreeRTOS/portable/GCC/ARM_CM3/port.c
@@ -156,18 +136,7 @@ const portISR_t * const pxVectorTable = portSCB_VTOR_REG;
 
 ---
 
-## Future Additions
-
-- Kalman filter for sensor fusion
-- Onboard data logging to EEPROM/SD
-- Autonomous obstacle avoidance using sensor mesh
-- OTA command update or reflash support
-
----
-
-
 ## Getting Started
-
 
 ### Prerequisites toolchain for Development Environment (Fedora Linux)
 

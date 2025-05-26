@@ -16,12 +16,14 @@ LD_SCRIPT     := ld/stm32f103.ld
 # Toolchain
 CC      := arm-none-eabi-gcc
 OBJCOPY := arm-none-eabi-objcopy
+SIZE    := arm-none-eabi-size
 
 # Flags
-CFLAGS := -Wall -Wextra -O2 -mcpu=cortex-m3 -mthumb -nostdlib -ffreestanding
+OPTIMIZATION ?= -O2
+CFLAGS := -Wall -Wextra $(OPTIMIZATION) -mcpu=cortex-m3 -mthumb -nostdlib -ffreestanding
 CFLAGS += -DSTM32F103xB -I$(INCLUDE_DIR) -I$(CMSIS_DIR)
 CFLAGS += -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
-LDFLAGS := -T$(LD_SCRIPT)
+LDFLAGS := -T$(LD_SCRIPT) -nostdlib -ffreestanding -mcpu=cortex-m3 -mthumb
 
 # Sources
 SRC_SUBDIRS := actuators app communication control core drivers interface logging logic monitoring power safety sensors
@@ -54,29 +56,41 @@ BIN_FILE  := $(TARGET).bin
 
 # Default target
 .PHONY: all
-all: $(TARGET)
+all: $(TARGET) $(BIN_FILE) size
 
 # Linking
 $(TARGET): $(OBJS) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
 # Compile .c files
-$(BUILD_DIR)/%.o: %.c
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Compile .s files
-$(BUILD_DIR)/%.o: %.s
+$(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -mcpu=cortex-m3 -mthumb -c $< -o $@
 
-# Create bin directory
+# Ensure build and bin directories
+$(BUILD_DIR):
+	@mkdir -p $@
+
 $(BIN_DIR):
 	@mkdir -p $@
 
 # Convert ELF to .bin
-$(BIN_FILE): $(TARGET)
+$(BIN_FILE): $(TARGET) | $(BIN_DIR)
 	$(OBJCOPY) -O binary $< $@
+
+# Show binary size
+.PHONY: size
+size: $(TARGET)
+	$(SIZE) $<
+
+# Flash shortcut
+.PHONY: flash
+flash: all deploy
 
 # Deployment
 METHOD ?= stlink
