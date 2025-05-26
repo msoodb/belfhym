@@ -11,6 +11,7 @@
 #include "blfm_sensor_hub.h"
 #include "blfm_ultrasonic.h"
 #include "blfm_temperature.h"
+#include "blfm_bigsound.h"
 #include "blfm_imu.h"
 
 #include <stdbool.h>
@@ -19,14 +20,16 @@ void blfm_sensor_hub_init(void) {
   blfm_ultrasonic_init();
   blfm_imu_init();
   blfm_temperature_init();
+  blfm_bigsound_init();
 }
 
 bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
   if (!out) return false;
 
   bool ok_ultrasonic = blfm_ultrasonic_read(&out->ultrasonic);
-  bool ok_imu = blfm_imu_read(&out->imu);
-  bool ok_temperature = blfm_temperature_read(&out->temperature);
+  bool ok_imu = true; //blfm_imu_read(&out->imu);
+  bool ok_temperature =  true; // blfm_temperature_read(&out->temperature);
+  bool ok_bigsound = blfm_bigsound_read(&out->bigsound);
 
-  return  ok_ultrasonic && ok_imu && ok_temperature;  
+  return  ok_ultrasonic && ok_imu && ok_temperature && ok_bigsound;
 }

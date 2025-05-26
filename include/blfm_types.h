@@ -34,9 +34,14 @@ typedef struct {
 } blfm_temperature_data_t;
 
 typedef struct {
+    bool sound_detected;
+} blfm_bigsound_data_t;
+
+typedef struct {
   blfm_ultrasonic_data_t ultrasonic;
   blfm_imu_data_t imu;
   blfm_temperature_data_t temperature;
+  blfm_bigsound_data_t bigsound; 
 } blfm_sensor_data_t;
 
 typedef struct {
