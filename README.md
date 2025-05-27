@@ -56,8 +56,13 @@ This table outlines the tasks in the system, their responsibilities, priorities,
 
 3. Conceptual Communication Flow
 ```
-                  [ Sensors ] → [ Sensor Hub ] → [ Controller ] → [ Actuator Hub ] → [ Actuators ]
-[ Urgent Sensors, interrupt ] → [ ISR ]        → [ Controller ] → [ Actuator Hub ] → [ Actuators ]
+[ Ultrasonic (polling) ] → [ Sensor Hub (task) ] → 
+                            [ Controller (task) ] → 
+                            [ Actuator Hub (task) ] → [ LEDs, LCD, Motors ]
+
+[ BigSound (interrupt) ] → [ ISR Handler ] → 
+                            [ Controller (task) ] → 
+                            [ Actuator Hub (task) ] → [ LEDs, LCD, Motors ]
 ```
 - Sensors: Collect raw data from environment (IMU, Ultrasonic, etc.)
 - Sensor Hub: Polls sensors, aggregates and timestamps data

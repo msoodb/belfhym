@@ -16,6 +16,11 @@
 
 #define BLFM_DISPLAY_LINE_LENGTH 17 // 16 chars + '\0'
 
+
+//-----------------------
+//  sensors
+//-----------------------
+
 typedef struct {
   int16_t acc_x;
   int16_t acc_y;
@@ -34,16 +39,30 @@ typedef struct {
 } blfm_temperature_data_t;
 
 typedef struct {
-    bool sound_detected;
-} blfm_bigsound_data_t;
-
-typedef struct {
   blfm_ultrasonic_data_t ultrasonic;
   blfm_imu_data_t imu;
-  blfm_temperature_data_t temperature;
-  blfm_bigsound_data_t bigsound; 
+  blfm_temperature_data_t temperature; 
 } blfm_sensor_data_t;
 
+
+//-----------------------
+//  bigsound
+//-----------------------
+typedef enum {
+  BIGSOUND_EVENT_DETECTED = 1
+} blfm_bigsound_event_type_t;
+
+typedef struct {
+  uint32_t timestamp;                    // Tick count when event happened
+  blfm_bigsound_event_type_t event_type; // Type of bigsound event
+} blfm_bigsound_event_t;
+
+
+
+
+//-----------------------
+//  actuators
+//-----------------------
 typedef struct {
   uint8_t speed;
   uint8_t direction;

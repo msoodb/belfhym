@@ -21,6 +21,7 @@ extern char *strcpy(char *dest, const char *src);
 
 void blfm_controller_init(void) {
   // Reserved for future initialization
+  blfm_gpio_config_output((uint32_t)GPIOB, 11);
 }
 
 // Fill 'out' based on 'in'
@@ -94,13 +95,12 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   strcpy(out->display.line2, buf2);
 }
 
-void blfm_controller_process_bigsound(blfm_actuator_command_t *out) {
-  if (!out)
+void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
+                                      blfm_actuator_command_t *out) {
+  if (!event || !out)
     return;
+  
+ //   blfm_gpio_config_output((uint32_t)GPIOB, 11);
+  blfm_gpio_set_pin((uint32_t)GPIOB, 11);
 
-  // Example reaction to a loud sound:
-  // - Stop motors
-  // - Flash LEDs
-  //blfm_gpio_set_pin((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
-  out->led.mode = BLFM_LED_MODE_ON;
 }

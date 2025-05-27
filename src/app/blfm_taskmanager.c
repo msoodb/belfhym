@@ -20,6 +20,7 @@
 #include "blfm_actuator_hub.h"
 #include "blfm_controller.h"
 #include "blfm_sensor_hub.h"
+#include "blfm_bigsound.h"
 #include "blfm_types.h"
 #include "queue.h"
 #include "task.h"
@@ -37,6 +38,7 @@
 
 // --- Queues ---
 static QueueHandle_t xSensorDataQueue = NULL;
+static QueueHandle_t xBigSoundQueue = NULL;
 static QueueHandle_t xActuatorCmdQueue = NULL;
 
 // --- Task Prototypes ---
@@ -49,32 +51,35 @@ static void vActuatorHubTask(void *pvParameters);
 
 // --- Public Setup Function ---
 void blfm_taskmanager_setup(void) {
-  // Initialize all modules
-  blfm_sensor_hub_init();
-  blfm_controller_init();
-  blfm_actuator_hub_init();
 
+ // Initialize GPIO for debug LED or external indicator
   blfm_gpio_config_output((uint32_t)GPIOB, 11);
 
   // Create queues
   xSensorDataQueue = xQueueCreate(5, sizeof(blfm_sensor_data_t));
   configASSERT(xSensorDataQueue != NULL);
 
+  xBigSoundQueue = xQueueCreate(5, sizeof(blfm_bigsound_event_t));
+  configASSERT(xBigSoundQueue != NULL);
+
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
 
+ // Initialize modules
+  blfm_sensor_hub_init();                // ultrasonic sensor polling
+  blfm_bigsound_init(xBigSoundQueue);   // bigsound interrupt sensor with its own queue
+  blfm_controller_init();                // controller logic
+  blfm_actuator_hub_init();              // actuators (LED, LCD, etc.)
+  
   // Create tasks
-  TaskHandle_t controller_task_handle = NULL;
-
   xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
               SENSOR_HUB_TASK_PRIORITY, NULL);
 
   xTaskCreate(vControllerTask, "Controller", CONTROLLER_TASK_STACK, NULL,
-              CONTROLLER_TASK_PRIORITY, &controller_task_handle);
+              CONTROLLER_TASK_PRIORITY, NULL);
 
   xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
               ACTUATOR_HUB_TASK_PRIORITY, NULL);
-
 }
 
 void blfm_taskmanager_start(void) { vTaskStartScheduler(); }
@@ -96,15 +101,23 @@ static void vSensorHubTask(void *pvParameters) {
 static void vControllerTask(void *pvParameters) {
   (void)pvParameters;
   blfm_sensor_data_t sensor_data;
+  blfm_bigsound_event_t bigsound_event;
   blfm_actuator_command_t command;
 
   for (;;) {
-    if (xQueueReceive(xSensorDataQueue, &sensor_data, pdMS_TO_TICKS(50)) ==
-        pdPASS) {
+    // Wait for either sensor data or bigsound event (non-blocking poll both queues)
+    if (xQueueReceive(xSensorDataQueue, &sensor_data, 0) == pdPASS) {
       blfm_controller_process(&sensor_data, &command);
       xQueueSendToBack(xActuatorCmdQueue, &command, 0);
     }
-    blfm_gpio_set_pin((uint32_t)GPIOB, 11);
+
+    if (xQueueReceive(xBigSoundQueue, &bigsound_event, 0) == pdPASS) {
+      blfm_controller_process_bigsound(&bigsound_event, &command);
+      xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+    }
+
+    // Sleep shortly to yield CPU
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 }
 

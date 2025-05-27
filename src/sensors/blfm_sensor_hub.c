@@ -10,7 +10,7 @@
 
 #include "blfm_sensor_hub.h"
 #include "blfm_ultrasonic.h"
-
+#include "blfm_gpio.h"
 #include <stdbool.h>
 
 void blfm_sensor_hub_init() {
@@ -24,3 +24,7 @@ bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
   bool ok_ultrasonic = blfm_ultrasonic_read(&out->ultrasonic);
   return ok_ultrasonic;
 }
+
+
+//   blfm_gpio_config_output((uint32_t)GPIOB, 11);
+//    blfm_gpio_set_pin((uint32_t)GPIOB, 11);
