@@ -11,12 +11,11 @@
 #ifndef BLFM_BIGSOUND_H
 #define BLFM_BIGSOUND_H
 
-#include <stdint.h>
+#include "FreeRTOS.h"
+#include "task.h"
 #include <stdbool.h>
 
-#include "blfm_types.h"
-
 void blfm_bigsound_init(void);
-bool blfm_bigsound_read(blfm_bigsound_data_t *data);
+void blfm_bigsound_register_controller_task(TaskHandle_t controller_handle);
 
 #endif // BLFM_BIGSOUND_H

@@ -38,6 +38,7 @@
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY    191
 
 #define configUSE_TIMERS                        0
+#define configUSE_QUEUE_SETS 1
 
 /* Required for CMSIS-style interrupt names */
 #define vPortSVCHandler    SVC_Handler

@@ -16,7 +16,7 @@ extern char *strcpy(char *dest, const char *src);
 
 void blfm_controller_init(void) {
   // Reserved for future initialization
- }
+}
 
 // Fill 'out' based on 'in'
 void blfm_controller_process(const blfm_sensor_data_t *in,
@@ -89,7 +89,12 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   strcpy(out->display.line2, buf2);
 }
 
-// No RTOS task here - Task Manager controls execution
-void blfm_controller_start(void) {
-  // Reserved for RTOS task or loop launch
+void blfm_controller_process_bigsound(blfm_actuator_command_t *out) {
+  if (!out)
+    return;
+
+  // Example reaction to a loud sound:
+  // - Stop motors
+  // - Flash LEDs
+  out->led.mode = BLFM_LED_MODE_BLINK;
 }

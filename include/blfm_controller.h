@@ -16,6 +16,7 @@
 void blfm_controller_init(void);
 void blfm_controller_process(const blfm_sensor_data_t *in,
                              blfm_actuator_command_t *out);
+void blfm_controller_process_bigsound(blfm_actuator_command_t *out);
 
 #endif // BLFM_CONTROLLER_H
 

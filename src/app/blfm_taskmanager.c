@@ -16,14 +16,12 @@
  */
 
 #include "blfm_taskmanager.h"
+#include "FreeRTOS.h"
 #include "blfm_actuator_hub.h"
+#include "blfm_bigsound.h"
 #include "blfm_controller.h"
 #include "blfm_sensor_hub.h"
 #include "blfm_types.h"
-
-#include "blfm_debug.h"
-
-#include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
 
@@ -58,17 +56,21 @@ void blfm_taskmanager_setup(void) {
 
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
-  
-  
+
   // Create tasks
+  TaskHandle_t controller_task_handle = NULL;
+
   xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
               SENSOR_HUB_TASK_PRIORITY, NULL);
-  
+
   xTaskCreate(vControllerTask, "Controller", CONTROLLER_TASK_STACK, NULL,
-              CONTROLLER_TASK_PRIORITY, NULL);
-  
+              CONTROLLER_TASK_PRIORITY, &controller_task_handle);
+
   xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
               ACTUATOR_HUB_TASK_PRIORITY, NULL);
+
+  // Register controller task handle for bigsound ISR notifications
+  blfm_bigsound_register_controller_task(controller_task_handle);
 }
 
 void blfm_taskmanager_start(void) { vTaskStartScheduler(); }
@@ -93,12 +95,18 @@ static void vControllerTask(void *pvParameters) {
   blfm_actuator_command_t command;
 
   for (;;) {
-    if (xQueueReceive(xSensorDataQueue, &sensor_data, pdMS_TO_TICKS(10)) ==
+    // Wait for either queue message or ISR notification
+    if (xQueueReceive(xSensorDataQueue, &sensor_data, pdMS_TO_TICKS(50)) ==
         pdPASS) {
       blfm_controller_process(&sensor_data, &command);
       xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-    }      
-    vTaskDelay(pdMS_TO_TICKS(50));
+    }
+
+    // Check if bigsound ISR sent a notification
+    if (ulTaskNotifyTake(pdTRUE, 0) > 0) {
+      blfm_controller_process_bigsound(&command);
+      xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+    }
   }
 }
 
