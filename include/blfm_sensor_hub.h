@@ -11,9 +11,11 @@
 #ifndef BLFM_SENSOR_HUB_H
 #define BLFM_SENSOR_HUB_H
 
+#include "FreeRTOS.h"
+#include "task.h"
 #include "blfm_types.h"
 
-void blfm_sensor_hub_init(void);
+void blfm_sensor_hub_init();
 bool blfm_sensor_hub_read(blfm_sensor_data_t *out);
 
 #endif // BLFM_SENSOR_HUB_H

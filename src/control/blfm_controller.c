@@ -10,7 +10,12 @@
 
 #include "blfm_controller.h"
 #include "blfm_types.h"
+#include "blfm_gpio.h"
 #include <stdbool.h>
+
+#define LED_EXTERNAL_PORT GPIOB
+#define LED_EXTERNAL_PIN 5
+
 
 extern char *strcpy(char *dest, const char *src);
 
@@ -96,5 +101,6 @@ void blfm_controller_process_bigsound(blfm_actuator_command_t *out) {
   // Example reaction to a loud sound:
   // - Stop motors
   // - Flash LEDs
-  out->led.mode = BLFM_LED_MODE_BLINK;
+  //blfm_gpio_set_pin((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
+  out->led.mode = BLFM_LED_MODE_ON;
 }

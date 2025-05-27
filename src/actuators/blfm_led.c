@@ -73,7 +73,7 @@ static void blfm_led_external_off(void) {
 static void vLedTask(void *pvParameters) {
   (void)pvParameters;
   blfm_led_command_t current_cmd = {.mode = BLFM_LED_MODE_OFF,
-                                    .blink_speed_ms = 200};
+				    .blink_speed_ms = 200};
   TickType_t last_toggle_tick = xTaskGetTickCount();
   bool led_state = false;
 

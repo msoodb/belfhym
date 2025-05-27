@@ -18,12 +18,13 @@
 #include "blfm_taskmanager.h"
 #include "FreeRTOS.h"
 #include "blfm_actuator_hub.h"
-#include "blfm_bigsound.h"
 #include "blfm_controller.h"
 #include "blfm_sensor_hub.h"
 #include "blfm_types.h"
 #include "queue.h"
 #include "task.h"
+
+#include "blfm_gpio.h"
 
 // --- Task Configuration ---
 #define SENSOR_HUB_TASK_STACK 256
@@ -43,12 +44,17 @@ static void vSensorHubTask(void *pvParameters);
 static void vControllerTask(void *pvParameters);
 static void vActuatorHubTask(void *pvParameters);
 
+#define LED_EXTERNAL_PORT GPIOB
+#define LED_EXTERNAL_PIN 5
+
 // --- Public Setup Function ---
 void blfm_taskmanager_setup(void) {
   // Initialize all modules
   blfm_sensor_hub_init();
   blfm_controller_init();
   blfm_actuator_hub_init();
+
+  blfm_gpio_config_output((uint32_t)GPIOB, 11);
 
   // Create queues
   xSensorDataQueue = xQueueCreate(5, sizeof(blfm_sensor_data_t));
@@ -69,8 +75,6 @@ void blfm_taskmanager_setup(void) {
   xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
               ACTUATOR_HUB_TASK_PRIORITY, NULL);
 
-  // Register controller task handle for bigsound ISR notifications
-  blfm_bigsound_register_controller_task(controller_task_handle);
 }
 
 void blfm_taskmanager_start(void) { vTaskStartScheduler(); }
@@ -95,18 +99,12 @@ static void vControllerTask(void *pvParameters) {
   blfm_actuator_command_t command;
 
   for (;;) {
-    // Wait for either queue message or ISR notification
     if (xQueueReceive(xSensorDataQueue, &sensor_data, pdMS_TO_TICKS(50)) ==
         pdPASS) {
       blfm_controller_process(&sensor_data, &command);
       xQueueSendToBack(xActuatorCmdQueue, &command, 0);
     }
-
-    // Check if bigsound ISR sent a notification
-    if (ulTaskNotifyTake(pdTRUE, 0) > 0) {
-      blfm_controller_process_bigsound(&command);
-      xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-    }
+    blfm_gpio_set_pin((uint32_t)GPIOB, 11);
   }
 }
 
