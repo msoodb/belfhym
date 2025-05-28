@@ -116,10 +116,17 @@ void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
     return;
 
   // Handle big sound event (e.g., alert display)
-    strcpy(out->display.line1, "!!! ALERT !!!");
-    strcpy(out->display.line2, "Noise detected");
-    out->led.mode = BLFM_LED_MODE_ON;
+  strcpy(out->display.line1, "!!! ALERT !!!");
+  strcpy(out->display.line2, "Noise detected");
+  out->led.mode = BLFM_LED_MODE_ON;
     
   //   blfm_gpio_config_output((uint32_t)GPIOB, 11);
   blfm_gpio_set_pin((uint32_t)GPIOB, 11);
+
+  // crude short delay (adjust if needed)
+  for (volatile int i = 0; i < 10000; i++) {
+    __asm__("nop");
+  }
+
+  blfm_gpio_clear_pin((uint32_t)GPIOB, 11);
 }
