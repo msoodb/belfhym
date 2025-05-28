@@ -38,8 +38,8 @@ int main(void) {
   // Start the FreeRTOS scheduler (does not return)
   blfm_taskmanager_start();
 
-  // Should never reach here if RTOS is running correctly
+  // Fallback loop: should never reach here if RTOS is running
   while (1) {
-    // Optional: enter low-power sleep or log error state
+    // TODO: Consider low-power mode or error handler
   }
 }
