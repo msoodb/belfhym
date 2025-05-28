@@ -12,11 +12,14 @@
 #define LIBC_STUB_H
 
 #include <stddef.h>
-#include <stdint.h>
 
 void *memset(void *dest, int val, size_t len);
 void *memcpy(void *dest, const void *src, size_t len);
+char *strcpy(char *dest, const char *src);
+char *strcat(char *dest, const char *src);
 size_t strlen(const char *s);
+
+// Special init function (does nothing)
 void __libc_init_array(void);
 
 #endif

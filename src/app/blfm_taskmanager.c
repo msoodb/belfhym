@@ -116,7 +116,6 @@ static void vControllerTask(void *pvParameters) {
       xQueueSendToBack(xActuatorCmdQueue, &command, 0);
     }
 
-    // Sleep shortly to yield CPU
     vTaskDelay(pdMS_TO_TICKS(10));
   }
 }

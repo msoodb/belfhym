@@ -8,43 +8,51 @@
  * See LICENSE file for details.
  */
 
-#include <stddef.h>
-#include <stdint.h>
+#include "libc_stubs.h"
 
 // Minimal memset implementation
 void *memset(void *dest, int val, size_t len) {
-    unsigned char *ptr = dest;
-    while (len-- > 0) {
-        *ptr++ = (unsigned char)val;
-    }
-    return dest;
+  unsigned char *ptr = dest;
+  while (len-- > 0) {
+    *ptr++ = (unsigned char)val;
+  }
+  return dest;
 }
 
 // Minimal memcpy implementation
 void *memcpy(void *dest, const void *src, size_t len) {
-    unsigned char *d = dest;
-    const unsigned char *s = src;
-    while (len-- > 0) {
-        *d++ = *s++;
-    }
-    return dest;
+  unsigned char *d = dest;
+  const unsigned char *s = src;
+  while (len-- > 0) {
+    *d++ = *s++;
+  }
+  return dest;
 }
 
 // Minimal strcpy implementation (assumes dest is large enough)
 char *strcpy(char *dest, const char *src) {
-    char *d = dest;
-    while ((*d++ = *src++))
-        ;
-    return dest;
+  char *d = dest;
+  while ((*d++ = *src++))
+    ;
+  return dest;
 }
 
 // Minimal __libc_init_array (does nothing)
 void __libc_init_array(void) {
-    // No global/static C++ constructors used, safe to leave empty.
+  // No global/static C++ constructors used, safe to leave empty.
 }
 
 size_t strlen(const char *s) {
-    size_t len = 0;
-    while (s[len]) ++len;
-    return len;
+  size_t len = 0;
+  while (s[len])
+    ++len;
+  return len;
+}
+
+// Minimal strcat implementation
+char *strcat(char *dest, const char *src) {
+  char *d = dest + strlen(dest);
+  while ((*d++ = *src++))
+    ;
+  return dest;
 }
