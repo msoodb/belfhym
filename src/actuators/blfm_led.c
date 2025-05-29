@@ -32,6 +32,10 @@ static QueueHandle_t led_command_queue = NULL;
 static TaskHandle_t led_task_handle = NULL;
 
 void blfm_led_init(void) {
+#if BLFM_LED_DISABLED
+  return;
+#endif
+
   blfm_gpio_config_output((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
   blfm_gpio_config_output((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
 
@@ -50,6 +54,10 @@ void blfm_led_init(void) {
 }
 
 void blfm_led_apply(const blfm_led_command_t *cmd) {
+#if BLFM_LED_DISABLED
+  return;
+#endif
+
   if (!cmd || !led_command_queue)
     return;
   xQueueOverwrite(led_command_queue, cmd);

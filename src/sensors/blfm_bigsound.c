@@ -2,12 +2,17 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "stm32f1xx.h"
+#include "blfm_config.h"
 
 #define BIGSOUND_EVENT_DETECTED 1
 
 static QueueHandle_t bigsound_controller_queue = NULL;
 
 void blfm_bigsound_init(QueueHandle_t controller_queue) {
+#if BLFM_BIGSOUND_DISABLED
+  return;
+#endif
+
   bigsound_controller_queue = controller_queue;
 
   // Enable GPIOA and AFIO clocks
@@ -31,6 +36,10 @@ void blfm_bigsound_init(QueueHandle_t controller_queue) {
 }
 
 void blfm_bigsound_isr_handler(void) {
+#if BLFM_BIGSOUND_DISABLED
+  return;
+#endif
+
   if (bigsound_controller_queue == NULL) {
     return; // Queue not set up, skip
   }

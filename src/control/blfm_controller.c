@@ -15,9 +15,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "libc_stubs.h"
-
-#define LED_EXTERNAL_PORT GPIOB
-#define LED_EXTERNAL_PIN 5
+#include "blfm_pins.h"
 
 static int lcd_mode = 0;
 static int lcd_counter = 0;
@@ -48,13 +46,11 @@ static void uint_to_str(char *buf, uint16_t value) {
 
 void blfm_controller_init(void) {
   // Reserved for future initialization
-  blfm_gpio_config_output((uint32_t)GPIOB, 11);
 }
 
 // Fill 'out' based on 'in'
 void blfm_controller_process(const blfm_sensor_data_t *in,
                              blfm_actuator_command_t *out) {
-
   if (!in || !out)
     return;
 
@@ -68,7 +64,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   }
 
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = in->ultrasonic.distance_mm;
+  out->led.blink_speed_ms = 100; //in->ultrasonic.distance_mm;
 
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;

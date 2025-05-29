@@ -15,6 +15,7 @@
 #include "stm32f1xx.h"
 #include "task.h"
 #include "blfm_pins.h"
+#include "blfm_config.h"
 
 #define ULTRASONIC_TASK_STACK_SIZE 256
 #define ULTRASONIC_TASK_PRIORITY 2
@@ -34,6 +35,10 @@ static bool wait_for_pin(uint32_t port, uint32_t pin, int target_state,
                          uint32_t timeout_ms);
 
 void blfm_ultrasonic_init(void) {
+#if BLFM_ULTRASONIC_DISABLED
+  return;
+#endif
+
   blfm_gpio_config_output((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
   blfm_gpio_config_input((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN);
   blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
@@ -61,6 +66,10 @@ void blfm_ultrasonic_init(void) {
 }
 
 bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
+#if BLFM_ULTRASONIC_DISABLED
+  return true;
+#endif
+
   if (!data || !ultrasonic_data_queue)
     return false;
 

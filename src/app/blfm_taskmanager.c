@@ -25,8 +25,6 @@
 #include "queue.h"
 #include "task.h"
 
-#include "blfm_gpio.h"
-
 // --- Task Configuration ---
 #define SENSOR_HUB_TASK_STACK 256
 #define CONTROLLER_TASK_STACK 256
@@ -46,14 +44,8 @@ static void vSensorHubTask(void *pvParameters);
 static void vControllerTask(void *pvParameters);
 static void vActuatorHubTask(void *pvParameters);
 
-#define LED_EXTERNAL_PORT GPIOB
-#define LED_EXTERNAL_PIN 5
-
 // --- Public Setup Function ---
 void blfm_taskmanager_setup(void) {
-
- // Initialize GPIO for debug LED or external indicator
-  blfm_gpio_config_output((uint32_t)GPIOB, 11);
 
   // Create queues
   xSensorDataQueue = xQueueCreate(5, sizeof(blfm_sensor_data_t));
@@ -67,7 +59,7 @@ void blfm_taskmanager_setup(void) {
 
  // Initialize modules
   blfm_sensor_hub_init();                // ultrasonic sensor polling
-  blfm_bigsound_init(xBigSoundQueue);   // bigsound interrupt sensor with its own queue
+  blfm_bigsound_init(xBigSoundQueue);    // bigsound interrupt sensor with its own queue
   blfm_controller_init();                // controller logic
   blfm_actuator_hub_init();              // actuators (LED, LCD, etc.)
   
@@ -115,7 +107,6 @@ static void vControllerTask(void *pvParameters) {
       blfm_controller_process_bigsound(&bigsound_event, &command);
       xQueueSendToBack(xActuatorCmdQueue, &command, 0);
     }
-
     vTaskDelay(pdMS_TO_TICKS(10));
   }
 }

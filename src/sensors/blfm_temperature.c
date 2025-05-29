@@ -12,12 +12,21 @@
 #include "blfm_adc.h"
 #include "blfm_pins.h"
 #include <stdbool.h>
+#include "blfm_config.h"
 
 void blfm_temperature_init(void) {
   // Initialize ADC, if needed
+#if BLFM_TEMPRATURE_DISABLED
+  return;
+#endif
+
 }
 
 bool blfm_temperature_read(blfm_temperature_data_t *temp) {
+#if BLFM_TEMPRATURE_DISABLED
+  return true;
+#endif
+
   if (!temp)
     return false;
 

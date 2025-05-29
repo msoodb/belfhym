@@ -11,7 +11,6 @@
 #include "blfm_sensor_hub.h"
 #include "blfm_ultrasonic.h"
 #include "blfm_temperature.h"
-#include "blfm_gpio.h"
 #include <stdbool.h>
 
 void blfm_sensor_hub_init() {
@@ -23,11 +22,10 @@ bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
   if (!out)
     return false;
 
-  bool ok_ultrasonic = blfm_ultrasonic_read(&out->ultrasonic);
-  bool ok_temperature = blfm_temperature_read(&out->temperature);
+  bool ok = true;
 
-  return ok_ultrasonic && ok_temperature;
+  ok &= blfm_ultrasonic_read(&out->ultrasonic);
+  ok &= blfm_temperature_read(&out->temperature);
+
+  return ok;
 }
-
-//   blfm_gpio_config_output((uint32_t)GPIOB, 11);
-//    blfm_gpio_set_pin((uint32_t)GPIOB, 11);
