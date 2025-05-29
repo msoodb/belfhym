@@ -9,6 +9,7 @@
  */
 
 #include "blfm_radio.h"
+#include "blfm_config.h"
 
 void blfm_radio_init(void) {
 #if BLFM_RADIO_DISABLED

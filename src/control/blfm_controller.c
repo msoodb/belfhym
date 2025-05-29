@@ -16,6 +16,7 @@
 #include "task.h"
 #include "libc_stubs.h"
 #include "blfm_pins.h"
+#include "blfm_config.h"
 
 static int lcd_mode = 0;
 static int lcd_counter = 0;
