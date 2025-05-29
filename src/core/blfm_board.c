@@ -13,6 +13,7 @@
 #include "blfm_gpio.h"
 #include "blfm_i2c.h"
 #include "blfm_uart.h"
+#include "blfm_adc.h"
 
 void blfm_board_init(void) {
   blfm_clock_init();
@@ -27,4 +28,5 @@ void blfm_board_init(void) {
 
   blfm_uart_init();
   blfm_i2c_init();
+  blfm_adc_init();
 }

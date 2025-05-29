@@ -9,30 +9,33 @@
  */
 
 #include "blfm_temperature.h"
-#include "blfm_i2c.h"
+#include "blfm_adc.h"
 #include <stdbool.h>
 
-#define TMP102_ADDR      0x48
-#define TMP102_TEMP_REG  0x00
+#define ST0248_ADC_CHANNEL 6
 
 void blfm_temperature_init(void) {
+  // Initialize ADC, if needed
 }
 
 bool blfm_temperature_read(blfm_temperature_data_t *temp) {
-  if (!temp) return false;
+  if (!temp)
+    return false;
 
-  uint8_t raw_data[2];
-  if (blfm_i2c_read_bytes(TMP102_ADDR, TMP102_TEMP_REG, raw_data, 2) != 0) {
+  uint16_t adc_value = 0;
+  if (blfm_adc_read(ST0248_ADC_CHANNEL, &adc_value) != 0) {
     return false;
   }
 
-  int16_t raw_temp = (raw_data[0] << 8) | raw_data[1];
-  raw_temp >>= 4;
+  // Convert ADC value to millivolts using integer math
+  // (adc_value * 3300) / 4095
+  // To maintain precision, use 64-bit math if needed
+  uint32_t voltage_mv = ((uint32_t)adc_value * 3300 + 2047) / 4095;
 
-  if (raw_temp & 0x800) {
-    raw_temp |= 0xF000;
-  }
+  // Temperature in milli°C: (voltage_mv - 500) * 1000 / 10 = (voltage_mv - 500)
+  // * 100
+  int32_t temperature_mc = ((int32_t)voltage_mv - 500) * 100;
 
-  temp->temperature_mc = (int32_t)raw_temp * 625 / 10;
+  temp->temperature_mc = temperature_mc;
   return true;
 }

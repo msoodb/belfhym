@@ -20,7 +20,7 @@
 #include "blfm_types.h"
 
 void blfm_actuator_hub_init(void) {
-  //blfm_motor_init();
+  blfm_motor_init();
 
 #if BLFM_LCD_ATTACHED
   blfm_display_init();

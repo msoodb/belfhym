@@ -84,10 +84,11 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   char num_buf[12];
 
   lcd_counter++;
-  if (lcd_counter >= LCD_CYCLE_COUNT) {
+  /*if (lcd_counter >= LCD_CYCLE_COUNT) {
     lcd_counter = 0;
     lcd_mode = (lcd_mode + 1) % 3; // 0=dist,1=speed,2=temp
-  }
+    }*/
+  lcd_mode = 2;
 
   if (lcd_mode == 0) {
     strcpy(buf1, "Dist: ");
@@ -101,7 +102,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     strcat(buf1, " cm/s");
   } else if (lcd_mode == 2) {
     strcpy(buf1, "Temp: ");
-    //uint_to_str(num_buf, in->temperature_c);
+    uint_to_str(num_buf, in->temperature.temperature_mc);
     strcat(buf1, num_buf);
     strcat(buf1, " C");
   }
