@@ -7,20 +7,12 @@
  * See LICENSE file for details.
  */
 
-#include "blfm_display.h"
 #include "FreeRTOS.h"
+#include "task.h"
+#include "blfm_display.h"
 #include "blfm_gpio.h"
 #include "stm32f1xx.h"
-#include "task.h"
-
-#define LCD_GPIO GPIOA
-
-#define LCD_RS_PIN 0 // PA0
-#define LCD_E_PIN 1  // PA1
-#define LCD_D4_PIN 2 // PA2
-#define LCD_D5_PIN 3 // PA3
-#define LCD_D6_PIN 4 // PA4
-#define LCD_D7_PIN 5 // PA5
+#include "blfm_pins.h"
 
 static void lcd_pulse_enable(void);
 static void lcd_write_nibble(uint8_t nibble);

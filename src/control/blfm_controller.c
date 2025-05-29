@@ -59,12 +59,12 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     return;
 
   // Default motor values
-  out->motor.speed = 0;
-  out->motor.direction = 0;
+  out->motor.left.direction = 0;
+  out->motor.left.speed = 100;
 
   if (in->ultrasonic.distance_mm >= 200) {
-    out->motor.speed = 128;
-    out->motor.direction = 1;
+    out->motor.right.direction = 0;
+    out->motor.right.speed = 100;
   }
 
   out->led.mode = BLFM_LED_MODE_BLINK;

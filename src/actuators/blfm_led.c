@@ -15,21 +15,14 @@
 #include "queue.h"
 #include "stm32f1xx.h"
 #include "task.h"
+#include "blfm_pins.h"
+
+// Internal state for blinking
+#define LED_TASK_INTERVAL_MS 10
 
 #define LED_TASK_STACK_SIZE 256
 #define LED_TASK_PRIORITY 2
 #define LED_QUEUE_LENGTH 1
-
-// Onboard LED: PC13
-#define LED_ONBOARD_PORT GPIOC
-#define LED_ONBOARD_PIN 13
-
-// External LED: PB5
-#define LED_EXTERNAL_PORT GPIOB
-#define LED_EXTERNAL_PIN 5
-
-// Internal state for blinking
-#define LED_TASK_INTERVAL_MS 10
 
 static void blfm_led_external_on(void);
 static void blfm_led_external_off(void);
@@ -117,6 +110,6 @@ static void vLedTask(void *pvParameters) {
       break;
     }
 
-    vTaskDelay(pdMS_TO_TICKS(10)); // Short loop delay to avoid CPU hog
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 }

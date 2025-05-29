@@ -14,11 +14,7 @@
 #include "queue.h"
 #include "stm32f1xx.h"
 #include "task.h"
-
-#define TRIG_PORT GPIOB
-#define TRIG_PIN 6
-#define ECHO_PORT GPIOB
-#define ECHO_PIN 3
+#include "blfm_pins.h"
 
 #define ULTRASONIC_TASK_STACK_SIZE 256
 #define ULTRASONIC_TASK_PRIORITY 2
@@ -38,9 +34,9 @@ static bool wait_for_pin(uint32_t port, uint32_t pin, int target_state,
                          uint32_t timeout_ms);
 
 void blfm_ultrasonic_init(void) {
-  blfm_gpio_config_output((uint32_t)TRIG_PORT, TRIG_PIN);
-  blfm_gpio_config_input((uint32_t)ECHO_PORT, ECHO_PIN);
-  blfm_gpio_clear_pin((uint32_t)TRIG_PORT, TRIG_PIN);
+  blfm_gpio_config_output((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
+  blfm_gpio_config_input((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN);
+  blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
 
   // Enable DWT cycle counter
   if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
@@ -96,18 +92,18 @@ static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
 
   uint32_t start, end, duration;
 
-  blfm_gpio_clear_pin((uint32_t)TRIG_PORT, TRIG_PIN);
+  blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
   delay_us(2);
-  blfm_gpio_set_pin((uint32_t)TRIG_PORT, TRIG_PIN);
+  blfm_gpio_set_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
   delay_us(10);
-  blfm_gpio_clear_pin((uint32_t)TRIG_PORT, TRIG_PIN);
+  blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
 
-  if (!wait_for_pin((uint32_t)ECHO_PORT, ECHO_PIN, 1, 30)) {
+  if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 1, 30)) {
     return false;
   }
   start = DWT->CYCCNT;
 
-  if (!wait_for_pin((uint32_t)ECHO_PORT, ECHO_PIN, 0, 30)) {
+  if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 0, 30)) {
     return false;
   }
   end = DWT->CYCCNT;

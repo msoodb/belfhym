@@ -10,9 +10,8 @@
 
 #include "blfm_temperature.h"
 #include "blfm_adc.h"
+#include "blfm_pins.h"
 #include <stdbool.h>
-
-#define ST0248_ADC_CHANNEL 6
 
 void blfm_temperature_init(void) {
   // Initialize ADC, if needed
