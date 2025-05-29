@@ -3,7 +3,7 @@
 
 /* === Hardware presence flags === */
 #define BLFM_LCD_DISABLED 1
-#define BLFM_ULTRASONIC_DISABLED 1
+#define BLFM_ULTRASONIC_DISABLED 0
 #define BLFM_LED_DISABLED 0
 #define BLFM_TEMPRATURE_DISABLED 1
 #define BLFM_MOTOR_DISABLED 1
