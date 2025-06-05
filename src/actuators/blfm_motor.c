@@ -31,10 +31,6 @@ static void blfm_motor_set_side(const blfm_single_motor_command_t *cmd,
                                 bool is_left);
 
 void blfm_motor_init(void) {
-#if BLFM_MOTOR_DISABLED
-  return;
-#endif
-
   // === Configure motor direction pins as output ===
   blfm_gpio_config_output(LEFT_DIR_PORT, LEFT_DIR_PIN1);
   blfm_gpio_config_output(LEFT_DIR_PORT, LEFT_DIR_PIN2);
@@ -58,10 +54,6 @@ void blfm_motor_init(void) {
 }
 
 void blfm_motor_apply(const blfm_motor_command_t *cmd) {
-#if BLFM_MOTOR_DISABLED
-  return;
-#endif
-
   if (!cmd)
     return;
 

@@ -65,7 +65,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   }
 
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = in->ultrasonic.distance_mm;
+  out->led.blink_speed_ms = 100; //in->ultrasonic.distance_mm;
 
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
@@ -113,6 +113,7 @@ void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
   if (!event || !out)
     return;
 
+  return;
   // Handle big sound event (e.g., alert display)
   strcpy(out->display.line1, "!!! ALERT !!!");
   strcpy(out->display.line2, "Noise detected");

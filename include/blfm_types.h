@@ -74,6 +74,13 @@ typedef struct {
 } blfm_motor_command_t;
 
 typedef struct {
+  int32_t target_position; // e.g., in steps
+  uint16_t speed;          // steps per second
+  bool direction;          // false = CW, true = CCW, or use enum
+  bool enabled;            // whether to drive this motor or ignore it
+} blfm_stepmotor_command_t;
+
+typedef struct {
   char line1[BLFM_DISPLAY_LINE_LENGTH];
   char line2[BLFM_DISPLAY_LINE_LENGTH];
 } blfm_display_command_t;

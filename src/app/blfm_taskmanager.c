@@ -57,9 +57,9 @@ void blfm_taskmanager_setup(void) {
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
 
- // Initialize modules
+  // Initialize modules
   blfm_sensor_hub_init();                // ultrasonic sensor polling
-  blfm_bigsound_init(xBigSoundQueue);    // bigsound interrupt sensor with its own queue
+  //blfm_bigsound_init(xBigSoundQueue);    // bigsound interrupt sensor with its own queue
   blfm_controller_init();                // controller logic
   blfm_actuator_hub_init();              // actuators (LED, LCD, etc.)
   
