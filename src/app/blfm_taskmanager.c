@@ -25,6 +25,7 @@
 #include "queue.h"
 #include "task.h"
 
+#include "blfm_pwm.h"
 // --- Task Configuration ---
 #define SENSOR_HUB_TASK_STACK 256
 #define CONTROLLER_TASK_STACK 256
@@ -73,7 +74,7 @@ void blfm_taskmanager_setup(void) {
   blfm_controller_init();   // controller logic
   blfm_actuator_hub_init(); // actuators (LED, LCD, etc.)
 
-  // Create tasks
+   // Create tasks
   xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
               SENSOR_HUB_TASK_PRIORITY, NULL);
 

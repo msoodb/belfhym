@@ -31,7 +31,7 @@ int main(void) {
 
   // Initialize system clocks, peripherals, and low-level hardware
   blfm_board_init();
-  
+
   // Set up all RTOS tasks and any necessary synchronization primitives
   blfm_taskmanager_setup();
 

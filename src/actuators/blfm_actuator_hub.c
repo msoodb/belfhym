@@ -17,16 +17,13 @@
 #include "blfm_servomotor.h"
 #include "blfm_types.h"
 
-#include "blfm_config.h"
-#include "blfm_types.h"
-
 void blfm_actuator_hub_init(void) {
   //blfm_motor_init();
   //blfm_display_init();
   blfm_led_init();
+  blfm_servomotor_init();
   //blfm_alarm_init();
   //blfm_radio_init();
-  blfm_servomotor_init();
 }
 
 void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {

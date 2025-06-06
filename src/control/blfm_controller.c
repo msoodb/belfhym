@@ -66,7 +66,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   }
 
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 100; //in->ultrasonic.distance_mm;
+  out->led.blink_speed_ms = 200; //in->ultrasonic.distance_mm;
 
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
@@ -87,7 +87,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     direction = false;
   else if (out->servo.angle <= 0)
     direction = true;
-  
+     
   // LCD display logic
   char buf1[17]; // 16 + null terminator
   char num_buf[12];

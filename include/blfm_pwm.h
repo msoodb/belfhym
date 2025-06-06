@@ -13,8 +13,8 @@
 
 #include <stdint.h>
 
-void blfm_pwm_init(uint8_t channel);
-void blfm_pwm_set_duty(uint8_t channel, uint16_t duty);
+void blfm_pwm_init();
+void blfm_pwm_set_pulse_us(uint16_t us);
 
 #endif // BLFM_PWM_H
 

@@ -16,11 +16,13 @@
 #include "blfm_adc.h"
 #include "blfm_delay.h"
 #include "blfm_config.h"
+#include "blfm_pwm.h"
 
 void blfm_board_init(void) {
   blfm_clock_init();
   blfm_gpio_init();
-
+  blfm_pwm_init();
+  
 #ifdef BLFM_DEBUG_ENABLED
    // Enable DWT cycle counter for timing
   if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
@@ -32,6 +34,6 @@ void blfm_board_init(void) {
   
   blfm_uart_init();
   blfm_i2c_init();
-  //blfm_adc_init();
+  blfm_adc_init();
   blfm_delay_init();
 }
