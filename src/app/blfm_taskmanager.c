@@ -18,9 +18,9 @@
 #include "blfm_taskmanager.h"
 #include "FreeRTOS.h"
 #include "blfm_actuator_hub.h"
+#include "blfm_bigsound.h"
 #include "blfm_controller.h"
 #include "blfm_sensor_hub.h"
-#include "blfm_bigsound.h"
 #include "blfm_types.h"
 #include "queue.h"
 #include "task.h"
@@ -38,6 +38,7 @@
 static QueueHandle_t xSensorDataQueue = NULL;
 static QueueHandle_t xBigSoundQueue = NULL;
 static QueueHandle_t xActuatorCmdQueue = NULL;
+static QueueSetHandle_t xControllerQueueSet = NULL;
 
 // --- Task Prototypes ---
 static void vSensorHubTask(void *pvParameters);
@@ -57,12 +58,22 @@ void blfm_taskmanager_setup(void) {
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
 
+  // Create queue set (sum of queue lengths)
+  xControllerQueueSet =
+      xQueueCreateSet(10); // total combined items that may be waiting
+  configASSERT(xControllerQueueSet != NULL);
+
+  // Add queues to the set
+  xQueueAddToSet(xSensorDataQueue, xControllerQueueSet);
+  xQueueAddToSet(xBigSoundQueue, xControllerQueueSet);
+
   // Initialize modules
-  blfm_sensor_hub_init();                // ultrasonic sensor polling
-  //blfm_bigsound_init(xBigSoundQueue);    // bigsound interrupt sensor with its own queue
-  blfm_controller_init();                // controller logic
-  blfm_actuator_hub_init();              // actuators (LED, LCD, etc.)
-  
+  blfm_sensor_hub_init(); // ultrasonic sensor polling
+  // blfm_bigsound_init(xBigSoundQueue);    // bigsound interrupt sensor with
+  // its own queue
+  blfm_controller_init();   // controller logic
+  blfm_actuator_hub_init(); // actuators (LED, LCD, etc.)
+
   // Create tasks
   xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
               SENSOR_HUB_TASK_PRIORITY, NULL);
@@ -96,18 +107,29 @@ static void vControllerTask(void *pvParameters) {
   blfm_bigsound_event_t bigsound_event;
   blfm_actuator_command_t command;
 
+  QueueSetMemberHandle_t xActivatedQueue;
+
   for (;;) {
-    // Wait for either sensor data or bigsound event (non-blocking poll both queues)
-    if (xQueueReceive(xSensorDataQueue, &sensor_data, 0) == pdPASS) {
-      blfm_controller_process(&sensor_data, &command);
-      xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+
+    // Wait until one of the queues has data
+    xActivatedQueue =
+        xQueueSelectFromSet(xControllerQueueSet, pdMS_TO_TICKS(100));
+
+    if (xActivatedQueue == NULL) {
+      continue; // timeout, loop again
     }
 
-    if (xQueueReceive(xBigSoundQueue, &bigsound_event, 0) == pdPASS) {
-      blfm_controller_process_bigsound(&bigsound_event, &command);
-      xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+    if (xActivatedQueue == xSensorDataQueue) {
+      if (xQueueReceive(xSensorDataQueue, &sensor_data, 0) == pdPASS) {
+        blfm_controller_process(&sensor_data, &command);
+        xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+      }
+    } else if (xActivatedQueue == xBigSoundQueue) {
+      if (xQueueReceive(xBigSoundQueue, &bigsound_event, 0) == pdPASS) {
+        blfm_controller_process_bigsound(&bigsound_event, &command);
+        xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+      }
     }
-    vTaskDelay(pdMS_TO_TICKS(10));
   }
 }
 

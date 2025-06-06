@@ -27,10 +27,10 @@ void blfm_gpio_config_output(uint32_t port, uint32_t pin) {
 
   if (pin <= 7) {
     gpio->CRL &= ~(0xF << (pin * 4));
-    gpio->CRL |= (0x2 << (pin * 4)); // Output, push-pull, 2 MHz
+    gpio->CRL |= (0x3 << (pin * 4)); // Output, push-pull, 50 MHz (fastest)
   } else {
     gpio->CRH &= ~(0xF << ((pin - 8) * 4));
-    gpio->CRH |= (0x2 << ((pin - 8) * 4)); // Output, push-pull, 2 MHz
+    gpio->CRH |= (0x3 << ((pin - 8) * 4)); // Output, push-pull, 50 MHz (fastest)
   }
 }
 
@@ -43,7 +43,7 @@ void blfm_gpio_config_input(uint32_t port, uint32_t pin) {
   } else {
     uint32_t shift = (pin - 8) * 4;
     gpio->CRH &= ~(0xF << shift);
-    gpio->CRH |= (0x4 << (pin * 4)); // Input floating
+    gpio->CRH |= (0x4 << ((pin - 8) * 4));
   }
 
   // Enable pull-up by default

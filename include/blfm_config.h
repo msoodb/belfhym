@@ -16,6 +16,7 @@
 #define BLFM_DEFAULT_STACK_SIZE       256
 
 /* === Feature toggles === */
+#define BLFM_DEBUG_ENABLED 1
 #define ENABLE_DEBUG_PRINT            1
 #define ENABLE_LOGGING                0
 

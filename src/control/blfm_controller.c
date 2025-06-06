@@ -24,6 +24,7 @@ static int lcd_counter = 0;
 #define LCD_CYCLE_COUNT 50 // number of loops before switching mode
 
 static void uint_to_str(char *buf, uint16_t value);
+static bool direction = true;
 
 /*
   functions
@@ -76,7 +77,18 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     out->alarm.active = false;
   }
 
-// LCD display logic
+  
+  if (direction)
+    out->servo.angle += 5;
+  else
+    out->servo.angle -= 5;
+
+  if (out->servo.angle >= 180)
+    direction = false;
+  else if (out->servo.angle <= 0)
+    direction = true;
+  
+  // LCD display logic
   char buf1[17]; // 16 + null terminator
   char num_buf[12];
 

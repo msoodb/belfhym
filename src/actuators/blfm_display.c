@@ -23,10 +23,6 @@ static void blfm_lcd_send_data(uint8_t data);
 static void safe_delay_ms(uint32_t ms);
 
 void blfm_display_init(void) {
-#if BLFM_LCD_DISABLED
-  return;
-#endif
-
   RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
 
   blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_RS_PIN);
@@ -64,10 +60,7 @@ void blfm_display_init(void) {
 }
 
 void blfm_display_apply(const blfm_display_command_t *cmd) {
-#if BLFM_LCD_DISABLED
-  return;
-#endif
-  
+ 
   if (!cmd)
     return;
 

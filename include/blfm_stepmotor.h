@@ -15,15 +15,6 @@
 #include <stdbool.h>
 #include "blfm_types.h"
 
-// Enum to label each stepper motor
-typedef enum {
-  BLFM_STEPMOTOR_NECK = 0,
-  BLFM_STEPMOTOR_ELBOW,
-  BLFM_STEPMOTOR_WRIST,
-  BLFM_STEPMOTOR_COUNT // always last
-} blfm_stepmotor_id_t;
-
-
 // === API ===
 void blfm_stepmotor_init(void);
 void blfm_stepmotor_apply(blfm_stepmotor_id_t id, const blfm_stepmotor_command_t *cmd);

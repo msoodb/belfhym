@@ -80,6 +80,23 @@ typedef struct {
   bool enabled;            // whether to drive this motor or ignore it
 } blfm_stepmotor_command_t;
 
+typedef enum {
+  BLFM_STEPMOTOR_NECK = 0,
+  BLFM_STEPMOTOR_ELBOW,
+  BLFM_STEPMOTOR_WRIST,
+  BLFM_STEPMOTOR_COUNT
+} blfm_stepmotor_id_t;
+
+typedef struct {
+  uint8_t angle;    // Servo angle in degrees (0-180)
+  uint16_t pulse_width_us; // Optional: pulse width in microseconds (e.g., 1000-2000us)
+} blfm_servomotor_command_t;
+
+typedef enum {
+  BLFM_SERVOMOTOR_NECK = 0,
+  BLFM_SERVOMOTOR_COUNT
+} blfm_servomotor_id_t;
+
 typedef struct {
   char line1[BLFM_DISPLAY_LINE_LENGTH];
   char line2[BLFM_DISPLAY_LINE_LENGTH];
@@ -116,6 +133,8 @@ typedef struct {
   blfm_led_command_t led;
   blfm_alarm_command_t alarm;
   blfm_radio_command_t radio;
+  blfm_servomotor_command_t servo;
+  blfm_stepmotor_command_t stepmotor;
 } blfm_actuator_command_t;
 
 #endif // BLFM_TYPES_H
