@@ -19,6 +19,9 @@
 #define SERVO_TASK_PRIORITY 2
 #define SERVO_QUEUE_LENGTH 1
 
+#define SERVO_STEP_US 50
+#define SERVO_UPDATE_MS 8
+
 static QueueHandle_t servo_command_queue = NULL;
 static TaskHandle_t servo_task_handle = NULL;
 
@@ -61,45 +64,38 @@ static void servo_smooth_move(uint16_t *current_pulse, uint16_t target_pulse) {
     return;
 
   int16_t diff = (int16_t)target_pulse - (int16_t)(*current_pulse);
-
-  // Step size: choose something reasonable (e.g. 10 us)
-  int16_t step = 10;
+  int16_t step = SERVO_STEP_US;
 
   if (diff > 0) {
-    if (diff < step)
-      *current_pulse = target_pulse;
-    else
-      *current_pulse += step;
+    *current_pulse += (diff < step) ? diff : step;
   } else {
-    if (-diff < step)
-      *current_pulse = target_pulse;
-    else
-      *current_pulse -= step;
+    *current_pulse += (diff > -step) ? diff : -step;
   }
 
   blfm_pwm_set_pulse_us(*current_pulse);
-  vTaskDelay(pdMS_TO_TICKS(20)); // Wait 20 ms per step (~50Hz)
+  vTaskDelay(pdMS_TO_TICKS(SERVO_UPDATE_MS));
 }
 
 static void vServoTask(void *pvParameters) {
   (void)pvParameters;
 
-  uint16_t current_pulse = angle_to_pulse_us(90); // Start centered
+  uint16_t current_pulse = angle_to_pulse_us(90);
   uint16_t target_pulse = current_pulse;
 
   for (;;) {
-    blfm_servomotor_command_t new_cmd;
-
-    // Try to get new command from queue (non-blocking)
-    if (xQueueReceive(servo_command_queue, &new_cmd, 0) == pdPASS) {
-      if (new_cmd.pulse_width_us >= 1000 && new_cmd.pulse_width_us <= 2000) {
-        target_pulse = new_cmd.pulse_width_us;
-      } else {
-        target_pulse = angle_to_pulse_us(new_cmd.angle);
+    // Only take a new command if we're at the target
+    if (current_pulse == target_pulse) {
+      blfm_servomotor_command_t new_cmd;
+      if (xQueueReceive(servo_command_queue, &new_cmd, portMAX_DELAY) ==
+          pdPASS) {
+        if (new_cmd.pulse_width_us >= 1000 && new_cmd.pulse_width_us <= 2000)
+          target_pulse = new_cmd.pulse_width_us;
+        else
+          target_pulse = angle_to_pulse_us(new_cmd.angle);
       }
     }
 
-    // Smoothly move servo towards target pulse
+    // Move one step toward the target
     servo_smooth_move(&current_pulse, target_pulse);
   }
 }
