@@ -20,7 +20,7 @@
 #define LED_EXTERNAL_PIN 5
 
 #define LED_DEBUG_PORT GPIOB
-#define LED_DEBUG_PIN 4
+#define LED_DEBUG_PIN 7
 
 // Ultrasonic 
 #define ULTRASONIC_TRIG_PORT GPIOB

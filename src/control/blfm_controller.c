@@ -62,10 +62,10 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 
   // Default motor values
   out->motor.left.direction = 0;
-  out->motor.left.speed = 100;
+  out->motor.left.speed = 255;
 
   out->motor.right.direction = 0;
-  out->motor.right.speed = 100;
+  out->motor.right.speed = 255;
 
   /*if (in->ultrasonic.distance_mm >= 200) {
     out->motor.right.direction = 0;

@@ -63,8 +63,6 @@ void blfm_motor_apply(const blfm_motor_command_t *cmd) {
   if (!cmd)
     return;
 
-  blfm_gpio_set_pin((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN);
-  
   blfm_motor_set_side(&cmd->left, true);
   blfm_motor_set_side(&cmd->right, false);
 }
@@ -101,4 +99,7 @@ static void blfm_motor_set_side(const blfm_single_motor_command_t *cmd, bool is_
 
   // Clamp speed to 0–255
   *pwm_ccr = cmd->speed;
+
+  //blfm_gpio_set_pin((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN);
+ 
 }
