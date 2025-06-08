@@ -64,10 +64,13 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   out->motor.left.direction = 0;
   out->motor.left.speed = 100;
 
-  if (in->ultrasonic.distance_mm >= 200) {
+  out->motor.right.direction = 0;
+  out->motor.right.speed = 100;
+
+  /*if (in->ultrasonic.distance_mm >= 200) {
     out->motor.right.direction = 0;
     out->motor.right.speed = 100;
-  }
+    }*/
 
   out->led.mode = BLFM_LED_MODE_BLINK;
   out->led.blink_speed_ms = 200; //in->ultrasonic.distance_mm;
@@ -81,7 +84,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     out->alarm.active = false;
   }
 
-if (direction)
+  if (direction)
     out->servo.angle += 5;
   else
     out->servo.angle -= 5;
