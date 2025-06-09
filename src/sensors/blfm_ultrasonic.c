@@ -14,6 +14,7 @@
 #include "blfm_pins.h"
 #include "queue.h"
 #include "task.h"
+#include <stdbool.h>
 
 #define ULTRASONIC_TASK_STACK_SIZE 256
 #define ULTRASONIC_TASK_PRIORITY 2
@@ -99,10 +100,13 @@ static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
   delay_us(10);
   blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
 
+
   if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 1,
                     30)) {
     return false;
   }
+
+  
   start = DWT->CYCCNT;
 
   if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 0,
@@ -111,6 +115,7 @@ static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
   }
   end = DWT->CYCCNT;
 
+  
   duration = end - start;
   uint32_t us = duration / (SystemCoreClock / 1000000);
   data->distance_mm = (uint16_t)(us / 58);
@@ -120,11 +125,13 @@ static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
 
 static void vUltrasonicTask(void *pvParameters) {
   (void)pvParameters;
-
+ 
   for (;;) {
+
     // Wait until someone calls read()
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
+    
     blfm_ultrasonic_data_t data;
     if (blfm_ultrasonic_action(&data)) {
       xQueueOverwrite(ultrasonic_data_queue, &data);

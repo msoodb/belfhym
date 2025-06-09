@@ -23,8 +23,14 @@
 
 static int lcd_mode = 0;
 static int lcd_counter = 0;
-static bool turn_left = true;
 static bool direction = true;
+
+typedef enum { STATE_FORWARD, STATE_BACKWARD, STATE_ROTATE } robot_state_t;
+typedef enum { MOTOR_BACKWARD = 0, MOTOR_FORWARD = 1 } motor_direction_t;
+static robot_state_t state = STATE_FORWARD;
+//static TickType_t state_start_time = 0;
+const TickType_t ROTATE_DURATION = pdMS_TO_TICKS(360); // rotate for 700ms
+//static bool turn_left = true;
 
 static void uint_to_str(char *buf, uint16_t value);
 
@@ -58,22 +64,40 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   if (!in || !out)
     return;
 
-  if (in->ultrasonic.distance_mm < 200) {
-    if (turn_left) {
-      out->motor.left.direction = 1;
-      out->motor.right.direction = 0;
+  switch (state) {
+  case STATE_FORWARD:
+    if (in->ultrasonic.distance_mm > 200) {
+      blfm_gpio_set_pin((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN);
+      out->motor.left.direction = MOTOR_FORWARD;
+      out->motor.right.direction = MOTOR_FORWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
     } else {
-      out->motor.left.direction = 0;
-      out->motor.right.direction = 1;
+      state = STATE_BACKWARD;
     }
+    break;
 
-    out->motor.left.speed = 180;
-    out->motor.right.speed = 180;
+  case STATE_BACKWARD:
+    if (in->ultrasonic.distance_mm < 250) {
+      out->motor.left.direction = MOTOR_BACKWARD;
+      out->motor.right.direction = MOTOR_BACKWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
+    } else {
+      state = STATE_ROTATE;
+    }
+    break;
 
-    // Flip for next time
-    turn_left = !turn_left;
+  case STATE_ROTATE:
+    blfm_gpio_clear_pin((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN);
+    out->motor.left.direction = MOTOR_FORWARD;
+    out->motor.right.direction = MOTOR_BACKWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    state = STATE_FORWARD;
+    break;
   }
-
+ 
   out->led.mode = BLFM_LED_MODE_BLINK;
   out->led.blink_speed_ms = 200; // in->ultrasonic.distance_mm;
 
