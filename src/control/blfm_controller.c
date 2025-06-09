@@ -18,14 +18,13 @@
 #include "blfm_pins.h"
 #include "blfm_config.h"
 
-static int lcd_mode = 0;
-static int lcd_counter = 0;
-
 #define LCD_CYCLE_COUNT 50 // number of loops before switching mode
 #define SWEEP_MIN_ANGLE 0
 #define SWEEP_MAX_ANGLE 180
 
-
+static int lcd_mode = 0;
+static int lcd_counter = 0;
+static bool turn_left = true;
 static bool direction = true;
 
 static void uint_to_str(char *buf, uint16_t value);
@@ -60,18 +59,22 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   if (!in || !out)
     return;
 
-  // Default motor values
-  out->motor.left.direction = 0;
-  out->motor.left.speed = 255;
+  if (in->ultrasonic.distance_mm < 200) {
+    if (turn_left) {
+      out->motor.left.direction = 1;
+      out->motor.right.direction = 0;
+    } else {
+      out->motor.left.direction = 0;
+      out->motor.right.direction = 1;
+    }
 
-  out->motor.right.direction = 0;
-  out->motor.right.speed = 255;
+    out->motor.left.speed = 180;
+    out->motor.right.speed = 180;
 
-  /*if (in->ultrasonic.distance_mm >= 200) {
-    out->motor.right.direction = 0;
-    out->motor.right.speed = 100;
-    }*/
-
+    // Flip for next time
+    turn_left = !turn_left;
+  }
+  
   out->led.mode = BLFM_LED_MODE_BLINK;
   out->led.blink_speed_ms = 200; //in->ultrasonic.distance_mm;
 
