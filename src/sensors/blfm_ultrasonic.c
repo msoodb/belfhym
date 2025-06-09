@@ -11,11 +11,9 @@
 #include "blfm_ultrasonic.h"
 #include "FreeRTOS.h"
 #include "blfm_gpio.h"
-#include "queue.h"
-#include "stm32f1xx.h"
-#include "task.h"
 #include "blfm_pins.h"
-#include "blfm_config.h"
+#include "queue.h"
+#include "task.h"
 
 #define ULTRASONIC_TASK_STACK_SIZE 256
 #define ULTRASONIC_TASK_PRIORITY 2
@@ -35,10 +33,6 @@ static bool wait_for_pin(uint32_t port, uint32_t pin, int target_state,
                          uint32_t timeout_ms);
 
 void blfm_ultrasonic_init(void) {
-#if BLFM_ULTRASONIC_DISABLED
-  return;
-#endif
-
   blfm_gpio_config_output((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
   blfm_gpio_config_input((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN);
   blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
@@ -61,15 +55,12 @@ void blfm_ultrasonic_init(void) {
         vUltrasonicTask, "UltrasonicTask", ULTRASONIC_TASK_STACK_SIZE, NULL,
         ULTRASONIC_TASK_PRIORITY, &ultrasonic_task_handle);
     configASSERT(result == pdPASS);
-    if (result != pdPASS) {}
+    if (result != pdPASS) {
+    }
   }
 }
 
 bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
-#if BLFM_ULTRASONIC_DISABLED
-  return true;
-#endif
-
   if (!data || !ultrasonic_data_queue)
     return false;
 
@@ -83,7 +74,8 @@ bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
   return false;
 }
 
-static bool wait_for_pin(uint32_t port, uint32_t pin, int target_state, uint32_t timeout_ms) {
+static bool wait_for_pin(uint32_t port, uint32_t pin, int target_state,
+                         uint32_t timeout_ms) {
   uint32_t start = DWT->CYCCNT;
   uint32_t timeout_cycles = (SystemCoreClock / 1000) * timeout_ms;
 
@@ -107,12 +99,14 @@ static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
   delay_us(10);
   blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
 
-  if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 1, 30)) {
+  if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 1,
+                    30)) {
     return false;
   }
   start = DWT->CYCCNT;
 
-  if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 0, 30)) {
+  if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 0,
+                    30)) {
     return false;
   }
   end = DWT->CYCCNT;

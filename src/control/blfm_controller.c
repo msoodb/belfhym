@@ -9,14 +9,13 @@
  */
 
 #include "blfm_controller.h"
-#include "blfm_gpio.h"
-#include "blfm_types.h"
-#include <stdbool.h>
 #include "FreeRTOS.h"
-#include "task.h"
-#include "libc_stubs.h"
+#include "blfm_gpio.h"
 #include "blfm_pins.h"
-#include "blfm_config.h"
+#include "blfm_types.h"
+#include "libc_stubs.h"
+#include "task.h"
+#include <stdbool.h>
 
 #define LCD_CYCLE_COUNT 50 // number of loops before switching mode
 #define SWEEP_MIN_ANGLE 0
@@ -74,9 +73,9 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     // Flip for next time
     turn_left = !turn_left;
   }
-  
+
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 200; //in->ultrasonic.distance_mm;
+  out->led.blink_speed_ms = 200; // in->ultrasonic.distance_mm;
 
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
@@ -96,17 +95,17 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     direction = false;
   else if (out->servo.angle <= SWEEP_MIN_ANGLE)
     direction = true;
-  
-    // LCD display logic
+
+  // LCD display logic
   char buf1[17]; // 16 + null terminator
   char num_buf[12];
 
   lcd_counter++;
-  /*if (lcd_counter >= LCD_CYCLE_COUNT) {
+  if (lcd_counter >= LCD_CYCLE_COUNT) {
     lcd_counter = 0;
     lcd_mode = (lcd_mode + 1) % 3; // 0=dist,1=speed,2=temp
-    }*/
-  lcd_mode = 2;
+  }
+  // lcd_mode = 2;
 
   if (lcd_mode == 0) {
     strcpy(buf1, "Dist: ");
@@ -115,7 +114,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     strcat(buf1, " mm");
   } else if (lcd_mode == 1) {
     strcpy(buf1, "Speed: ");
-    //uint_to_str(num_buf, in->imu.speed_cm_s);
+    // uint_to_str(num_buf, in->imu.speed_cm_s);
     strcat(buf1, num_buf);
     strcat(buf1, " cm/s");
   } else if (lcd_mode == 2) {
@@ -139,7 +138,7 @@ void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
   strcpy(out->display.line1, "!!! ALERT !!!");
   strcpy(out->display.line2, "Noise detected");
   out->led.mode = BLFM_LED_MODE_ON;
-    
+
   //   blfm_gpio_config_output((uint32_t)GPIOB, 11);
   blfm_gpio_set_pin((uint32_t)GPIOB, 11);
 
