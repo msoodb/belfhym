@@ -89,7 +89,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     break;
 
   case STATE_ROTATE:
-    blfm_gpio_clear_pin((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN);
     out->motor.left.direction = MOTOR_FORWARD;
     out->motor.right.direction = MOTOR_BACKWARD;
     out->motor.left.speed = 255;
