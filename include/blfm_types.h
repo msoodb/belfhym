@@ -58,7 +58,22 @@ typedef struct {
 } blfm_bigsound_event_t;
 
 
+typedef enum {
+  BLFM_IR_CMD_NONE = 0,
+  BLFM_IR_CMD_SET_AUTO,
+  BLFM_IR_CMD_SET_MANUAL,
+  BLFM_IR_CMD_TOGGLE_POWER,
+  BLFM_IR_CMD_FORWARD,
+  BLFM_IR_CMD_BACKWARD,
+  BLFM_IR_CMD_LEFT,
+  BLFM_IR_CMD_RIGHT,
+} blfm_ir_command_t;
 
+typedef struct {
+  uint32_t timestamp;      // Tick count at event
+  uint32_t pulse_us;        // Raw IR code received
+  blfm_ir_command_t command; // Decoded command
+} blfm_ir_remote_event_t;
 
 //-----------------------
 //  actuators

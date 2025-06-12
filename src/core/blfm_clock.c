@@ -33,4 +33,7 @@ void blfm_clock_init(void) {
   RCC->CFGR |= RCC_CFGR_SW_PLL;
   while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL)
     ;
+
+  // Update CMSIS SystemCoreClock variable
+  SystemCoreClockUpdate();
 }

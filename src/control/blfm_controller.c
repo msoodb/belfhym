@@ -21,16 +21,16 @@
 #define SWEEP_MIN_ANGLE 0
 #define SWEEP_MAX_ANGLE 180
 
-static int lcd_mode = 0;
-static int lcd_counter = 0;
-static bool direction = true;
+//static int lcd_mode = 0;
+//static int lcd_counter = 0;
+//static bool direction = true;
 
-typedef enum { STATE_FORWARD, STATE_BACKWARD, STATE_ROTATE } robot_state_t;
-typedef enum { MOTOR_BACKWARD = 0, MOTOR_FORWARD = 1 } motor_direction_t;
-static robot_state_t state = STATE_FORWARD;
-//static TickType_t state_start_time = 0;
-const TickType_t ROTATE_DURATION = pdMS_TO_TICKS(360); // rotate for 700ms
-//static bool turn_left = true;
+typedef enum { BLFM_MODE_AUTO, BLFM_MODE_MANUAL } blfm_mode_t;
+typedef enum { BLFM_STATE_FORWARD, BLFM_STATE_BACKWARD, BLFM_STATE_ROTATE } blfm_state_t;
+typedef enum { BLFM_MOTOR_FORWARD = 0, BLFM_MOTOR_BACKWARD = 1 } blfm_motor_direction_t;
+
+static blfm_mode_t blfm_current_mode = BLFM_MODE_AUTO;
+static blfm_state_t blfm_state = BLFM_STATE_FORWARD;
 
 static void uint_to_str(char *buf, uint16_t value);
 
@@ -64,52 +64,53 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   if (!in || !out)
     return;
 
-  switch (state) {
-  case STATE_FORWARD:
-    if (in->ultrasonic.distance_mm > 200) {
-      blfm_gpio_set_pin((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN);
-      out->motor.left.direction = MOTOR_FORWARD;
-      out->motor.right.direction = MOTOR_FORWARD;
+  /*if (blfm_current_mode == BLFM_MODE_AUTO) {
+    switch (blfm_state) {
+    case BLFM_STATE_FORWARD:
+      if (in->ultrasonic.distance_mm > 200) {
+        out->motor.left.direction = BLFM_MOTOR_FORWARD;
+        out->motor.right.direction = BLFM_MOTOR_FORWARD;
+        out->motor.left.speed = 255;
+        out->motor.right.speed = 255;
+      } else {
+        blfm_state = BLFM_STATE_BACKWARD;
+      }
+      break;
+
+    case BLFM_STATE_BACKWARD:
+      if (in->ultrasonic.distance_mm < 220) {
+        out->motor.left.direction = BLFM_MOTOR_BACKWARD;
+        out->motor.right.direction = BLFM_MOTOR_BACKWARD;
+        out->motor.left.speed = 255;
+        out->motor.right.speed = 255;
+      } else {
+        blfm_state = BLFM_STATE_ROTATE;
+      }
+      break;
+
+    case BLFM_STATE_ROTATE:
+      out->motor.left.direction = BLFM_MOTOR_FORWARD;
+      out->motor.right.direction = BLFM_MOTOR_BACKWARD;
       out->motor.left.speed = 255;
       out->motor.right.speed = 255;
-    } else {
-      state = STATE_BACKWARD;
+      blfm_state = BLFM_STATE_FORWARD;
+      break;
     }
-    break;
+    }*/
 
-  case STATE_BACKWARD:
-    if (in->ultrasonic.distance_mm < 250) {
-      out->motor.left.direction = MOTOR_BACKWARD;
-      out->motor.right.direction = MOTOR_BACKWARD;
-      out->motor.left.speed = 255;
-      out->motor.right.speed = 255;
-    } else {
-      state = STATE_ROTATE;
-    }
-    break;
-
-  case STATE_ROTATE:
-    out->motor.left.direction = MOTOR_FORWARD;
-    out->motor.right.direction = MOTOR_BACKWARD;
-    out->motor.left.speed = 255;
-    out->motor.right.speed = 255;
-    state = STATE_FORWARD;
-    break;
-  }
- 
   out->led.mode = BLFM_LED_MODE_BLINK;
   out->led.blink_speed_ms = 200; // in->ultrasonic.distance_mm;
 
-  if (in->ultrasonic.distance_mm < 100) {
+  /* if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
     out->alarm.pattern_id = 1;
     out->alarm.duration_ms = 500;
     out->alarm.volume = 10;
   } else {
     out->alarm.active = false;
-  }
+    }*/
 
-  if (direction)
+  /*if (direction)
     out->servo.angle += 5;
   else
     out->servo.angle -= 5;
@@ -118,9 +119,10 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     direction = false;
   else if (out->servo.angle <= SWEEP_MIN_ANGLE)
     direction = true;
-
+  */
+  
   // LCD display logic
-  char buf1[17]; // 16 + null terminator
+  /*char buf1[17]; // 16 + null terminator
   char num_buf[12];
 
   lcd_counter++;
@@ -149,6 +151,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   // Copy to display command
   strcpy(out->display.line1, buf1);
   strcpy(out->display.line2, num_buf);
+  */
 }
 
 void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
@@ -160,7 +163,7 @@ void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
   // Handle big sound event (e.g., alert display)
   strcpy(out->display.line1, "!!! ALERT !!!");
   strcpy(out->display.line2, "Noise detected");
-  out->led.mode = BLFM_LED_MODE_ON;
+  //out->led.mode = BLFM_LED_MODE_ON;
 
   //   blfm_gpio_config_output((uint32_t)GPIOB, 11);
   blfm_gpio_set_pin((uint32_t)GPIOB, 11);
@@ -169,6 +172,84 @@ void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
   for (volatile int i = 0; i < 10000; i++) {
     __asm__("nop");
   }
-
+  
   blfm_gpio_clear_pin((uint32_t)GPIOB, 11);
+}
+
+void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
+                                       blfm_actuator_command_t *out) {
+  static bool robot_enabled = false;
+
+  blfm_gpio_toggle_pin((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN); // toggle on every IR pulse
+
+  if (!in || !out)
+    return;
+
+  robot_enabled = true;
+  
+  switch (in->command) {
+  case BLFM_IR_CMD_SET_AUTO:
+    blfm_current_mode = BLFM_MODE_AUTO;
+    break;
+
+  case BLFM_IR_CMD_SET_MANUAL:
+    blfm_current_mode = BLFM_MODE_MANUAL;
+    break;
+
+  case BLFM_IR_CMD_TOGGLE_POWER:
+    //robot_enabled = !robot_enabled;
+    out->motor.left.speed = 0;
+    out->motor.right.speed = 0;
+    out->motor.left.direction = BLFM_MOTOR_FORWARD;
+    out->motor.right.direction = BLFM_MOTOR_FORWARD;
+    break;
+
+  case BLFM_IR_CMD_FORWARD:
+    if (robot_enabled && blfm_current_mode == BLFM_MODE_MANUAL) {
+      out->motor.left.direction = BLFM_MOTOR_FORWARD;
+      out->motor.right.direction = BLFM_MOTOR_FORWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
+    }
+    break;
+
+  case BLFM_IR_CMD_BACKWARD:
+    if (robot_enabled && blfm_current_mode == BLFM_MODE_MANUAL) {
+      out->motor.left.direction = BLFM_MOTOR_BACKWARD;
+      out->motor.right.direction = BLFM_MOTOR_BACKWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
+    }
+    break;
+
+  case BLFM_IR_CMD_LEFT:
+    if (robot_enabled && blfm_current_mode == BLFM_MODE_MANUAL) {
+      out->motor.left.direction = BLFM_MOTOR_BACKWARD;
+      out->motor.right.direction = BLFM_MOTOR_FORWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
+    }
+    break;
+
+  case BLFM_IR_CMD_RIGHT:
+    if (robot_enabled && blfm_current_mode == BLFM_MODE_MANUAL) {
+      out->motor.left.direction = BLFM_MOTOR_FORWARD;
+      out->motor.right.direction = BLFM_MOTOR_BACKWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
+    }
+    break;
+
+  case BLFM_IR_CMD_NONE:
+    if (blfm_current_mode == BLFM_MODE_MANUAL) {
+      // Stop motors when no key is pressed in manual mode
+      out->motor.left.speed = 0;
+      out->motor.right.speed = 0;
+    }
+    break;
+
+  default:
+    // No action for other keys
+    break;
+  }
 }

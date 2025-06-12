@@ -35,7 +35,6 @@ static TaskHandle_t led_task_handle = NULL;
 void blfm_led_init(void) {
   blfm_gpio_config_output((uint32_t)LED_ONBOARD_PORT, LED_ONBOARD_PIN);
   blfm_gpio_config_output((uint32_t)LED_EXTERNAL_PORT, LED_EXTERNAL_PIN);
-
   blfm_gpio_config_output((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN);
   //blfm_gpio_set_pin((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN);
  
@@ -51,8 +50,6 @@ void blfm_led_init(void) {
     configASSERT(result == pdPASS);
     if (result != pdPASS) {}
   }
-
-  //blfm_gpio_set_pin((uint32_t)LED_DEBUG_PORT, LED_DEBUG_PIN);
 }
 
 void blfm_led_apply(const blfm_led_command_t *cmd) {
