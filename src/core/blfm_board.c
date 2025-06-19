@@ -28,6 +28,7 @@ void blfm_board_init(void) {
   DWT->CYCCNT = 0;
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
+  
   blfm_uart_init();
   blfm_i2c_init();
   blfm_adc_init();

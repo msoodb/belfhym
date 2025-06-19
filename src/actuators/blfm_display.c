@@ -25,12 +25,12 @@ static void safe_delay_ms(uint32_t ms);
 void blfm_display_init(void) {
   RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
 
-  blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_RS_PIN);
-  blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_E_PIN);
-  blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_D4_PIN);
-  blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_D5_PIN);
-  blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_D6_PIN);
-  blfm_gpio_config_output((uint32_t)LCD_GPIO, LCD_D7_PIN);
+  blfm_gpio_config_output((uint32_t)BLFM_LCD_RS_PORT, BLFM_LCD_RS_PIN);
+  blfm_gpio_config_output((uint32_t)BLFM_LCD_E_PORT, BLFM_LCD_E_PIN);
+  blfm_gpio_config_output((uint32_t)BLFM_LCD_D4_PORT, BLFM_LCD_D4_PIN);
+  blfm_gpio_config_output((uint32_t)BLFM_LCD_D5_PORT, BLFM_LCD_D5_PIN);
+  blfm_gpio_config_output((uint32_t)BLFM_LCD_D6_PORT, BLFM_LCD_D6_PIN);
+  blfm_gpio_config_output((uint32_t)BLFM_LCD_D7_PORT, BLFM_LCD_D7_PIN);
 
   // Manual delay for power-on wait (~50ms)
   for (volatile int i = 0; i < 50000; i++)
@@ -79,39 +79,39 @@ void blfm_display_apply(const blfm_display_command_t *cmd) {
 }
 
 static void lcd_pulse_enable(void) {
-  LCD_GPIO->BSRR = (1 << LCD_E_PIN); // E high
+  BLFM_LCD_E_PORT->BSRR = (1 << BLFM_LCD_E_PIN); // E high
   for (volatile int i = 0; i < 200; i++)
     __asm__("nop");
-  LCD_GPIO->BRR = (1 << LCD_E_PIN); // E low
+  BLFM_LCD_E_PORT->BRR = (1 << BLFM_LCD_E_PIN); // E low
   for (volatile int i = 0; i < 200; i++)
     __asm__("nop");
 }
 
 static void lcd_write_nibble(uint8_t nibble) {
-  LCD_GPIO->BRR = (1 << LCD_D4_PIN) | (1 << LCD_D5_PIN) | (1 << LCD_D6_PIN) |
-                  (1 << LCD_D7_PIN);
+  BLFM_LCD_E_PORT->BRR = (1 << BLFM_LCD_D4_PIN) | (1 << BLFM_LCD_D5_PIN) | (1 << BLFM_LCD_D6_PIN) |
+                  (1 << BLFM_LCD_D7_PIN);
 
   if (nibble & 0x01)
-    LCD_GPIO->BSRR = (1 << LCD_D4_PIN);
+    BLFM_LCD_D4_PORT->BSRR = (1 << BLFM_LCD_D4_PIN);
   if (nibble & 0x02)
-    LCD_GPIO->BSRR = (1 << LCD_D5_PIN);
+    BLFM_LCD_D5_PORT->BSRR = (1 << BLFM_LCD_D5_PIN);
   if (nibble & 0x04)
-    LCD_GPIO->BSRR = (1 << LCD_D6_PIN);
+    BLFM_LCD_D6_PORT->BSRR = (1 << BLFM_LCD_D6_PIN);
   if (nibble & 0x08)
-    LCD_GPIO->BSRR = (1 << LCD_D7_PIN);
+    BLFM_LCD_D7_PORT->BSRR = (1 << BLFM_LCD_D7_PIN);
 
   lcd_pulse_enable();
 }
 
 static void blfm_lcd_send_command(uint8_t cmd) {
-  LCD_GPIO->BRR = (1 << LCD_RS_PIN); // RS = 0 for command
+  BLFM_LCD_E_PORT->BRR = (1 << BLFM_LCD_RS_PIN); // RS = 0 for command
   lcd_write_nibble(cmd >> 4);
   lcd_write_nibble(cmd & 0x0F);
   safe_delay_ms(2);
 }
 
 static void blfm_lcd_send_data(uint8_t data) {
-  LCD_GPIO->BSRR = (1 << LCD_RS_PIN); // RS = 1 for data
+  BLFM_LCD_E_PORT->BSRR = (1 << BLFM_LCD_RS_PIN); // RS = 1 for data
   lcd_write_nibble(data >> 4);
   lcd_write_nibble(data & 0x0F);
   safe_delay_ms(2);

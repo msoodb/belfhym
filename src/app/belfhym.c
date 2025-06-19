@@ -18,6 +18,7 @@
 
 #include "blfm_taskmanager.h"
 #include "blfm_board.h"
+#include "stdint.h"
 
 /**
  * @brief Main function: Initializes hardware and starts RTOS task management.
@@ -26,6 +27,7 @@
  * launches the FreeRTOS task manager. If the scheduler starts
  * successfully, execution should never return from `vTaskStartScheduler()`.
  */
+
 
 int main(void) {
 

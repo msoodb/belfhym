@@ -19,15 +19,11 @@
 #include "FreeRTOS.h"
 #include "blfm_actuator_hub.h"
 #include "blfm_bigsound.h"
-#include "blfm_ir_remote.h"
 #include "blfm_controller.h"
 #include "blfm_sensor_hub.h"
 #include "blfm_types.h"
 #include "queue.h"
 #include "task.h"
-#include "blfm_pwm.h"
-#include "blfm_gpio.h"
-#include "blfm_pins.h"
 
 // --- Task Configuration ---
 #define SENSOR_HUB_TASK_STACK 256
@@ -42,6 +38,7 @@
 static QueueHandle_t xSensorDataQueue = NULL;
 static QueueHandle_t xBigSoundQueue = NULL;
 static QueueHandle_t xIRRemoteQueue = NULL;
+static QueueHandle_t xJoystickQueue = NULL;
 static QueueHandle_t xActuatorCmdQueue = NULL;
 static QueueSetHandle_t xControllerQueueSet = NULL;
 
@@ -63,6 +60,9 @@ void blfm_taskmanager_setup(void) {
   xIRRemoteQueue = xQueueCreate(5, sizeof(blfm_ir_remote_event_t));
   configASSERT(xIRRemoteQueue != NULL);
 
+  xJoystickQueue = xQueueCreate(5, sizeof(blfm_joystick_event_t));
+  configASSERT(xJoystickQueue != NULL);
+
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
 
@@ -75,15 +75,16 @@ void blfm_taskmanager_setup(void) {
   xQueueAddToSet(xSensorDataQueue, xControllerQueueSet);
   xQueueAddToSet(xBigSoundQueue, xControllerQueueSet);
   xQueueAddToSet(xIRRemoteQueue, xControllerQueueSet);
- 
-  // Initialize modules
-  blfm_sensor_hub_init(); // ultrasonic sensor polling
-  //blfm_bigsound_init(xBigSoundQueue);    // bigsound interrupt sensor
-  blfm_ir_remote_init(xIRRemoteQueue);
-  blfm_controller_init();   // controller logic
-  blfm_actuator_hub_init(); // actuators (LED, LCD, etc.)
+  xQueueAddToSet(xJoystickQueue, xControllerQueueSet);
 
-   // Create tasks
+  // Initialize modules
+  blfm_sensor_hub_init();
+  // blfm_bigsound_init(xBigSoundQueue);
+  // blfm_ir_remote_init(xIRRemoteQueue);
+  blfm_controller_init();
+  blfm_actuator_hub_init();
+
+  // Create tasks
   xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
               SENSOR_HUB_TASK_PRIORITY, NULL);
 
@@ -115,6 +116,7 @@ static void vControllerTask(void *pvParameters) {
   blfm_sensor_data_t sensor_data;
   blfm_bigsound_event_t bigsound_event;
   blfm_ir_remote_event_t ir_event;
+  blfm_joystick_event_t joystick_event;
   blfm_actuator_command_t command;
 
   QueueSetMemberHandle_t xActivatedQueue;
@@ -141,6 +143,11 @@ static void vControllerTask(void *pvParameters) {
     } else if (xActivatedQueue == xIRRemoteQueue) {
       if (xQueueReceive(xIRRemoteQueue, &ir_event, 0) == pdPASS) {
         blfm_controller_process_ir_remote(&ir_event, &command);
+        xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+      }
+    } else if (xActivatedQueue == xJoystickQueue) {
+      if (xQueueReceive(xJoystickQueue, &joystick_event, 0) == pdPASS) {
+        blfm_controller_process_joystick(&joystick_event, &command);
         xQueueSendToBack(xActuatorCmdQueue, &command, 0);
       }
     }

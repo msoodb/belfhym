@@ -113,9 +113,15 @@ else ifeq ($(METHOD),gdb)
 	                  -ex "quit"
 else ifeq ($(METHOD),serial)
 	stm32flash -w $(BIN_FILE) -v -g 0x8000000 /dev/ttyUSB0
+else ifeq ($(METHOD),dfu)
+	dfu-util -a 0 -s 0x08000000:leave -D $(BIN_FILE)
 else
-	$(error Unknown METHOD: $(METHOD). Use METHOD=stlink|openocd|gdb|serial)
+	$(error Unknown METHOD: $(METHOD). Use METHOD=stlink|openocd|gdb|serial|dfu)
 endif
+
+.PHONY: dfu
+dfu:
+	$(MAKE) METHOD=dfu flash
 
 # Clean build artifacts
 .PHONY: clean

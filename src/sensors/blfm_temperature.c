@@ -31,7 +31,7 @@ bool blfm_temperature_read(blfm_temperature_data_t *temp) {
     return false;
 
   uint16_t adc_value = 0;
-  if (blfm_adc_read(ST0248_ADC_CHANNEL, &adc_value) != 0) {
+  if (blfm_adc_read(BLFM_TEMP_SENSOR_PIN, &adc_value) != 0) {
     return false;
   }
 

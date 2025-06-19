@@ -11,11 +11,10 @@
 #ifndef BLFM_TYPES_H
 #define BLFM_TYPES_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define BLFM_DISPLAY_LINE_LENGTH 17 // 16 chars + '\0'
-
 
 //-----------------------
 //  sensors
@@ -39,39 +38,79 @@ typedef struct {
 } blfm_temperature_data_t;
 
 typedef struct {
+  uint16_t x;  // ADC value from X-axis
+  uint16_t y;  // ADC value from Y-axis
+  bool pressed; // true if button is pressed
+} blfm_joystick_data_t;
+
+// Directional interpretation of the joystick position
+typedef enum {
+  BLFM_JOYSTICK_DIR_NONE = 0,
+  BLFM_JOYSTICK_DIR_UP,
+  BLFM_JOYSTICK_DIR_DOWN,
+  BLFM_JOYSTICK_DIR_LEFT,
+  BLFM_JOYSTICK_DIR_RIGHT
+} blfm_joystick_direction_t;
+
+// Type of joystick event (pressed/released)
+typedef enum {
+  BLFM_JOYSTICK_EVENT_NONE = 0,
+  BLFM_JOYSTICK_EVENT_PRESSED,
+  BLFM_JOYSTICK_EVENT_RELEASED
+} blfm_joystick_event_type_t;
+
+// Full interpreted joystick event
+typedef struct {
+  uint32_t timestamp;                        // Optional timestamp (e.g., from xTaskGetTickCount())
+  blfm_joystick_event_type_t event_type;     // Button event type
+  blfm_joystick_direction_t direction;       // Directional interpretation
+} blfm_joystick_event_t;
+
+typedef struct {
   blfm_ultrasonic_data_t ultrasonic;
   blfm_imu_data_t imu;
-  blfm_temperature_data_t temperature; 
+  blfm_temperature_data_t temperature;
+  blfm_joystick_data_t joystick;
+  blfm_joystick_event_t joystick_event;     // Interpreted direction + event
 } blfm_sensor_data_t;
 
+// Raw ADC data from the joystick (X and Y axis)
 
 //-----------------------
 //  bigsound
 //-----------------------
-typedef enum {
-  BIGSOUND_EVENT_DETECTED = 1
-} blfm_bigsound_event_type_t;
+typedef enum { BIGSOUND_EVENT_DETECTED = 1 } blfm_bigsound_event_type_t;
 
 typedef struct {
   uint32_t timestamp;                    // Tick count when event happened
   blfm_bigsound_event_type_t event_type; // Type of bigsound event
 } blfm_bigsound_event_t;
 
-
 typedef enum {
   BLFM_IR_CMD_NONE = 0,
-  BLFM_IR_CMD_SET_AUTO,
-  BLFM_IR_CMD_SET_MANUAL,
-  BLFM_IR_CMD_TOGGLE_POWER,
-  BLFM_IR_CMD_FORWARD,
-  BLFM_IR_CMD_BACKWARD,
-  BLFM_IR_CMD_LEFT,
-  BLFM_IR_CMD_RIGHT,
+  BLFM_IR_CMD_1 = 0x45,
+  BLFM_IR_CMD_2 = 0x46,
+  BLFM_IR_CMD_3 = 0x47,
+  BLFM_IR_CMD_4 = 0x44,
+  BLFM_IR_CMD_5 = 0x40,
+  BLFM_IR_CMD_6 = 0x43,
+  BLFM_IR_CMD_7 = 0x07,
+  BLFM_IR_CMD_8 = 0x15,
+  BLFM_IR_CMD_9 = 0x09,
+  BLFM_IR_CMD_0 = 0x19,
+  BLFM_IR_CMD_STAR = 0x16,
+  BLFM_IR_CMD_HASH = 0x0D,
+  BLFM_IR_CMD_UP = 0x18,
+  BLFM_IR_CMD_DOWN = 0x52,
+  BLFM_IR_CMD_LEFT = 0x08,
+  BLFM_IR_CMD_RIGHT = 0x5A,
+  BLFM_IR_CMD_OK = 0x1C,
+  BLFM_IR_CMD_REPEAT = 0xFFFFFFFF
 } blfm_ir_command_t;
 
 typedef struct {
-  uint32_t timestamp;      // Tick count at event
-  uint32_t pulse_us;        // Raw IR code received
+  uint32_t timestamp;        // Tick count at event
+  uint32_t pulse_us;         // Raw IR code received
   blfm_ir_command_t command; // Decoded command
 } blfm_ir_remote_event_t;
 
@@ -79,8 +118,8 @@ typedef struct {
 //  actuators
 //-----------------------
 typedef struct {
-  uint8_t speed;      // 0–255
-  uint8_t direction;  // 0 = forward, 1 = backward
+  uint8_t speed;     // 0–255
+  uint8_t direction; // 0 = forward, 1 = backward
 } blfm_single_motor_command_t;
 
 typedef struct {
@@ -103,8 +142,9 @@ typedef enum {
 } blfm_stepmotor_id_t;
 
 typedef struct {
-  uint8_t angle;    // Servo angle in degrees (0-180)
-  uint16_t pulse_width_us; // Optional: pulse width in microseconds (e.g., 1000-2000us)
+  uint8_t angle;           // Servo angle in degrees (0-180)
+  uint16_t pulse_width_us; // Optional: pulse width in microseconds (e.g.,
+                           // 1000-2000us)
 } blfm_servomotor_command_t;
 
 typedef enum {
@@ -131,10 +171,12 @@ typedef enum {
 } blfm_led_mode_t;
 
 typedef struct {
-  blfm_led_mode_t mode;     // off, on, or blink
-  uint16_t blink_speed_ms;  // blinking speed in milliseconds (period)
-  uint8_t pattern_id;       // blink pattern id (e.g., 0=solid, 1=short pulses, 2=SOS, etc)
-  uint8_t brightness;       // brightness level (0-255), optional if hardware supports PWM
+  blfm_led_mode_t mode;    // off, on, or blink
+  uint16_t blink_speed_ms; // blinking speed in milliseconds (period)
+  uint8_t pattern_id; // blink pattern id (e.g., 0=solid, 1=short pulses, 2=SOS,
+                      // etc)
+  uint8_t
+      brightness; // brightness level (0-255), optional if hardware supports PWM
 } blfm_led_command_t;
 
 typedef struct {

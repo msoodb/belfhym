@@ -18,98 +18,154 @@
 
 #define NEC_BITS 32
 
-#define NEC_START_LOW_MIN 1000
-#define NEC_START_LOW_MAX 10000
-#define NEC_START_HIGH_MIN 1000
-#define NEC_START_HIGH_MAX 5000
+#define NEC_CMD_MASK 0x0000FF00
+#define NEC_CMD_SHIFT 8
 
-#define NEC_BIT_LOW_MIN 300
-#define NEC_BIT_LOW_MAX 1000
-#define NEC_BIT1_HIGH_MIN 1000
-#define NEC_BIT1_HIGH_MAX 2000
-#define NEC_BIT0_HIGH_MIN 300
-#define NEC_BIT0_HIGH_MAX 1000
+#define NEC_BITS 32
+#define NEC_HDR_MARK_MIN 8500 // us
+#define NEC_HDR_MARK_MAX 9500
+#define NEC_HDR_SPACE_MIN 4000
+#define NEC_HDR_SPACE_MAX 5000
+#define NEC_BIT_MARK_MIN 400
+#define NEC_BIT_MARK_MAX 700
+#define NEC_ZERO_SPACE_MIN 300
+#define NEC_ZERO_SPACE_MAX 800
+#define NEC_ONE_SPACE_MIN 1300
+#define NEC_ONE_SPACE_MAX 2200
 
 typedef enum {
   NEC_STATE_IDLE,
-  NEC_STATE_LEAD_HIGH,
-  NEC_STATE_BIT_LOW,
-  NEC_STATE_BIT_HIGH
+  NEC_STATE_LEAD_SPACE,
+  NEC_STATE_BIT_MARK,
+  NEC_STATE_BIT_SPACE
 } nec_state_t;
 
 static nec_state_t nec_state = NEC_STATE_IDLE;
 static uint32_t nec_data = 0;
-static uint8_t bit_index = 0;
-static uint32_t last_edge_time = 0;
-static uint8_t decoded_command = 0xFF;
+static int bit_index = 0;
 
+static uint32_t last_edge_time = 0;
 static QueueHandle_t ir_controller_queue = NULL;
 
-uint8_t get_ir_raw_code(void) { return decoded_command; }
+static blfm_ir_command_t blfm_ir_remote_process_pulse(uint32_t pulse_us) {
+  static blfm_ir_command_t last_cmd = BLFM_IR_CMD_NONE;
 
-static bool pulse_in_range(uint32_t width, uint32_t min, uint32_t max) {
-  return (width >= min) && (width <= max);
+  switch (nec_state) {
+  case NEC_STATE_IDLE:
+    if (pulse_us > NEC_HDR_MARK_MIN && pulse_us < NEC_HDR_MARK_MAX) {
+      nec_state = NEC_STATE_LEAD_SPACE;
+    }
+    break;
+
+  case NEC_STATE_LEAD_SPACE:
+    if (pulse_us > NEC_HDR_SPACE_MIN && pulse_us < NEC_HDR_SPACE_MAX) {
+      nec_data = 0;
+      bit_index = 0;
+      nec_state = NEC_STATE_BIT_MARK;
+    } else {
+      nec_state = NEC_STATE_IDLE;
+    }
+    break;
+
+  case NEC_STATE_BIT_MARK:
+    if (pulse_us > NEC_BIT_MARK_MIN && pulse_us < NEC_BIT_MARK_MAX) {
+      nec_state = NEC_STATE_BIT_SPACE;
+    } else {
+      nec_state = NEC_STATE_IDLE;
+    }
+    break;
+
+  case NEC_STATE_BIT_SPACE:
+    if ((pulse_us > NEC_ONE_SPACE_MIN) && (pulse_us < NEC_ONE_SPACE_MAX)) {
+      nec_data |= (1UL << bit_index);
+    } else if ((pulse_us > NEC_ZERO_SPACE_MIN) &&
+               (pulse_us < NEC_ZERO_SPACE_MAX)) {
+      nec_data &= ~(1UL << bit_index);
+    } else {
+      nec_state = NEC_STATE_IDLE;
+      break;
+    }
+
+    bit_index++;
+    if (bit_index >= NEC_BITS) {
+      last_cmd =
+          (blfm_ir_command_t)((nec_data & NEC_CMD_MASK) >> NEC_CMD_SHIFT);
+      nec_state = NEC_STATE_IDLE;
+    } else {
+      nec_state = NEC_STATE_BIT_MARK;
+    }
+    break;
+
+  default:
+    nec_state = NEC_STATE_IDLE;
+    break;
+  }
+
+  return last_cmd;
 }
 
 static blfm_ir_command_t decode_ir_code(uint32_t pulse_us) {
-  switch (pulse_us) {
-  case 0x45:
-    return BLFM_IR_CMD_SET_AUTO;
-  case 0x46:
-    return BLFM_IR_CMD_SET_MANUAL;
-  case 0xA2:
-    return BLFM_IR_CMD_TOGGLE_POWER;
-  case 0x62:
-    return BLFM_IR_CMD_FORWARD;
-  case 0x22:
-    return BLFM_IR_CMD_BACKWARD;
-  case 0xC2:
-    return BLFM_IR_CMD_LEFT;
-  case 0xE2:
-    return BLFM_IR_CMD_RIGHT;
-  default:
-    return BLFM_IR_CMD_NONE;
-  }
+  return blfm_ir_remote_process_pulse(pulse_us);
 }
 
 void ir_exti_handler(void) {
   uint32_t now = DWT->CYCCNT;
   uint32_t diff = now - last_edge_time;
   last_edge_time = now;
+
   uint32_t pulse_us = (diff * 1000000UL) / SystemCoreClock;
 
-  blfm_ir_command_t cmd = decode_ir_code(pulse_us);
-  
-  if (ir_controller_queue != NULL) {
-    blfm_ir_remote_event_t event = {
-      .timestamp = xTaskGetTickCountFromISR(),
-      .pulse_us = (uint8_t)(pulse_us & 0xFF),
-      .command = cmd,
-    };
-    BaseType_t hpTaskWoken = pdFALSE;
-    xQueueSendFromISR(ir_controller_queue, &event, &hpTaskWoken);
-    portYIELD_FROM_ISR(hpTaskWoken);
+  //volatile uint32_t debug_pulse = pulse_us;
+
+  // Read logic level at the pin (PA8)
+  bool is_high = (GPIOA->IDR & GPIO_IDR_IDR8) != 0;
+
+  // Only process falling edge as meaningful pulse end
+  // (Optionally, you can process both edges if you're decoding both
+  // marks/spaces separately)
+  if (!is_high) {
+    blfm_ir_command_t cmd = decode_ir_code(pulse_us);
+
+    if (ir_controller_queue != NULL) {
+      blfm_ir_remote_event_t event = {
+          .timestamp = xTaskGetTickCountFromISR(),
+          .pulse_us = pulse_us, // Don't mask this
+          .command = cmd,
+      };
+      BaseType_t hpTaskWoken = pdFALSE;
+      xQueueSendFromISR(ir_controller_queue, &event, &hpTaskWoken);
+      portYIELD_FROM_ISR(hpTaskWoken);
+    }
   }
+
+  // Clear EXTI line 8 pending bit if you're manually managing it
+  // (depends on your EXTI handling setup)
+  // EXTI->PR = EXTI_PR_PR8;
 }
 
 void blfm_ir_remote_init(QueueHandle_t controller_queue) {
   ir_controller_queue = controller_queue;
 
+  // Enable GPIOA and AFIO clocks
   RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_AFIOEN;
 
-  // Configure PA8 as input pull-up
+  // Configure PA8 as input with pull-up
   GPIOA->CRH &= ~(GPIO_CRH_MODE8 | GPIO_CRH_CNF8);
-  GPIOA->CRH |= GPIO_CRH_CNF8_1;
-  GPIOA->ODR |= GPIO_ODR_ODR8;
+  GPIOA->CRH |= GPIO_CRH_CNF8_1; // Input, pull-up/pull-down
+  GPIOA->ODR |= GPIO_ODR_ODR8;   // Pull-up enabled
 
   // Map EXTI8 to PA8
   AFIO->EXTICR[2] &= ~AFIO_EXTICR3_EXTI8;
   AFIO->EXTICR[2] |= AFIO_EXTICR3_EXTI8_PA;
 
+  // Unmask EXTI line 8
   EXTI->IMR |= EXTI_IMR_MR8;
-  // Configure EXTI8: falling edge trigger
-  EXTI->FTSR |= EXTI_FTSR_TR8;
 
+  // Enable both rising and falling edge triggers
+  EXTI->RTSR |= EXTI_RTSR_TR8; // Rising
+  EXTI->FTSR |= EXTI_FTSR_TR8; // Falling
+
+  // Register and enable EXTI IRQ
   blfm_exti_register_callback(8, ir_exti_handler);
   NVIC_EnableIRQ(EXTI9_5_IRQn);
 }

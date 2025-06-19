@@ -34,10 +34,11 @@ static bool wait_for_pin(uint32_t port, uint32_t pin, int target_state,
                          uint32_t timeout_ms);
 
 void blfm_ultrasonic_init(void) {
-  blfm_gpio_config_output((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
-  blfm_gpio_config_input((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN);
-  blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
+  blfm_gpio_config_output((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
+  blfm_gpio_config_input((uint32_t)BLFM_ULTRASONIC_ECHO_PORT, BLFM_ULTRASONIC_ECHO_PIN);
+  blfm_gpio_clear_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
 
+  
   // Enable DWT cycle counter
   if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
@@ -94,14 +95,14 @@ static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
 
   uint32_t start, end, duration;
 
-  blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
+  blfm_gpio_clear_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
   delay_us(2);
-  blfm_gpio_set_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
+  blfm_gpio_set_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
   delay_us(10);
-  blfm_gpio_clear_pin((uint32_t)ULTRASONIC_TRIG_PORT, ULTRASONIC_TRIG_PIN);
+  blfm_gpio_clear_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
 
 
-  if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 1,
+  if (!wait_for_pin((uint32_t)BLFM_ULTRASONIC_ECHO_PORT, BLFM_ULTRASONIC_ECHO_PIN, 1,
                     30)) {
     return false;
   }
@@ -109,7 +110,7 @@ static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
   
   start = DWT->CYCCNT;
 
-  if (!wait_for_pin((uint32_t)ULTRASONIC_ECHO_PORT, ULTRASONIC_ECHO_PIN, 0,
+  if (!wait_for_pin((uint32_t)BLFM_ULTRASONIC_ECHO_PORT, BLFM_ULTRASONIC_ECHO_PIN, 0,
                     30)) {
     return false;
   }

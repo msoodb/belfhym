@@ -12,11 +12,9 @@
 #include "stm32f1xx.h"
 
 void blfm_gpio_init(void) {
-  // Enable GPIOA, GPIOB, and AFIO clocks
-  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN |
-                RCC_APB2ENR_IOPBEN |
-                RCC_APB2ENR_IOPCEN |
-                RCC_APB2ENR_AFIOEN;
+  // Enable GPIOA, GPIOB, GPIOC and AFIO clocks
+  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN |
+                  RCC_APB2ENR_AFIOEN;
 
   // Optional: disable JTAG to free PB3, PB4, PB5 (retain SWD)
   AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_JTAGDISABLE;
@@ -27,27 +25,36 @@ void blfm_gpio_config_output(uint32_t port, uint32_t pin) {
 
   if (pin <= 7) {
     gpio->CRL &= ~(0xF << (pin * 4));
-    gpio->CRL |= (0x3 << (pin * 4)); // Output, push-pull, 50 MHz (fastest)
+    gpio->CRL |= (0x3 << (pin * 4)); // Output push-pull, 50 MHz
   } else {
     gpio->CRH &= ~(0xF << ((pin - 8) * 4));
-    gpio->CRH |= (0x3 << ((pin - 8) * 4)); // Output, push-pull, 50 MHz (fastest)
+    gpio->CRH |= (0x3 << ((pin - 8) * 4)); // Output push-pull, 50 MHz
   }
 }
 
 void blfm_gpio_config_input(uint32_t port, uint32_t pin) {
   GPIO_TypeDef *gpio = (GPIO_TypeDef *)port;
 
-  if (pin < 8) {
+  if (pin <= 7) {
     gpio->CRL &= ~(0xF << (pin * 4));
     gpio->CRL |= (0x4 << (pin * 4)); // Input floating
   } else {
-    uint32_t shift = (pin - 8) * 4;
-    gpio->CRH &= ~(0xF << shift);
-    gpio->CRH |= (0x4 << ((pin - 8) * 4));
+    gpio->CRH &= ~(0xF << ((pin - 8) * 4));
+    gpio->CRH |= (0x4 << ((pin - 8) * 4)); // Input floating
   }
 
-  // Enable pull-up by default
+  // Optional: enable pull-up
   gpio->ODR |= (1 << pin);
+}
+
+void blfm_gpio_config_analog(uint32_t port, uint32_t pin) {
+  GPIO_TypeDef *gpio = (GPIO_TypeDef *)port;
+
+  if (pin <= 7) {
+    gpio->CRL &= ~(0xF << (pin * 4)); // MODE=00, CNF=00 => Analog mode
+  } else {
+    gpio->CRH &= ~(0xF << ((pin - 8) * 4)); // Analog mode
+  }
 }
 
 void blfm_gpio_set_pin(uint32_t port, uint32_t pin) {
