@@ -44,12 +44,12 @@ static int rotate_duration = 0;
 static blfm_system_state_t blfm_system_state = {
     .current_mode = BLFM_MODE_AUTO, .motion_state = BLFM_MOTION_FORWARD};
 
-static void uint_to_str(char *buf, uint16_t value);
+//static void uint_to_str(char *buf, uint16_t value);
 
 /*
   functions
  */
-static void uint_to_str(char *buf, uint16_t value) {
+/*static void uint_to_str(char *buf, uint16_t value) {
   // max 3 digits (0-999)
   if (value >= 100) {
     buf[0] = '0' + (value / 100) % 10;
@@ -64,7 +64,7 @@ static void uint_to_str(char *buf, uint16_t value) {
     buf[0] = '0' + value;
     buf[1] = '\0';
   }
-}
+  }*/
 
 void blfm_controller_init(void) {
   // Reserved for future initialization
@@ -76,14 +76,11 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   if (!in || !out)
     return;
 
-  // blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-  // blfm_gpio_clear_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-
   if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     switch (blfm_system_state.motion_state) {
     case BLFM_MOTION_FORWARD:
       if (in->ultrasonic.distance_mm <= ULTRASONIC_FORWARD_THRESH) {
-        // Obstacle detected — begin BACKWARD
+	blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
         backward_ticks = 0;
         blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
       } else {
@@ -105,11 +102,11 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
         // Back up complete — begin ROTATE
         rotate_ticks = 0;
         rotate_duration = pseudo_random(MIN_ROTATE_TICKS, MAX_ROTATE_TICKS);
-        blfm_system_state.motion_state = BLFM_MOTION_ROTATE;
+        blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
       }
       break;
 
-    case BLFM_MOTION_ROTATE:
+    case BLFM_MOTION_ROTATE_LEFT:
       out->motor.left.direction = BLFM_MOTION_FORWARD;
       out->motor.right.direction = BLFM_MOTION_BACKWARD;
       out->motor.left.speed = 255;
@@ -222,12 +219,91 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     return;
 }
 
-void blfm_controller_process_joystick(const blfm_joystick_event_t *in,
+void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
                                       blfm_actuator_command_t *out) {
-  return;
+
+  /*if (evt->event_type == BLFM_JOYSTICK_EVENT_PRESSED) {
+    // Toggle AUTO/MANUAL
+    blfm_system_state.current_mode =
+        (blfm_system_state.current_mode == BLFM_MODE_AUTO) ? BLFM_MODE_MANUAL
+                                                           : BLFM_MODE_AUTO;
+							   }*/
+  blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
+    switch (evt->direction) {
+    case BLFM_JOYSTICK_DIR_UP:
+      blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
+      break;
+    case BLFM_JOYSTICK_DIR_DOWN:
+      blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
+      break;
+    case BLFM_JOYSTICK_DIR_LEFT:
+      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
+      break;
+    case BLFM_JOYSTICK_DIR_RIGHT:
+      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
+      break;
+    default:
+      blfm_system_state.motion_state = BLFM_MOTION_STOP;
+      break;
+    }
+  }
+
+  // Compose actuator command according to motion_state
+  switch (blfm_system_state.motion_state) {
+  case BLFM_MOTION_FORWARD:
+    out->motor.left.direction = BLFM_MOTION_FORWARD;
+    out->motor.right.direction = BLFM_MOTION_FORWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
+  case BLFM_MOTION_BACKWARD:
+    out->motor.left.direction = BLFM_MOTION_BACKWARD;
+    out->motor.right.direction = BLFM_MOTION_BACKWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
+  case BLFM_MOTION_ROTATE_LEFT:
+    out->motor.left.direction = BLFM_MOTION_BACKWARD;
+    out->motor.right.direction = BLFM_MOTION_FORWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
+  case BLFM_MOTION_ROTATE_RIGHT:
+    out->motor.left.direction = BLFM_MOTION_FORWARD;
+    out->motor.right.direction = BLFM_MOTION_BACKWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
+  case BLFM_MOTION_STOP:
+  default:
+    out->motor.left.speed = 0;
+    out->motor.right.speed = 0;
+    break;
+  }
 }
 
 void blfm_system_state_reset(void) {
   blfm_system_state.current_mode = BLFM_MODE_AUTO;
   blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
+}
+
+void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
+                                            blfm_actuator_command_t *command) {
+    if (!event || !command) {
+        return;
+    }
+
+    blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+
+    // Toggle the mode
+    if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
+        blfm_system_state.current_mode = BLFM_MODE_AUTO;
+    } else {
+        blfm_system_state.current_mode = BLFM_MODE_MANUAL;
+    }
+
+    // You can also fill other fields of the command as needed
+    command->motor.left.speed = 0;
+    command->motor.right.speed = 0;
 }

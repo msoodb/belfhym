@@ -16,7 +16,8 @@ typedef enum {
 typedef enum {
   BLFM_MOTION_FORWARD = 0,
   BLFM_MOTION_BACKWARD,
-  BLFM_MOTION_ROTATE,
+  BLFM_MOTION_ROTATE_LEFT,
+  BLFM_MOTION_ROTATE_RIGHT,
   BLFM_MOTION_STOP
 } blfm_motion_state_t;
 

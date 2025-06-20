@@ -22,5 +22,8 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
                                        blfm_actuator_command_t *out);
 void blfm_controller_process_joystick(const blfm_joystick_event_t *in,
                                       blfm_actuator_command_t *out) ;
+void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
+                                            blfm_actuator_command_t *command);
+
 #endif // BLFM_CONTROLLER_H
 

@@ -118,7 +118,7 @@ typedef struct {
 //  actuators
 //-----------------------
 typedef struct {
-  uint8_t speed;     // 0–255
+  uint16_t speed;     // 0–255
   uint8_t direction; // 0 = forward, 1 = backward
 } blfm_single_motor_command_t;
 

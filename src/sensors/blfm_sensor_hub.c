@@ -17,7 +17,7 @@
 void blfm_sensor_hub_init() {
   blfm_ultrasonic_init();
   //blfm_temperature_init();
-  //blfm_joystick_init();
+  blfm_joystick_init();
 }
 
 bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {

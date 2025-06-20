@@ -19,8 +19,9 @@
 
 // Joystick GPIO pins and ports
 
-#define JOYSTICK_TASK_STACK_SIZE 256
-#define JOYSTICK_TASK_PRIORITY 2
+#define JOYSTICK_TASK_STACK_SIZE 128
+//#define JOYSTICK_TASK_PRIORITY 2
+#define JOYSTICK_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
 #define JOYSTICK_QUEUE_LENGTH 1
 
 // ADC channels for joystick X and Y

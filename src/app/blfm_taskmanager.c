@@ -17,15 +17,24 @@
 
 #include "blfm_taskmanager.h"
 #include "FreeRTOS.h"
-#include "blfm_actuator_hub.h"
-#include "blfm_bigsound.h"
-#include "blfm_controller.h"
-#include "blfm_sensor_hub.h"
-#include "blfm_types.h"
 #include "queue.h"
 #include "task.h"
 
-// --- Task Configuration ---
+#include "blfm_actuator_hub.h"
+#include "blfm_controller.h"
+#include "blfm_sensor_hub.h"
+
+static void vSensorHubTask(void *pvParameters);
+static void vControllerTask(void *pvParameters);
+static void vActuatorHubTask(void *pvParameters);
+
+// Internal handler functions
+static void handle_sensor_data(void);
+static void handle_bigsound_event(void);
+static void handle_ir_remote_event(void);
+static void handle_joystick_event(void);
+
+// Task and queue handles
 #define SENSOR_HUB_TASK_STACK 256
 #define CONTROLLER_TASK_STACK 256
 #define ACTUATOR_HUB_TASK_STACK 256
@@ -34,22 +43,16 @@
 #define CONTROLLER_TASK_PRIORITY 2
 #define ACTUATOR_HUB_TASK_PRIORITY 2
 
-// --- Queues ---
+// Queues
 static QueueHandle_t xSensorDataQueue = NULL;
 static QueueHandle_t xBigSoundQueue = NULL;
 static QueueHandle_t xIRRemoteQueue = NULL;
 static QueueHandle_t xJoystickQueue = NULL;
 static QueueHandle_t xActuatorCmdQueue = NULL;
+
 static QueueSetHandle_t xControllerQueueSet = NULL;
 
-// --- Task Prototypes ---
-static void vSensorHubTask(void *pvParameters);
-static void vControllerTask(void *pvParameters);
-static void vActuatorHubTask(void *pvParameters);
-
-// --- Public Setup Function ---
 void blfm_taskmanager_setup(void) {
-
   // Create queues
   xSensorDataQueue = xQueueCreate(5, sizeof(blfm_sensor_data_t));
   configASSERT(xSensorDataQueue != NULL);
@@ -66,18 +69,16 @@ void blfm_taskmanager_setup(void) {
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
 
-  // Create queue set (sum of queue lengths)
-  xControllerQueueSet =
-      xQueueCreateSet(10); // total combined items that may be waiting
+  // Create queue set
+  xControllerQueueSet = xQueueCreateSet(10);
   configASSERT(xControllerQueueSet != NULL);
 
-  // Add queues to the set
   xQueueAddToSet(xSensorDataQueue, xControllerQueueSet);
   xQueueAddToSet(xBigSoundQueue, xControllerQueueSet);
   xQueueAddToSet(xIRRemoteQueue, xControllerQueueSet);
   xQueueAddToSet(xJoystickQueue, xControllerQueueSet);
 
-  // Initialize modules
+  // Init subsystems
   blfm_sensor_hub_init();
   // blfm_bigsound_init(xBigSoundQueue);
   // blfm_ir_remote_init(xIRRemoteQueue);
@@ -87,10 +88,8 @@ void blfm_taskmanager_setup(void) {
   // Create tasks
   xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
               SENSOR_HUB_TASK_PRIORITY, NULL);
-
   xTaskCreate(vControllerTask, "Controller", CONTROLLER_TASK_STACK, NULL,
               CONTROLLER_TASK_PRIORITY, NULL);
-
   xTaskCreate(vActuatorHubTask, "ActuatorHub", ACTUATOR_HUB_TASK_STACK, NULL,
               ACTUATOR_HUB_TASK_PRIORITY, NULL);
 }
@@ -101,6 +100,7 @@ void blfm_taskmanager_start(void) { vTaskStartScheduler(); }
 
 static void vSensorHubTask(void *pvParameters) {
   (void)pvParameters;
+
   blfm_sensor_data_t sensor_data;
 
   for (;;) {
@@ -113,49 +113,30 @@ static void vSensorHubTask(void *pvParameters) {
 
 static void vControllerTask(void *pvParameters) {
   (void)pvParameters;
-  blfm_sensor_data_t sensor_data;
-  blfm_bigsound_event_t bigsound_event;
-  blfm_ir_remote_event_t ir_event;
-  blfm_joystick_event_t joystick_event;
-  blfm_actuator_command_t command;
-
-  QueueSetMemberHandle_t xActivatedQueue;
 
   for (;;) {
-    // Wait until one of the queues has data
-    xActivatedQueue =
+    QueueSetMemberHandle_t activated =
         xQueueSelectFromSet(xControllerQueueSet, pdMS_TO_TICKS(100));
 
-    if (xActivatedQueue == NULL) {
-      continue; // timeout, loop again
+    if (activated == NULL) {
+      continue;
     }
 
-    if (xActivatedQueue == xSensorDataQueue) {
-      if (xQueueReceive(xSensorDataQueue, &sensor_data, 0) == pdPASS) {
-        blfm_controller_process(&sensor_data, &command);
-        xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-      }
-    } else if (xActivatedQueue == xBigSoundQueue) {
-      if (xQueueReceive(xBigSoundQueue, &bigsound_event, 0) == pdPASS) {
-        blfm_controller_process_bigsound(&bigsound_event, &command);
-        xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-      }
-    } else if (xActivatedQueue == xIRRemoteQueue) {
-      if (xQueueReceive(xIRRemoteQueue, &ir_event, 0) == pdPASS) {
-        blfm_controller_process_ir_remote(&ir_event, &command);
-        xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-      }
-    } else if (xActivatedQueue == xJoystickQueue) {
-      if (xQueueReceive(xJoystickQueue, &joystick_event, 0) == pdPASS) {
-        blfm_controller_process_joystick(&joystick_event, &command);
-        xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-      }
+    if (activated == xSensorDataQueue) {
+      handle_sensor_data();
+    } else if (activated == xBigSoundQueue) {
+      handle_bigsound_event();
+    } else if (activated == xIRRemoteQueue) {
+      handle_ir_remote_event();
+    } else if (activated == xJoystickQueue) {
+      handle_joystick_event();
     }
   }
 }
 
 static void vActuatorHubTask(void *pvParameters) {
   (void)pvParameters;
+
   blfm_actuator_command_t command;
 
   for (;;) {
@@ -165,4 +146,57 @@ static void vActuatorHubTask(void *pvParameters) {
     }
     vTaskDelay(pdMS_TO_TICKS(50));
   }
+}
+
+// --- Event Handlers ---
+
+static void handle_sensor_data(void) {
+  blfm_sensor_data_t sensor_data;
+  blfm_actuator_command_t command;
+
+  if (xQueueReceive(xSensorDataQueue, &sensor_data, 0) == pdPASS) {
+    blfm_controller_process(&sensor_data, &command);
+    xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+  }
+}
+
+static void handle_bigsound_event(void) {
+  blfm_bigsound_event_t bigsound_event;
+  blfm_actuator_command_t command;
+
+  if (xQueueReceive(xBigSoundQueue, &bigsound_event, 0) == pdPASS) {
+    blfm_controller_process_bigsound(&bigsound_event, &command);
+    xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+  }
+}
+
+static void handle_ir_remote_event(void) {
+  blfm_ir_remote_event_t ir_event;
+  blfm_actuator_command_t command;
+
+  if (xQueueReceive(xIRRemoteQueue, &ir_event, 0) == pdPASS) {
+    blfm_controller_process_ir_remote(&ir_event, &command);
+    xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+  }
+}
+
+static void handle_joystick_event(void) {
+    blfm_joystick_event_t joystick_event;
+    blfm_actuator_command_t command;
+
+    if (xQueueReceive(xJoystickQueue, &joystick_event, 0) == pdPASS) {
+        // Check if it's a click event
+        if (joystick_event.event_type == BLFM_JOYSTICK_EVENT_PRESSED) {
+            // Click detected
+            blfm_controller_process_joystick_click(&joystick_event, &command);
+            xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+        } else if (joystick_event.event_type == BLFM_JOYSTICK_EVENT_RELEASED) {
+            // Release detected (you can process if needed)
+            // Currently ignoring release
+        } else {
+            // Movement (no click/release), use normal joystick process
+            blfm_controller_process_joystick(&joystick_event, &command);
+            xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+        }
+    }
 }
