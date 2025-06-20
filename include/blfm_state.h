@@ -1,4 +1,6 @@
 
+
+
 #ifndef BLFM_STATE_H
 #define BLFM_STATE_H
 
@@ -11,8 +13,16 @@ typedef enum {
   BLFM_MODE_EMERGENCY
 } blfm_mode_t;
 
+typedef enum {
+  BLFM_MOTION_FORWARD = 0,
+  BLFM_MOTION_BACKWARD,
+  BLFM_MOTION_ROTATE,
+  BLFM_MOTION_STOP
+} blfm_motion_state_t;
+
 typedef struct {
   blfm_mode_t current_mode;
+  blfm_motion_state_t motion_state;
   bool overheat;
   bool obstacle_near;
   bool manual_override;
