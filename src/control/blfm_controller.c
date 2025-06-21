@@ -30,6 +30,7 @@
 #define BACKWARD_TICKS_MAX 2
 #define MIN_ROTATE_TICKS 4
 #define MAX_ROTATE_TICKS 6
+#define MODE_BUTTON_DEBOUNCE_MS 100
 
 static int pseudo_random(int min, int max) {
   static uint32_t seed = 123456789;
@@ -228,7 +229,6 @@ void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
         (blfm_system_state.current_mode == BLFM_MODE_AUTO) ? BLFM_MODE_MANUAL
                                                            : BLFM_MODE_AUTO;
   }
-  blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
   if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
     switch (evt->direction) {
     case BLFM_JOYSTICK_DIR_UP:
@@ -308,15 +308,15 @@ void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
 
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command) {
+  static uint32_t last_press_tick = 0;
 
-  blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-  if (!event || !command) {
-    return;
-  }
+  if (event->event_type == BLFM_MODE_BUTTON_EVENT_PRESSED) {
+    uint32_t now = xTaskGetTickCount();
+    uint32_t diff = now - last_press_tick;
 
-  if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
-    blfm_system_state.current_mode = BLFM_MODE_AUTO;
-  } else {
-    blfm_system_state.current_mode = BLFM_MODE_MANUAL;
+    if (diff > pdMS_TO_TICKS(MODE_BUTTON_DEBOUNCE_MS)) {
+      blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+      last_press_tick = now;
+    }
   }
 }

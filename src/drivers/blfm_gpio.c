@@ -47,6 +47,21 @@ void blfm_gpio_config_input(uint32_t port, uint32_t pin) {
   gpio->ODR |= (1 << pin);
 }
 
+void blfm_gpio_config_input_pullup(uint32_t port, uint32_t pin) {
+  GPIO_TypeDef *gpio = (GPIO_TypeDef *)port;
+
+  if (pin <= 7) {
+    gpio->CRL &= ~(0xF << (pin * 4));
+    gpio->CRL |= (0x8 << (pin * 4)); // CNF = 10 (Input Pull‑Up/Pull‑Down), MODE = 00
+  } else {
+    gpio->CRH &= ~(0xF << ((pin - 8) * 4));
+    gpio->CRH |= (0x8 << ((pin - 8) * 4)); // CNF = 10 (Input Pull‑Up/Pull‑Down), MODE = 00
+  }
+
+  // Enable Pull‑Up by setting ODR
+  gpio->ODR |= (1 << pin);
+}
+
 void blfm_gpio_config_analog(uint32_t port, uint32_t pin) {
   GPIO_TypeDef *gpio = (GPIO_TypeDef *)port;
 

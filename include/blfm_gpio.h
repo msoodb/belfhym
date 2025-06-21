@@ -38,5 +38,8 @@ void blfm_gpio_toggle_pin(uint32_t port, uint32_t pin);
 // Configure given pin as output analoge (2 MHz default)
 void blfm_gpio_config_analog(uint32_t port, uint32_t pin);
 
+void blfm_gpio_config_input_pullup(uint32_t port, uint32_t pin);
+
+
 #endif // BLFM_GPIO_H
 
