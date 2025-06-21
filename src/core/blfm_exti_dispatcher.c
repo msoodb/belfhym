@@ -24,6 +24,15 @@ void blfm_exti_register_callback(uint8_t exti_line,
   }
 }
 
+void EXTI4_IRQHandler(void) {
+  if (EXTI->PR & (1U << 4)) {
+    EXTI->PR = (1U << 4);
+    if (exti_callbacks[4]) {
+      exti_callbacks[4]();
+    }
+  }
+}
+
 void EXTI9_5_IRQHandler(void) {
   for (uint8_t line = 5; line <= 9; ++line) {
     if (EXTI->PR & (1U << line)) {

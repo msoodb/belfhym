@@ -12,22 +12,29 @@
 #include "blfm_ultrasonic.h"
 #include "blfm_temperature.h"
 #include "blfm_joystick.h"
+#include "blfm_mode_button.h"
+
 #include <stdbool.h>
 
-void blfm_sensor_hub_init() {
-  blfm_ultrasonic_init();
-  //blfm_temperature_init();
-  blfm_joystick_init();
+void blfm_sensor_hub_init(void) {
+  //blfm_ultrasonic_init();
+  // blfm_temperature_init();
+  //blfm_joystick_init();
+  //blfm_mode_button_init();
 }
 
 bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
-  if (!out)
+  if (!out) {
     return false;
+  }
 
   bool ok = true;
 
-  ok &= blfm_ultrasonic_read(&out->ultrasonic);
-  //ok &= blfm_temperature_read(&out->temperature);
-  //ok &= blfm_joystick_read(&out->joystick);
+  //ok &= blfm_ultrasonic_read(&out->ultrasonic);
+  // ok &= blfm_temperature_read(&out->temperature);
+  // ok &= blfm_joystick_read(&out->joystick);
+  // Mode button is an *event* source, read it when needed via:
+  // blfm_mode_button_get_event(&out_event)
+
   return ok;
 }

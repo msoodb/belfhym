@@ -44,7 +44,7 @@ static int rotate_duration = 0;
 static blfm_system_state_t blfm_system_state = {
     .current_mode = BLFM_MODE_AUTO, .motion_state = BLFM_MOTION_FORWARD};
 
-//static void uint_to_str(char *buf, uint16_t value);
+// static void uint_to_str(char *buf, uint16_t value);
 
 /*
   functions
@@ -76,11 +76,10 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   if (!in || !out)
     return;
 
-  if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
+  /*if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     switch (blfm_system_state.motion_state) {
     case BLFM_MOTION_FORWARD:
       if (in->ultrasonic.distance_mm <= ULTRASONIC_FORWARD_THRESH) {
-	blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
         backward_ticks = 0;
         blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
       } else {
@@ -125,7 +124,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
       out->motor.right.speed = 0;
       break;
     }
-  }
+    }*/
 
   /*else if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
     // You can add real manual logic here
@@ -136,8 +135,9 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     }*/
 
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = in->ultrasonic.distance_mm; // 200;
+  out->led.blink_speed_ms = 200; // in->ultrasonic.distance_mm; // 200;
 
+  // blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
   /* if (in->ultrasonic.distance_mm < 100) {
       out->alarm.active = true;
       out->alarm.pattern_id = 1;
@@ -222,12 +222,12 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
 void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
                                       blfm_actuator_command_t *out) {
 
-  /*if (evt->event_type == BLFM_JOYSTICK_EVENT_PRESSED) {
+  if (evt->event_type == BLFM_JOYSTICK_EVENT_PRESSED) {
     // Toggle AUTO/MANUAL
     blfm_system_state.current_mode =
         (blfm_system_state.current_mode == BLFM_MODE_AUTO) ? BLFM_MODE_MANUAL
                                                            : BLFM_MODE_AUTO;
-							   }*/
+  }
   blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
   if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
     switch (evt->direction) {
@@ -290,20 +290,33 @@ void blfm_system_state_reset(void) {
 
 void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
                                             blfm_actuator_command_t *command) {
-    if (!event || !command) {
-        return;
-    }
+  if (!event || !command) {
+    return;
+  }
 
-    blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  // Toggle the mode
+  if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
+    blfm_system_state.current_mode = BLFM_MODE_AUTO;
+  } else {
+    blfm_system_state.current_mode = BLFM_MODE_MANUAL;
+  }
 
-    // Toggle the mode
-    if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
-        blfm_system_state.current_mode = BLFM_MODE_AUTO;
-    } else {
-        blfm_system_state.current_mode = BLFM_MODE_MANUAL;
-    }
+  // You can also fill other fields of the command as needed
+  command->motor.left.speed = 0;
+  command->motor.right.speed = 0;
+}
 
-    // You can also fill other fields of the command as needed
-    command->motor.left.speed = 0;
-    command->motor.right.speed = 0;
+void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
+                                         blfm_actuator_command_t *command) {
+
+  blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  if (!event || !command) {
+    return;
+  }
+
+  if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
+    blfm_system_state.current_mode = BLFM_MODE_AUTO;
+  } else {
+    blfm_system_state.current_mode = BLFM_MODE_MANUAL;
+  }
 }

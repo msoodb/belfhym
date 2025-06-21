@@ -20,6 +20,17 @@
 //  sensors
 //-----------------------
 
+// Event definitions
+typedef enum {
+  BLFM_MODE_BUTTON_EVENT_PRESSED,
+  BLFM_MODE_BUTTON_EVENT_RELEASED
+} blfm_mode_button_event_type_t;
+
+typedef struct {
+  blfm_mode_button_event_type_t event_type;
+  uint32_t timestamp;
+} blfm_mode_button_event_t;
+
 typedef struct {
   int16_t acc_x;
   int16_t acc_y;
