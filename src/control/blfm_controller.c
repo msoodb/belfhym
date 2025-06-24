@@ -222,10 +222,11 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
   
   switch (in->command) {
   case BLFM_IR_CMD_1:
+    blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
     break;
 
-  case BLFM_IR_CMD_OK:
-    blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  case BLFM_IR_CMD_2:
+    blfm_gpio_clear_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
     break;
 
   // ... and so on for other commands
