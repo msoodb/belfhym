@@ -41,6 +41,8 @@
 #define NEC_ZERO_SPACE_MAX 800
 #define NEC_ONE_SPACE_MIN 1300
 #define NEC_ONE_SPACE_MAX 2200
+#define NEC_REPEAT_SPACE_MIN 2000
+#define NEC_REPEAT_SPACE_MAX 2500
 
 // ===============================================================
 // State Definitions
@@ -133,53 +135,6 @@ static blfm_ir_command_t ir_remote_process_pulse(uint32_t pulse_us,
 
   return last_cmd;
 }
-
-// ===============================================================
-// SystemCoreClock
-// ===============================================================
-void test_system_core_clock_range(void) {
-  uint32_t expected = 72000000UL; // 72 MHz
-  uint32_t tolerance = 500000;    // ±0.5 MHz tolerance
-
-  if (SystemCoreClock > (expected - tolerance) &&
-      SystemCoreClock < (expected + tolerance)) {
-    // Clock is within expected range: turn LED ON
-    blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-  } else {
-    // Clock outside expected range: turn LED OFF
-    blfm_gpio_clear_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-  }
-}
-
-// ===============================================================
-// ISR
-// ===============================================================
-/*void ir_exti_handler(void) {
-
-  uint32_t now = DWT->CYCCNT;
-
-  if (last_edge_time != 0) {
-
-    uint32_t diff = now - last_edge_time;
-    uint32_t pulse_us = diff / 72;
-
-    bool is_low = ((GPIOA->IDR & GPIO_IDR_IDR8) == 0);
-
-    if (!is_low) {
-      // FALLING EDGE - long mark (~9ms) occurs here
-      if (pulse_us > 8000 && pulse_us < 9500) {
-        blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-      }
-    } else {
-      // RISING EDGE - short space (~4.5ms) occurs here
-      if (pulse_us > 4000 && pulse_us < 5000) {
-        blfm_gpio_clear_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-      }
-    }
-  }
-  last_edge_time = now;
-  }*/
-
 
 // ===============================================================
 // ISR
