@@ -98,9 +98,12 @@ METHOD ?= stlink
 .PHONY: deploy
 deploy: $(BIN_FILE)
 ifeq ($(METHOD),stlink)
+	st-flash erase
 	st-flash write $(BIN_FILE) 0x8000000
+	st-flash --connect-under-reset reset
 else ifeq ($(METHOD),openocd)
-	openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c "program $(BIN_FILE) 0x8000000 verify reset exit"
+	openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c \
+	"program $(BIN_FILE) 0x8000000 verify reset exit"
 else ifeq ($(METHOD),gdb)
 	@echo "Starting OpenOCD server in background..."
 	@pkill openocd || true

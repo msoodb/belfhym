@@ -18,22 +18,30 @@ void blfm_clock_init(void) {
     ;
 
   // Set flash latency (2 wait states)
+  FLASH->ACR &= ~FLASH_ACR_LATENCY;
   FLASH->ACR |= FLASH_ACR_LATENCY_2;
 
-  // Configure PLL: 8 MHz HSE * 9 = 72 MHz
+  // Configure PLL: clear PLLSRC and PLLMUL bits first
+  RCC->CFGR &= ~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL);
+
+  // Set PLL source = HSE, PLL multiplier = 9 (8 MHz * 9 = 72 MHz)
   RCC->CFGR |= RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL9;
+
+  // Enable PLL
   RCC->CR |= RCC_CR_PLLON;
   while (!(RCC->CR & RCC_CR_PLLRDY))
     ;
 
-  // Set AHB = SYSCLK, APB1 = SYSCLK/2, APB2 = SYSCLK
+  // Configure AHB, APB1, APB2 prescalers: clear and set
+  RCC->CFGR &= ~(RCC_CFGR_HPRE | RCC_CFGR_PPRE1 | RCC_CFGR_PPRE2);
   RCC->CFGR |= RCC_CFGR_HPRE_DIV1 | RCC_CFGR_PPRE1_DIV2 | RCC_CFGR_PPRE2_DIV1;
 
-  // Switch system clock to PLL
+  // Select PLL as system clock
+  RCC->CFGR &= ~RCC_CFGR_SW;
   RCC->CFGR |= RCC_CFGR_SW_PLL;
   while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL)
     ;
 
-  // Update CMSIS SystemCoreClock variable
+  // Update SystemCoreClock variable
   SystemCoreClockUpdate();
 }

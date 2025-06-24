@@ -215,9 +215,23 @@ void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
 }
 
 void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
-                                       blfm_actuator_command_t *out) {
-  if (!in || !out)
+                                       blfm_actuator_command_t *out) {  
+  if (!in || !out) {
     return;
+  }
+  
+  switch (in->command) {
+  case BLFM_IR_CMD_1:
+    break;
+
+  case BLFM_IR_CMD_OK:
+    blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+    break;
+
+  // ... and so on for other commands
+  default:
+    break;
+  }
 }
 
 void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,

@@ -22,8 +22,12 @@
 
 #include "blfm_actuator_hub.h"
 #include "blfm_controller.h"
-#include "blfm_sensor_hub.h"
+#include "blfm_ir_remote.h"
 #include "blfm_mode_button.h"
+#include "blfm_sensor_hub.h"
+
+#include "blfm_gpio.h"
+#include "blfm_pins.h"
 
 static void vSensorHubTask(void *pvParameters);
 static void vControllerTask(void *pvParameters);
@@ -71,7 +75,7 @@ void blfm_taskmanager_setup(void) {
 
   xModeButtonQueue = xQueueCreate(5, sizeof(blfm_mode_button_event_t));
   configASSERT(xModeButtonQueue != NULL);
-  
+
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
 
@@ -84,12 +88,12 @@ void blfm_taskmanager_setup(void) {
   xQueueAddToSet(xIRRemoteQueue, xControllerQueueSet);
   xQueueAddToSet(xJoystickQueue, xControllerQueueSet);
   xQueueAddToSet(xModeButtonQueue, xControllerQueueSet);
-  
+
   // Init subsystems
   blfm_sensor_hub_init();
   blfm_mode_button_init(xModeButtonQueue);
   // blfm_bigsound_init(xBigSoundQueue);
-  // blfm_ir_remote_init(xIRRemoteQueue);
+  blfm_ir_remote_init(xIRRemoteQueue);
   blfm_controller_init();
   blfm_actuator_hub_init();
 
@@ -183,7 +187,7 @@ static void handle_bigsound_event(void) {
 static void handle_ir_remote_event(void) {
   blfm_ir_remote_event_t ir_event;
   blfm_actuator_command_t command;
-
+  
   if (xQueueReceive(xIRRemoteQueue, &ir_event, 0) == pdPASS) {
     blfm_controller_process_ir_remote(&ir_event, &command);
     xQueueSendToBack(xActuatorCmdQueue, &command, 0);
@@ -191,24 +195,24 @@ static void handle_ir_remote_event(void) {
 }
 
 static void handle_joystick_event(void) {
-    blfm_joystick_event_t joystick_event;
-    blfm_actuator_command_t command;
+  blfm_joystick_event_t joystick_event;
+  blfm_actuator_command_t command;
 
-    if (xQueueReceive(xJoystickQueue, &joystick_event, 0) == pdPASS) {
-        // Check if it's a click event
-        if (joystick_event.event_type == BLFM_JOYSTICK_EVENT_PRESSED) {
-            // Click detected
-            blfm_controller_process_joystick_click(&joystick_event, &command);
-            xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-        } else if (joystick_event.event_type == BLFM_JOYSTICK_EVENT_RELEASED) {
-            // Release detected (you can process if needed)
-            // Currently ignoring release
-        } else {
-            // Movement (no click/release), use normal joystick process
-            blfm_controller_process_joystick(&joystick_event, &command);
-            xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-        }
+  if (xQueueReceive(xJoystickQueue, &joystick_event, 0) == pdPASS) {
+    // Check if it's a click event
+    if (joystick_event.event_type == BLFM_JOYSTICK_EVENT_PRESSED) {
+      // Click detected
+      blfm_controller_process_joystick_click(&joystick_event, &command);
+      xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+    } else if (joystick_event.event_type == BLFM_JOYSTICK_EVENT_RELEASED) {
+      // Release detected (you can process if needed)
+      // Currently ignoring release
+    } else {
+      // Movement (no click/release), use normal joystick process
+      blfm_controller_process_joystick(&joystick_event, &command);
+      xQueueSendToBack(xActuatorCmdQueue, &command, 0);
     }
+  }
 }
 
 static void handle_mode_button_event(void) {

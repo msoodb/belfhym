@@ -10,11 +10,12 @@
 #ifndef BLFM_IR_REMOTE_H
 #define BLFM_IR_REMOTE_H
 
-#include <stdint.h>
 #include "FreeRTOS.h"
-#include "queue.h"
 #include "blfm_types.h"
+#include "queue.h"
+#include <stdint.h>
 
 void blfm_ir_remote_init(QueueHandle_t controller_queue);
-void blfm_ir_task(void *params);
+void ir_exti_handler(void);
+
 #endif // BLFM_IR_REMOTE_H

@@ -7,6 +7,16 @@
  * See LICENSE file for details.
  */
 
+/*
+ * Fixed NEC-style IR Decoder
+ * Enables both rising and falling edge interrupts and measures pulse widths.
+ *
+ * Works reliably with NEC IR remotes.
+ */
+
+// ===============================================================
+// NEC IR Decoder - Clean, Tested Version (Active Low)
+// ===============================================================
 #include "blfm_ir_remote.h"
 #include "FreeRTOS.h"
 #include "blfm_exti_dispatcher.h"
@@ -15,14 +25,13 @@
 #include "blfm_types.h"
 #include "queue.h"
 #include "stm32f1xx.h"
+#include <stdbool.h>
 
+// ===============================================================
+// Timing Definitions (microseconds)
+// ===============================================================
 #define NEC_BITS 32
-
-#define NEC_CMD_MASK 0x0000FF00
-#define NEC_CMD_SHIFT 8
-
-#define NEC_BITS 32
-#define NEC_HDR_MARK_MIN 8500 // us
+#define NEC_HDR_MARK_MIN 8500
 #define NEC_HDR_MARK_MAX 9500
 #define NEC_HDR_SPACE_MIN 4000
 #define NEC_HDR_SPACE_MAX 5000
@@ -33,6 +42,9 @@
 #define NEC_ONE_SPACE_MIN 1300
 #define NEC_ONE_SPACE_MAX 2200
 
+// ===============================================================
+// State Definitions
+// ===============================================================
 typedef enum {
   NEC_STATE_IDLE,
   NEC_STATE_LEAD_SPACE,
@@ -42,130 +54,199 @@ typedef enum {
 
 static nec_state_t nec_state = NEC_STATE_IDLE;
 static uint32_t nec_data = 0;
-static int bit_index = 0;
-
+static uint32_t bit_index = 0;
 static uint32_t last_edge_time = 0;
+
 static QueueHandle_t ir_controller_queue = NULL;
 
-static blfm_ir_command_t blfm_ir_remote_process_pulse(uint32_t pulse_us) {
+// ===============================================================
+// NEC Pulse Decoder
+// ===============================================================
+static blfm_ir_command_t ir_remote_process_pulse(uint32_t pulse_us,
+                                                 bool is_low) {
   static blfm_ir_command_t last_cmd = BLFM_IR_CMD_NONE;
+  if (is_low) {
+    // MARK
+    switch (nec_state) {
+    case NEC_STATE_IDLE:
+      if (pulse_us > NEC_HDR_MARK_MIN && pulse_us < NEC_HDR_MARK_MAX) {
+        nec_state = NEC_STATE_LEAD_SPACE;
+      }
+      break;
 
-  switch (nec_state) {
-  case NEC_STATE_IDLE:
-    if (pulse_us > NEC_HDR_MARK_MIN && pulse_us < NEC_HDR_MARK_MAX) {
-      nec_state = NEC_STATE_LEAD_SPACE;
-    }
-    break;
+    case NEC_STATE_BIT_MARK:
+      if (pulse_us > NEC_BIT_MARK_MIN && pulse_us < NEC_BIT_MARK_MAX) {
+        nec_state = NEC_STATE_BIT_SPACE;
+      } else {
+        nec_state = NEC_STATE_IDLE;
+      }
+      break;
 
-  case NEC_STATE_LEAD_SPACE:
-    if (pulse_us > NEC_HDR_SPACE_MIN && pulse_us < NEC_HDR_SPACE_MAX) {
-      nec_data = 0;
-      bit_index = 0;
-      nec_state = NEC_STATE_BIT_MARK;
-    } else {
-      nec_state = NEC_STATE_IDLE;
-    }
-    break;
-
-  case NEC_STATE_BIT_MARK:
-    if (pulse_us > NEC_BIT_MARK_MIN && pulse_us < NEC_BIT_MARK_MAX) {
-      nec_state = NEC_STATE_BIT_SPACE;
-    } else {
-      nec_state = NEC_STATE_IDLE;
-    }
-    break;
-
-  case NEC_STATE_BIT_SPACE:
-    if ((pulse_us > NEC_ONE_SPACE_MIN) && (pulse_us < NEC_ONE_SPACE_MAX)) {
-      nec_data |= (1UL << bit_index);
-    } else if ((pulse_us > NEC_ZERO_SPACE_MIN) &&
-               (pulse_us < NEC_ZERO_SPACE_MAX)) {
-      nec_data &= ~(1UL << bit_index);
-    } else {
-      nec_state = NEC_STATE_IDLE;
+    default:
       break;
     }
+  } else {
+    // SPACE
+    switch (nec_state) {
+    case NEC_STATE_LEAD_SPACE:
+      if (pulse_us > NEC_HDR_SPACE_MIN && pulse_us < NEC_HDR_SPACE_MAX) {
+	nec_data = 0;
+        bit_index = 0;
+        nec_state = NEC_STATE_BIT_MARK;
+      } else {
+        nec_state = NEC_STATE_IDLE;
+      }
+      break;
 
-    bit_index++;
-    if (bit_index >= NEC_BITS) {
-      last_cmd =
-          (blfm_ir_command_t)((nec_data & NEC_CMD_MASK) >> NEC_CMD_SHIFT);
-      nec_state = NEC_STATE_IDLE;
-    } else {
-      nec_state = NEC_STATE_BIT_MARK;
+    case NEC_STATE_BIT_SPACE:
+      if (pulse_us > NEC_ONE_SPACE_MIN && pulse_us < NEC_ONE_SPACE_MAX) {
+        nec_data |= (1UL << bit_index);
+      } else if (pulse_us > NEC_ZERO_SPACE_MIN &&
+                 pulse_us < NEC_ZERO_SPACE_MAX) {
+        nec_data &= ~(1UL << bit_index);
+      } else {
+        nec_state = NEC_STATE_IDLE;
+        break;
+      }
+
+      bit_index++;
+      if (bit_index >= NEC_BITS) {
+        uint8_t command = (nec_data >> 16) & 0xFF;
+        uint8_t command_inv = (nec_data >> 24) & 0xFF;
+
+        if ((command ^ command_inv) == 0xFF) {
+          last_cmd = (blfm_ir_command_t)command;
+        } else {
+          last_cmd = BLFM_IR_CMD_NONE;
+        }
+        nec_state = NEC_STATE_IDLE;
+
+      } else {
+        nec_state = NEC_STATE_BIT_MARK;
+      }
+      break;
+
+    default:
+      break;
     }
-    break;
-
-  default:
-    nec_state = NEC_STATE_IDLE;
-    break;
   }
 
   return last_cmd;
 }
 
-static blfm_ir_command_t decode_ir_code(uint32_t pulse_us) {
-  return blfm_ir_remote_process_pulse(pulse_us);
+// ===============================================================
+// SystemCoreClock
+// ===============================================================
+void test_system_core_clock_range(void) {
+  uint32_t expected = 72000000UL; // 72 MHz
+  uint32_t tolerance = 500000;    // ±0.5 MHz tolerance
+
+  if (SystemCoreClock > (expected - tolerance) &&
+      SystemCoreClock < (expected + tolerance)) {
+    // Clock is within expected range: turn LED ON
+    blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  } else {
+    // Clock outside expected range: turn LED OFF
+    blfm_gpio_clear_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  }
 }
 
-void ir_exti_handler(void) {
+// ===============================================================
+// ISR
+// ===============================================================
+/*void ir_exti_handler(void) {
+
   uint32_t now = DWT->CYCCNT;
-  uint32_t diff = now - last_edge_time;
-  last_edge_time = now;
 
-  uint32_t pulse_us = (diff * 1000000UL) / SystemCoreClock;
+  if (last_edge_time != 0) {
 
-  //volatile uint32_t debug_pulse = pulse_us;
+    uint32_t diff = now - last_edge_time;
+    uint32_t pulse_us = diff / 72;
 
-  // Read logic level at the pin (PA8)
-  bool is_high = (GPIOA->IDR & GPIO_IDR_IDR8) != 0;
+    bool is_low = ((GPIOA->IDR & GPIO_IDR_IDR8) == 0);
 
-  // Only process falling edge as meaningful pulse end
-  // (Optionally, you can process both edges if you're decoding both
-  // marks/spaces separately)
-  if (!is_high) {
-    blfm_ir_command_t cmd = decode_ir_code(pulse_us);
-
-    if (ir_controller_queue != NULL) {
-      blfm_ir_remote_event_t event = {
-          .timestamp = xTaskGetTickCountFromISR(),
-          .pulse_us = pulse_us, // Don't mask this
-          .command = cmd,
-      };
-      BaseType_t hpTaskWoken = pdFALSE;
-      xQueueSendFromISR(ir_controller_queue, &event, &hpTaskWoken);
-      portYIELD_FROM_ISR(hpTaskWoken);
+    if (!is_low) {
+      // FALLING EDGE - long mark (~9ms) occurs here
+      if (pulse_us > 8000 && pulse_us < 9500) {
+        blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+      }
+    } else {
+      // RISING EDGE - short space (~4.5ms) occurs here
+      if (pulse_us > 4000 && pulse_us < 5000) {
+        blfm_gpio_clear_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+      }
     }
   }
+  last_edge_time = now;
+  }*/
 
-  // Clear EXTI line 8 pending bit if you're manually managing it
-  // (depends on your EXTI handling setup)
-  // EXTI->PR = EXTI_PR_PR8;
+
+// ===============================================================
+// ISR
+// ===============================================================
+void ir_exti_handler(void) {
+  if (!ir_controller_queue) {
+    return;
+  }
+
+  uint32_t now = DWT->CYCCNT;
+
+  if (last_edge_time == 0) {
+    last_edge_time = now;
+    return;
+  }
+
+  uint32_t diff = now - last_edge_time;
+  uint32_t pulse_us = diff / 72;
+
+  bool is_low = ((GPIOA->IDR & GPIO_IDR_IDR8) == 0);
+  bool is_mark = !is_low;
+
+  blfm_ir_command_t cmd = ir_remote_process_pulse(pulse_us, is_mark);
+  if (cmd != BLFM_IR_CMD_NONE) {
+    //blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+    blfm_ir_remote_event_t event = {
+        .timestamp = xTaskGetTickCountFromISR(),
+        .pulse_us = pulse_us,
+        .command = cmd,
+    };
+    BaseType_t hpTaskWoken = pdFALSE;
+    xQueueSendFromISR(ir_controller_queue, &event, &hpTaskWoken);
+    portYIELD_FROM_ISR(hpTaskWoken);
+  } else {
+    //blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  }
+
+  last_edge_time = now;
 }
 
+// ===============================================================
+// INIT FUNCTION
+// ===============================================================
 void blfm_ir_remote_init(QueueHandle_t controller_queue) {
   ir_controller_queue = controller_queue;
 
-  // Enable GPIOA and AFIO clocks
-  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_AFIOEN;
+  // Enable DWT for precise timings
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
-  // Configure PA8 as input with pull-up
-  GPIOA->CRH &= ~(GPIO_CRH_MODE8 | GPIO_CRH_CNF8);
-  GPIOA->CRH |= GPIO_CRH_CNF8_1; // Input, pull-up/pull-down
-  GPIOA->ODR |= GPIO_ODR_ODR8;   // Pull-up enabled
+  // Configure GPIO
+  blfm_gpio_config_input_pullup((uint32_t)BLFM_IR_REMOTE_PORT,
+                                BLFM_IR_REMOTE_PIN);
 
-  // Map EXTI8 to PA8
+  // AFIO mapping for PA8
   AFIO->EXTICR[2] &= ~AFIO_EXTICR3_EXTI8;
   AFIO->EXTICR[2] |= AFIO_EXTICR3_EXTI8_PA;
 
-  // Unmask EXTI line 8
-  EXTI->IMR |= EXTI_IMR_MR8;
+  // Configure EXTI
+  EXTI->IMR |= (1 << BLFM_IR_REMOTE_PIN);
+  EXTI->FTSR |= (1 << BLFM_IR_REMOTE_PIN);
+  EXTI->RTSR |= (1 << BLFM_IR_REMOTE_PIN);
 
-  // Enable both rising and falling edge triggers
-  EXTI->RTSR |= EXTI_RTSR_TR8; // Rising
-  EXTI->FTSR |= EXTI_FTSR_TR8; // Falling
+  // Register callback
+  blfm_exti_register_callback(BLFM_IR_REMOTE_PIN, ir_exti_handler);
 
-  // Register and enable EXTI IRQ
-  blfm_exti_register_callback(8, ir_exti_handler);
+  // Enable NVIC
   NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
