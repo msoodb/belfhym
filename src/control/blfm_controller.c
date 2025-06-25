@@ -31,6 +31,7 @@
 #define MIN_ROTATE_TICKS 4
 #define MAX_ROTATE_TICKS 6
 #define MODE_BUTTON_DEBOUNCE_MS 100
+#define IR_CONTROL_TIMEOUT_MS 200
 
 static int pseudo_random(int min, int max) {
   static uint32_t seed = 123456789;
@@ -42,9 +43,10 @@ static int backward_ticks = 0;
 static int rotate_ticks = 0;
 static int rotate_duration = 0;
 static blfm_ir_command_t last_command = BLFM_IR_CMD_NONE;
+static uint32_t last_ir_cmd_time = 0;
 
 static blfm_system_state_t blfm_system_state = {
-    .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_FORWARD};
+    .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_STOP};
 
 // static void uint_to_str(char *buf, uint16_t value);
 
@@ -70,6 +72,34 @@ static blfm_system_state_t blfm_system_state = {
 
 void blfm_controller_init(void) {
   // Reserved for future initialization
+}
+
+void blfm_controller_cycle_mode(blfm_actuator_command_t *out) {
+  // Cycle through modes
+  switch (blfm_system_state.current_mode) {
+  case BLFM_MODE_AUTO:
+    blfm_system_state.current_mode = BLFM_MODE_MANUAL;
+    out->led.mode = BLFM_LED_MODE_BLINK;
+    out->led.blink_speed_ms = 100;
+    break;
+
+  case BLFM_MODE_MANUAL:
+    blfm_system_state.current_mode = BLFM_MODE_AUTO;
+    out->led.mode = BLFM_LED_MODE_BLINK;
+    out->led.blink_speed_ms = 500;
+    break;
+
+  default:
+    blfm_system_state.current_mode = BLFM_MODE_EMERGENCY;
+    out->led.mode = BLFM_LED_MODE_ON;
+    out->led.blink_speed_ms = 0;
+    break;
+  }
+  out->motor.left.direction = BLFM_MOTION_FORWARD;
+  out->motor.right.direction = BLFM_MOTION_FORWARD;
+  out->motor.left.speed = 0;
+  out->motor.right.speed = 0;
+  blfm_system_state.motion_state = BLFM_MOTION_STOP;
 }
 
 // Fill 'out' based on 'in'
@@ -101,7 +131,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 
       backward_ticks++;
       if (backward_ticks >= BACKWARD_TICKS_MAX) {
-        // Back up complete — begin ROTATE
         rotate_ticks = 0;
         rotate_duration = pseudo_random(MIN_ROTATE_TICKS, MAX_ROTATE_TICKS);
         blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
@@ -116,13 +145,11 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 
       rotate_ticks++;
       if (rotate_ticks >= rotate_duration) {
-        // Rotation complete — return to FORWARD
         blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
       }
       break;
 
     default:
-      // Stop
       out->motor.left.speed = 0;
       out->motor.right.speed = 0;
       break;
@@ -130,7 +157,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   }
 
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 200; // in->ultrasonic.distance_mm; // 200;
+  out->led.blink_speed_ms = 100;
 
   // blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
   /* if (in->ultrasonic.distance_mm < 100) {
@@ -214,111 +241,57 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     return;
   }
 
-  //  Resolve command
-  blfm_ir_command_t command =
-      (in->command == BLFM_IR_CMD_REPEAT) ? last_command : in->command;
+  uint32_t now = xTaskGetTickCount();
+  blfm_ir_command_t command = in->command;
 
-  //  Save last command if NOT a repeat
-  if (in->command != BLFM_IR_CMD_REPEAT) {
-    last_command = in->command;
-  }
-
-  //  Handle OK for AUTO/MANUAL mode switching
-  if (command == BLFM_IR_CMD_OK) {
-    if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
-      blfm_system_state.current_mode = BLFM_MODE_MANUAL;
-    } else {
-      blfm_system_state.current_mode = BLFM_MODE_AUTO;
+  // 1️⃣ If it's a REPEAT, use the LAST command if valid
+  if (command == BLFM_IR_CMD_REPEAT) {
+    if (last_command != BLFM_IR_CMD_UP && last_command != BLFM_IR_CMD_DOWN &&
+        last_command != BLFM_IR_CMD_LEFT && last_command != BLFM_IR_CMD_RIGHT) {
+      // Not repeating a valid movement
+      return;
     }
-    // Always stop after mode change
-    blfm_system_state.motion_state = BLFM_MOTION_STOP;
+    command = last_command;
+  } else {
+    // It's NOT a repeat, so it's a new command
+    last_command = command;
+  }
 
-    out->motor.left.direction = BLFM_MOTION_FORWARD;
-    out->motor.right.direction = BLFM_MOTION_FORWARD;
-    out->motor.left.speed = 0;
-    out->motor.right.speed = 0;
+  // 2️⃣ Update the timestamp
+  if (command != BLFM_IR_CMD_NONE) {
+    last_ir_cmd_time = now;
+  }
 
+  // 3️⃣ If not in manual mode, skip
+  if (blfm_system_state.current_mode != BLFM_MODE_MANUAL) {
     return;
   }
 
-  //  In AUTO mode, ignore all manual commands
-  if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
-    return;
-  }
-
-  //  Process manual commands
+  // 4️⃣ Set motion state
   switch (command) {
   case BLFM_IR_CMD_UP:
     blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
-    out->motor.left.direction = BLFM_MOTION_FORWARD;
-    out->motor.right.direction = BLFM_MOTION_FORWARD;
-    out->motor.left.speed = 255;
-    out->motor.right.speed = 255;
     break;
 
   case BLFM_IR_CMD_DOWN:
     blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
-    out->motor.left.direction = BLFM_MOTION_BACKWARD;
-    out->motor.right.direction = BLFM_MOTION_BACKWARD;
-    out->motor.left.speed = 255;
-    out->motor.right.speed = 255;
     break;
 
   case BLFM_IR_CMD_LEFT:
     blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
-    out->motor.left.direction = BLFM_MOTION_BACKWARD;
-    out->motor.right.direction = BLFM_MOTION_FORWARD;
-    out->motor.left.speed = 255;
-    out->motor.right.speed = 255;
     break;
 
   case BLFM_IR_CMD_RIGHT:
     blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
-    out->motor.left.direction = BLFM_MOTION_FORWARD;
-    out->motor.right.direction = BLFM_MOTION_BACKWARD;
-    out->motor.left.speed = 255;
-    out->motor.right.speed = 255;
     break;
 
   case BLFM_IR_CMD_NONE:
   default:
     blfm_system_state.motion_state = BLFM_MOTION_STOP;
-    out->motor.left.speed = 0;
-    out->motor.right.speed = 0;
     break;
   }
-}
 
-void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
-                                      blfm_actuator_command_t *out) {
-
-  if (evt->event_type == BLFM_JOYSTICK_EVENT_PRESSED) {
-    // Toggle AUTO/MANUAL
-    blfm_system_state.current_mode =
-        (blfm_system_state.current_mode == BLFM_MODE_AUTO) ? BLFM_MODE_MANUAL
-                                                           : BLFM_MODE_AUTO;
-  }
-  if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
-    switch (evt->direction) {
-    case BLFM_JOYSTICK_DIR_UP:
-      blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
-      break;
-    case BLFM_JOYSTICK_DIR_DOWN:
-      blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
-      break;
-    case BLFM_JOYSTICK_DIR_LEFT:
-      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
-      break;
-    case BLFM_JOYSTICK_DIR_RIGHT:
-      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
-      break;
-    default:
-      blfm_system_state.motion_state = BLFM_MOTION_STOP;
-      break;
-    }
-  }
-
-  // Compose actuator command according to motion_state
+  // 5️⃣ Apply motion
   switch (blfm_system_state.motion_state) {
   case BLFM_MOTION_FORWARD:
     out->motor.left.direction = BLFM_MOTION_FORWARD;
@@ -326,24 +299,28 @@ void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
     out->motor.left.speed = 255;
     out->motor.right.speed = 255;
     break;
+
   case BLFM_MOTION_BACKWARD:
     out->motor.left.direction = BLFM_MOTION_BACKWARD;
     out->motor.right.direction = BLFM_MOTION_BACKWARD;
     out->motor.left.speed = 255;
     out->motor.right.speed = 255;
     break;
+
   case BLFM_MOTION_ROTATE_LEFT:
     out->motor.left.direction = BLFM_MOTION_BACKWARD;
     out->motor.right.direction = BLFM_MOTION_FORWARD;
     out->motor.left.speed = 255;
     out->motor.right.speed = 255;
     break;
+
   case BLFM_MOTION_ROTATE_RIGHT:
     out->motor.left.direction = BLFM_MOTION_FORWARD;
     out->motor.right.direction = BLFM_MOTION_BACKWARD;
     out->motor.left.speed = 255;
     out->motor.right.speed = 255;
     break;
+
   case BLFM_MOTION_STOP:
   default:
     out->motor.left.speed = 0;
@@ -352,9 +329,78 @@ void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
   }
 }
 
-void blfm_system_state_reset(void) {
-  blfm_system_state.current_mode = BLFM_MODE_AUTO;
-  blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
+void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
+                                      blfm_actuator_command_t *out) {
+  if (!evt || !out) {
+    return;
+  }
+
+  /*if (evt->event_type == BLFM_JOYSTICK_EVENT_PRESSED) {
+    blfm_controller_cycle_mode(out);
+    }*/
+
+  if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
+    switch (evt->direction) {
+    case BLFM_JOYSTICK_DIR_UP:
+      blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
+      break;
+
+    case BLFM_JOYSTICK_DIR_DOWN:
+      blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
+      break;
+
+    case BLFM_JOYSTICK_DIR_LEFT:
+      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
+      break;
+
+    case BLFM_JOYSTICK_DIR_RIGHT:
+      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
+      break;
+
+    default:
+      blfm_system_state.motion_state = BLFM_MOTION_STOP;
+      break;
+    }
+  }
+
+  // Output based on motion state
+  switch (blfm_system_state.motion_state) {
+  case BLFM_MOTION_FORWARD:
+    out->motor.left.direction = BLFM_MOTION_FORWARD;
+    out->motor.right.direction = BLFM_MOTION_FORWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
+
+  case BLFM_MOTION_BACKWARD:
+    out->motor.left.direction = BLFM_MOTION_BACKWARD;
+    out->motor.right.direction = BLFM_MOTION_BACKWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
+
+  case BLFM_MOTION_ROTATE_LEFT:
+    out->motor.left.direction = BLFM_MOTION_BACKWARD;
+    out->motor.right.direction = BLFM_MOTION_FORWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
+
+  case BLFM_MOTION_ROTATE_RIGHT:
+    out->motor.left.direction = BLFM_MOTION_FORWARD;
+    out->motor.right.direction = BLFM_MOTION_BACKWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
+
+  case BLFM_MOTION_STOP:
+  default:
+    out->motor.left.direction = BLFM_MOTION_FORWARD;
+    out->motor.right.direction = BLFM_MOTION_BACKWARD;
+    out->motor.left.speed = 0;
+    out->motor.right.speed = 0;
+    break;
+  }
 }
 
 void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
@@ -362,31 +408,42 @@ void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
   if (!event || !command) {
     return;
   }
-
-  // Toggle the mode
-  if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
-    blfm_system_state.current_mode = BLFM_MODE_AUTO;
-  } else {
-    blfm_system_state.current_mode = BLFM_MODE_MANUAL;
-  }
-
-  // You can also fill other fields of the command as needed
-  command->motor.left.speed = 0;
-  command->motor.right.speed = 0;
+  // blfm_controller_cycle_mode(command);
 }
 
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command) {
-  (void)command;
   static uint32_t last_press_tick = 0;
 
-  if (event->event_type == BLFM_MODE_BUTTON_EVENT_PRESSED) {
+  if (event && event->event_type == BLFM_MODE_BUTTON_EVENT_PRESSED) {
     uint32_t now = xTaskGetTickCount();
     uint32_t diff = now - last_press_tick;
 
     if (diff > pdMS_TO_TICKS(MODE_BUTTON_DEBOUNCE_MS)) {
+      // blfm_controller_cycle_mode(command);
       blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
       last_press_tick = now;
     }
   }
+}
+
+bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out) {
+  uint32_t now = xTaskGetTickCount();
+
+  bool is_movement_command =
+      (last_command == BLFM_IR_CMD_UP || last_command == BLFM_IR_CMD_DOWN ||
+       last_command == BLFM_IR_CMD_LEFT || last_command == BLFM_IR_CMD_RIGHT);
+
+  if (is_movement_command &&
+      (now - last_ir_cmd_time > pdMS_TO_TICKS(IR_CONTROL_TIMEOUT_MS))) {
+    
+    blfm_system_state.motion_state = BLFM_MOTION_STOP;
+    last_command = BLFM_IR_CMD_NONE;
+    
+    out->motor.left.speed = 0;
+    out->motor.right.speed = 0;
+    
+    return true;
+  }
+  return false;
 }

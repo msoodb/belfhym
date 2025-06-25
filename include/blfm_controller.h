@@ -25,6 +25,8 @@ void blfm_controller_process_joystick(const blfm_joystick_event_t *in,
 void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
                                             blfm_actuator_command_t *command);
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
-					 blfm_actuator_command_t *command);
+                                         blfm_actuator_command_t *command);
+bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out);
+
 #endif // BLFM_CONTROLLER_H
 

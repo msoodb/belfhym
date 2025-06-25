@@ -168,7 +168,6 @@ void ir_exti_handler(void) {
 
   blfm_ir_command_t cmd = ir_remote_process_pulse(pulse_us, is_mark);
   if (cmd != BLFM_IR_CMD_NONE) {
-    //blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
     blfm_ir_remote_event_t event = {
         .timestamp = xTaskGetTickCountFromISR(),
         .pulse_us = pulse_us,
@@ -177,10 +176,8 @@ void ir_exti_handler(void) {
     BaseType_t hpTaskWoken = pdFALSE;
     xQueueSendFromISR(ir_controller_queue, &event, &hpTaskWoken);
     portYIELD_FROM_ISR(hpTaskWoken);
-  } else {
-    //blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
   }
-
+  
   last_edge_time = now;
 }
 

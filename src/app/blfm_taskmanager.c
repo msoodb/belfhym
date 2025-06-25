@@ -56,7 +56,6 @@ static QueueHandle_t xIRRemoteQueue = NULL;
 static QueueHandle_t xJoystickQueue = NULL;
 static QueueHandle_t xModeButtonQueue = NULL;
 static QueueHandle_t xActuatorCmdQueue = NULL;
-
 static QueueSetHandle_t xControllerQueueSet = NULL;
 
 void blfm_taskmanager_setup(void) {
@@ -125,15 +124,21 @@ static void vSensorHubTask(void *pvParameters) {
 
 static void vControllerTask(void *pvParameters) {
   (void)pvParameters;
+  blfm_actuator_command_t command;
 
   for (;;) {
     QueueSetMemberHandle_t activated =
         xQueueSelectFromSet(xControllerQueueSet, pdMS_TO_TICKS(100));
 
     if (activated == NULL) {
+      // No event: just check timeout
+      if (blfm_controller_check_ir_timeout(&command)) {
+        // Only send if a stop was issued
+        xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+      }
       continue;
     }
-
+    
     if (activated == xSensorDataQueue) {
       handle_sensor_data();
     } else if (activated == xBigSoundQueue) {
