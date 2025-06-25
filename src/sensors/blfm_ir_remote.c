@@ -92,14 +92,23 @@ static blfm_ir_command_t ir_remote_process_pulse(uint32_t pulse_us,
     switch (nec_state) {
     case NEC_STATE_LEAD_SPACE:
       if (pulse_us > NEC_HDR_SPACE_MIN && pulse_us < NEC_HDR_SPACE_MAX) {
-	nec_data = 0;
+        // Normal header space
+        nec_data = 0;
         bit_index = 0;
         nec_state = NEC_STATE_BIT_MARK;
+
+      } else if (pulse_us > NEC_REPEAT_SPACE_MIN &&
+                 pulse_us < NEC_REPEAT_SPACE_MAX) {
+        // It's a REPEAT signal
+        last_cmd = last_cmd != BLFM_IR_CMD_NONE ? last_cmd : BLFM_IR_CMD_NONE;
+        nec_state = NEC_STATE_IDLE;
+        return last_cmd;
+
       } else {
         nec_state = NEC_STATE_IDLE;
       }
       break;
-
+      
     case NEC_STATE_BIT_SPACE:
       if (pulse_us > NEC_ONE_SPACE_MIN && pulse_us < NEC_ONE_SPACE_MAX) {
         nec_data |= (1UL << bit_index);

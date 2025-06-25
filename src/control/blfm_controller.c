@@ -41,6 +41,7 @@ static int pseudo_random(int min, int max) {
 static int backward_ticks = 0;
 static int rotate_ticks = 0;
 static int rotate_duration = 0;
+static blfm_ir_command_t last_command = BLFM_IR_CMD_NONE;
 
 static blfm_system_state_t blfm_system_state = {
     .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_FORWARD};
@@ -79,6 +80,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 
   if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     switch (blfm_system_state.motion_state) {
+    case BLFM_MOTION_STOP:
     case BLFM_MOTION_FORWARD:
       if (in->ultrasonic.distance_mm <= ULTRASONIC_FORWARD_THRESH) {
         backward_ticks = 0;
@@ -212,22 +214,42 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     return;
   }
 
-  blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  //  Resolve command
+  blfm_ir_command_t command =
+      (in->command == BLFM_IR_CMD_REPEAT) ? last_command : in->command;
 
-  if (in->command == BLFM_IR_CMD_OK) {
+  //  Save last command if NOT a repeat
+  if (in->command != BLFM_IR_CMD_REPEAT) {
+    last_command = in->command;
+  }
+
+  //  Handle OK for AUTO/MANUAL mode switching
+  if (command == BLFM_IR_CMD_OK) {
     if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
       blfm_system_state.current_mode = BLFM_MODE_MANUAL;
     } else {
       blfm_system_state.current_mode = BLFM_MODE_AUTO;
     }
+    // Always stop after mode change
+    blfm_system_state.motion_state = BLFM_MOTION_STOP;
+
+    out->motor.left.direction = BLFM_MOTION_FORWARD;
+    out->motor.right.direction = BLFM_MOTION_FORWARD;
+    out->motor.left.speed = 0;
+    out->motor.right.speed = 0;
+
+    return;
   }
 
+  //  In AUTO mode, ignore all manual commands
   if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     return;
   }
 
-  switch (in->command) {
+  //  Process manual commands
+  switch (command) {
   case BLFM_IR_CMD_UP:
+    blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
     out->motor.left.direction = BLFM_MOTION_FORWARD;
     out->motor.right.direction = BLFM_MOTION_FORWARD;
     out->motor.left.speed = 255;
@@ -235,6 +257,7 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     break;
 
   case BLFM_IR_CMD_DOWN:
+    blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
     out->motor.left.direction = BLFM_MOTION_BACKWARD;
     out->motor.right.direction = BLFM_MOTION_BACKWARD;
     out->motor.left.speed = 255;
@@ -242,6 +265,7 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     break;
 
   case BLFM_IR_CMD_LEFT:
+    blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
     out->motor.left.direction = BLFM_MOTION_BACKWARD;
     out->motor.right.direction = BLFM_MOTION_FORWARD;
     out->motor.left.speed = 255;
@@ -249,14 +273,18 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     break;
 
   case BLFM_IR_CMD_RIGHT:
+    blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
     out->motor.left.direction = BLFM_MOTION_FORWARD;
     out->motor.right.direction = BLFM_MOTION_BACKWARD;
     out->motor.left.speed = 255;
     out->motor.right.speed = 255;
     break;
 
+  case BLFM_IR_CMD_NONE:
   default:
-    // Unknown command or no movement
+    blfm_system_state.motion_state = BLFM_MOTION_STOP;
+    out->motor.left.speed = 0;
+    out->motor.right.speed = 0;
     break;
   }
 }
@@ -349,7 +377,7 @@ void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
 
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command) {
-  (void) command;
+  (void)command;
   static uint32_t last_press_tick = 0;
 
   if (event->event_type == BLFM_MODE_BUTTON_EVENT_PRESSED) {
