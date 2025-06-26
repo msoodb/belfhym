@@ -42,8 +42,6 @@ static int pseudo_random(int min, int max) {
 static int backward_ticks = 0;
 static int rotate_ticks = 0;
 static int rotate_duration = 0;
-static blfm_ir_command_t last_command = BLFM_IR_CMD_NONE;
-static uint32_t last_ir_cmd_time = 0;
 
 static blfm_system_state_t blfm_system_state = {
     .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_STOP};
@@ -241,91 +239,71 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     return;
   }
 
-  uint32_t now = xTaskGetTickCount();
   blfm_ir_command_t command = in->command;
-
-  // 1️⃣ If it's a REPEAT, use the LAST command if valid
-  if (command == BLFM_IR_CMD_REPEAT) {
-    if (last_command != BLFM_IR_CMD_UP && last_command != BLFM_IR_CMD_DOWN &&
-        last_command != BLFM_IR_CMD_LEFT && last_command != BLFM_IR_CMD_RIGHT) {
-      // Not repeating a valid movement
-      return;
-    }
-    command = last_command;
-  } else {
-    // It's NOT a repeat, so it's a new command
-    last_command = command;
-  }
-
-  // 2️⃣ Update the timestamp
-  if (command != BLFM_IR_CMD_NONE) {
-    last_ir_cmd_time = now;
-  }
-
-  // 3️⃣ If not in manual mode, skip
   if (blfm_system_state.current_mode != BLFM_MODE_MANUAL) {
     return;
-  }
-
-  // 4️⃣ Set motion state
+  } 
+  
   switch (command) {
-  case BLFM_IR_CMD_UP:
-    blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
-    break;
+    case BLFM_IR_CMD_UP:
+      blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
+      break;
 
-  case BLFM_IR_CMD_DOWN:
-    blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
-    break;
+    case BLFM_IR_CMD_DOWN:
+      blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
+      break;
 
-  case BLFM_IR_CMD_LEFT:
-    blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
-    break;
+    case BLFM_IR_CMD_LEFT:
+      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
+      break;
 
-  case BLFM_IR_CMD_RIGHT:
-    blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
-    break;
+    case BLFM_IR_CMD_RIGHT:
+      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
+      break;
 
-  case BLFM_IR_CMD_NONE:
-  default:
-    blfm_system_state.motion_state = BLFM_MOTION_STOP;
-    break;
+    case BLFM_IR_CMD_NONE:
+    default:
+      blfm_system_state.motion_state = BLFM_MOTION_STOP;
+      break;
   }
 
-  // 5️⃣ Apply motion
+  // STEP 5: Output the motor command
   switch (blfm_system_state.motion_state) {
-  case BLFM_MOTION_FORWARD:
-    out->motor.left.direction = BLFM_MOTION_FORWARD;
-    out->motor.right.direction = BLFM_MOTION_FORWARD;
-    out->motor.left.speed = 255;
-    out->motor.right.speed = 255;
-    break;
+    case BLFM_MOTION_FORWARD:
+      out->motor.left.direction = BLFM_MOTION_FORWARD;
+      out->motor.right.direction = BLFM_MOTION_FORWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
+      break;
 
-  case BLFM_MOTION_BACKWARD:
-    out->motor.left.direction = BLFM_MOTION_BACKWARD;
-    out->motor.right.direction = BLFM_MOTION_BACKWARD;
-    out->motor.left.speed = 255;
-    out->motor.right.speed = 255;
-    break;
+    case BLFM_MOTION_BACKWARD:
+      out->motor.left.direction = BLFM_MOTION_BACKWARD;
+      out->motor.right.direction = BLFM_MOTION_BACKWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
+      break;
 
-  case BLFM_MOTION_ROTATE_LEFT:
-    out->motor.left.direction = BLFM_MOTION_BACKWARD;
-    out->motor.right.direction = BLFM_MOTION_FORWARD;
-    out->motor.left.speed = 255;
-    out->motor.right.speed = 255;
-    break;
+    case BLFM_MOTION_ROTATE_LEFT:
+      out->motor.left.direction = BLFM_MOTION_BACKWARD;
+      out->motor.right.direction = BLFM_MOTION_FORWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
+      break;
 
-  case BLFM_MOTION_ROTATE_RIGHT:
-    out->motor.left.direction = BLFM_MOTION_FORWARD;
-    out->motor.right.direction = BLFM_MOTION_BACKWARD;
-    out->motor.left.speed = 255;
-    out->motor.right.speed = 255;
-    break;
+    case BLFM_MOTION_ROTATE_RIGHT:
+      out->motor.left.direction = BLFM_MOTION_FORWARD;
+      out->motor.right.direction = BLFM_MOTION_BACKWARD;
+      out->motor.left.speed = 255;
+      out->motor.right.speed = 255;
+      break;
 
-  case BLFM_MOTION_STOP:
-  default:
-    out->motor.left.speed = 0;
-    out->motor.right.speed = 0;
-    break;
+    case BLFM_MOTION_STOP:
+    default:
+      out->motor.left.direction = BLFM_MOTION_FORWARD;
+      out->motor.right.direction = BLFM_MOTION_FORWARD;
+      out->motor.left.speed = 0;
+      out->motor.right.speed = 0;
+      break;
   }
 }
 
@@ -413,6 +391,7 @@ void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
 
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command) {
+  (void) command;
   static uint32_t last_press_tick = 0;
 
   if (event && event->event_type == BLFM_MODE_BUTTON_EVENT_PRESSED) {
@@ -428,22 +407,7 @@ void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
 }
 
 bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out) {
-  uint32_t now = xTaskGetTickCount();
-
-  bool is_movement_command =
-      (last_command == BLFM_IR_CMD_UP || last_command == BLFM_IR_CMD_DOWN ||
-       last_command == BLFM_IR_CMD_LEFT || last_command == BLFM_IR_CMD_RIGHT);
-
-  if (is_movement_command &&
-      (now - last_ir_cmd_time > pdMS_TO_TICKS(IR_CONTROL_TIMEOUT_MS))) {
-    
-    blfm_system_state.motion_state = BLFM_MOTION_STOP;
-    last_command = BLFM_IR_CMD_NONE;
-    
-    out->motor.left.speed = 0;
-    out->motor.right.speed = 0;
-    
-    return true;
-  }
+  (void) out;
   return false;
 }
+

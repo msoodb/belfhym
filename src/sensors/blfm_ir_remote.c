@@ -44,6 +44,8 @@
 #define NEC_REPEAT_SPACE_MIN 2000
 #define NEC_REPEAT_SPACE_MAX 2500
 
+#define NEC_REPEAT_TIMEOUT_MS 250
+
 // ===============================================================
 // State Definitions
 // ===============================================================
@@ -58,8 +60,8 @@ static nec_state_t nec_state = NEC_STATE_IDLE;
 static uint32_t nec_data = 0;
 static uint32_t bit_index = 0;
 static uint32_t last_edge_time = 0;
-
 static QueueHandle_t ir_controller_queue = NULL;
+static uint32_t last_valid_command_tick = 0;
 
 // ===============================================================
 // NEC Pulse Decoder
@@ -67,6 +69,7 @@ static QueueHandle_t ir_controller_queue = NULL;
 static blfm_ir_command_t ir_remote_process_pulse(uint32_t pulse_us,
                                                  bool is_low) {
   static blfm_ir_command_t last_cmd = BLFM_IR_CMD_NONE;
+
   if (is_low) {
     // MARK
     switch (nec_state) {
@@ -92,23 +95,30 @@ static blfm_ir_command_t ir_remote_process_pulse(uint32_t pulse_us,
     switch (nec_state) {
     case NEC_STATE_LEAD_SPACE:
       if (pulse_us > NEC_HDR_SPACE_MIN && pulse_us < NEC_HDR_SPACE_MAX) {
-        // Normal header space
         nec_data = 0;
         bit_index = 0;
         nec_state = NEC_STATE_BIT_MARK;
 
       } else if (pulse_us > NEC_REPEAT_SPACE_MIN &&
                  pulse_us < NEC_REPEAT_SPACE_MAX) {
-        // It's a REPEAT signal
-        last_cmd = last_cmd != BLFM_IR_CMD_NONE ? last_cmd : BLFM_IR_CMD_NONE;
-        nec_state = NEC_STATE_IDLE;
-        return last_cmd;
+        uint32_t now = xTaskGetTickCount();
+        // Accept REPEAT only if received within 150ms of the LAST VALID command
+        if ((now - last_valid_command_tick) < pdMS_TO_TICKS(150)) {
+          // Still valid repeat
+          nec_state = NEC_STATE_IDLE;
+          return last_cmd;
+        } else {
+          // Too old — treat as NONE
+          nec_state = NEC_STATE_IDLE;
+          return BLFM_IR_CMD_NONE;
+        }
+      }
 
-      } else {
+      else {
         nec_state = NEC_STATE_IDLE;
       }
       break;
-      
+
     case NEC_STATE_BIT_SPACE:
       if (pulse_us > NEC_ONE_SPACE_MIN && pulse_us < NEC_ONE_SPACE_MAX) {
         nec_data |= (1UL << bit_index);
@@ -127,11 +137,14 @@ static blfm_ir_command_t ir_remote_process_pulse(uint32_t pulse_us,
 
         if ((command ^ command_inv) == 0xFF) {
           last_cmd = (blfm_ir_command_t)command;
+          last_valid_command_tick = xTaskGetTickCount();
+          nec_state = NEC_STATE_IDLE;
+          return last_cmd;
         } else {
           last_cmd = BLFM_IR_CMD_NONE;
+          nec_state = NEC_STATE_IDLE;
+          return BLFM_IR_CMD_NONE;
         }
-        nec_state = NEC_STATE_IDLE;
-
       } else {
         nec_state = NEC_STATE_BIT_MARK;
       }
@@ -142,7 +155,7 @@ static blfm_ir_command_t ir_remote_process_pulse(uint32_t pulse_us,
     }
   }
 
-  return last_cmd;
+  return BLFM_IR_CMD_NONE;
 }
 
 // ===============================================================
@@ -177,7 +190,7 @@ void ir_exti_handler(void) {
     xQueueSendFromISR(ir_controller_queue, &event, &hpTaskWoken);
     portYIELD_FROM_ISR(hpTaskWoken);
   }
-  
+
   last_edge_time = now;
 }
 
