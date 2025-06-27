@@ -34,12 +34,13 @@ static bool wait_for_pin(uint32_t port, uint32_t pin, int target_state,
                          uint32_t timeout_ms);
 
 void blfm_ultrasonic_init(void) {
-  blfm_gpio_config_output((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
-  blfm_gpio_config_input((uint32_t)BLFM_ULTRASONIC_ECHO_PORT, BLFM_ULTRASONIC_ECHO_PIN);
-  blfm_gpio_clear_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
+  blfm_gpio_config_output((uint32_t)BLFM_ULTRASONIC_TRIG_PORT,
+                          BLFM_ULTRASONIC_TRIG_PIN);
+  blfm_gpio_config_input((uint32_t)BLFM_ULTRASONIC_ECHO_PORT,
+                         BLFM_ULTRASONIC_ECHO_PIN);
+  blfm_gpio_clear_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT,
+                      BLFM_ULTRASONIC_TRIG_PIN);
 
-  
-  // Enable DWT cycle counter
   if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
   }
@@ -66,10 +67,8 @@ bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data) {
   if (!data || !ultrasonic_data_queue)
     return false;
 
-  // Wake the task to take a fresh reading
   xTaskNotifyGive(ultrasonic_task_handle);
 
-  // Wait for the new data (with timeout)
   if (xQueueReceive(ultrasonic_data_queue, data, pdMS_TO_TICKS(50)) == pdPASS) {
     return true;
   }
@@ -95,28 +94,27 @@ static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
 
   uint32_t start, end, duration;
 
-  blfm_gpio_clear_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
+  blfm_gpio_clear_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT,
+                      BLFM_ULTRASONIC_TRIG_PIN);
   delay_us(2);
-  blfm_gpio_set_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
+  blfm_gpio_set_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT,
+                    BLFM_ULTRASONIC_TRIG_PIN);
   delay_us(10);
-  blfm_gpio_clear_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT, BLFM_ULTRASONIC_TRIG_PIN);
+  blfm_gpio_clear_pin((uint32_t)BLFM_ULTRASONIC_TRIG_PORT,
+                      BLFM_ULTRASONIC_TRIG_PIN);
 
-
-  if (!wait_for_pin((uint32_t)BLFM_ULTRASONIC_ECHO_PORT, BLFM_ULTRASONIC_ECHO_PIN, 1,
-                    30)) {
+  if (!wait_for_pin((uint32_t)BLFM_ULTRASONIC_ECHO_PORT,
+                    BLFM_ULTRASONIC_ECHO_PIN, 1, 30)) {
     return false;
   }
 
-  
   start = DWT->CYCCNT;
-
-  if (!wait_for_pin((uint32_t)BLFM_ULTRASONIC_ECHO_PORT, BLFM_ULTRASONIC_ECHO_PIN, 0,
-                    30)) {
+  if (!wait_for_pin((uint32_t)BLFM_ULTRASONIC_ECHO_PORT,
+                    BLFM_ULTRASONIC_ECHO_PIN, 0, 30)) {
     return false;
   }
   end = DWT->CYCCNT;
 
-  
   duration = end - start;
   uint32_t us = duration / (SystemCoreClock / 1000000);
   data->distance_mm = (uint16_t)(us / 58);
@@ -126,13 +124,9 @@ static bool blfm_ultrasonic_action(blfm_ultrasonic_data_t *data) {
 
 static void vUltrasonicTask(void *pvParameters) {
   (void)pvParameters;
- 
+
   for (;;) {
-
-    // Wait until someone calls read()
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-    
     blfm_ultrasonic_data_t data;
     if (blfm_ultrasonic_action(&data)) {
       xQueueOverwrite(ultrasonic_data_queue, &data);

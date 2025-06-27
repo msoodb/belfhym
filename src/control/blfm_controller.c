@@ -242,68 +242,68 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
   blfm_ir_command_t command = in->command;
   if (blfm_system_state.current_mode != BLFM_MODE_MANUAL) {
     return;
-  } 
-  
+  }
+
   switch (command) {
-    case BLFM_IR_CMD_UP:
-      blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
-      break;
+  case BLFM_IR_CMD_UP:
+    blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
+    break;
 
-    case BLFM_IR_CMD_DOWN:
-      blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
-      break;
+  case BLFM_IR_CMD_DOWN:
+    blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
+    break;
 
-    case BLFM_IR_CMD_LEFT:
-      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
-      break;
+  case BLFM_IR_CMD_LEFT:
+    blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
+    break;
 
-    case BLFM_IR_CMD_RIGHT:
-      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
-      break;
+  case BLFM_IR_CMD_RIGHT:
+    blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
+    break;
 
-    case BLFM_IR_CMD_NONE:
-    default:
-      blfm_system_state.motion_state = BLFM_MOTION_STOP;
-      break;
+  case BLFM_IR_CMD_NONE:
+  default:
+    blfm_system_state.motion_state = BLFM_MOTION_STOP;
+    break;
   }
 
   // STEP 5: Output the motor command
   switch (blfm_system_state.motion_state) {
-    case BLFM_MOTION_FORWARD:
-      out->motor.left.direction = BLFM_MOTION_FORWARD;
-      out->motor.right.direction = BLFM_MOTION_FORWARD;
-      out->motor.left.speed = 255;
-      out->motor.right.speed = 255;
-      break;
+  case BLFM_MOTION_FORWARD:
+    out->motor.left.direction = BLFM_MOTION_FORWARD;
+    out->motor.right.direction = BLFM_MOTION_FORWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
 
-    case BLFM_MOTION_BACKWARD:
-      out->motor.left.direction = BLFM_MOTION_BACKWARD;
-      out->motor.right.direction = BLFM_MOTION_BACKWARD;
-      out->motor.left.speed = 255;
-      out->motor.right.speed = 255;
-      break;
+  case BLFM_MOTION_BACKWARD:
+    out->motor.left.direction = BLFM_MOTION_BACKWARD;
+    out->motor.right.direction = BLFM_MOTION_BACKWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
 
-    case BLFM_MOTION_ROTATE_LEFT:
-      out->motor.left.direction = BLFM_MOTION_BACKWARD;
-      out->motor.right.direction = BLFM_MOTION_FORWARD;
-      out->motor.left.speed = 255;
-      out->motor.right.speed = 255;
-      break;
+  case BLFM_MOTION_ROTATE_LEFT:
+    out->motor.left.direction = BLFM_MOTION_BACKWARD;
+    out->motor.right.direction = BLFM_MOTION_FORWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
 
-    case BLFM_MOTION_ROTATE_RIGHT:
-      out->motor.left.direction = BLFM_MOTION_FORWARD;
-      out->motor.right.direction = BLFM_MOTION_BACKWARD;
-      out->motor.left.speed = 255;
-      out->motor.right.speed = 255;
-      break;
+  case BLFM_MOTION_ROTATE_RIGHT:
+    out->motor.left.direction = BLFM_MOTION_FORWARD;
+    out->motor.right.direction = BLFM_MOTION_BACKWARD;
+    out->motor.left.speed = 255;
+    out->motor.right.speed = 255;
+    break;
 
-    case BLFM_MOTION_STOP:
-    default:
-      out->motor.left.direction = BLFM_MOTION_FORWARD;
-      out->motor.right.direction = BLFM_MOTION_FORWARD;
-      out->motor.left.speed = 0;
-      out->motor.right.speed = 0;
-      break;
+  case BLFM_MOTION_STOP:
+  default:
+    out->motor.left.direction = BLFM_MOTION_FORWARD;
+    out->motor.right.direction = BLFM_MOTION_FORWARD;
+    out->motor.left.speed = 0;
+    out->motor.right.speed = 0;
+    break;
   }
 }
 
@@ -391,7 +391,7 @@ void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
 
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command) {
-  (void) command;
+  (void)command;
   static uint32_t last_press_tick = 0;
 
   if (event && event->event_type == BLFM_MODE_BUTTON_EVENT_PRESSED) {
@@ -407,7 +407,47 @@ void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
 }
 
 bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out) {
-  (void) out;
+  (void)out;
   return false;
 }
 
+void blfm_controller_process_esp32(const blfm_esp32_event_t *event,
+                                   blfm_actuator_command_t *out) {
+  memset(out, 0, sizeof(*out));
+
+  switch (event->command) {
+  case BLFM_ESP32_CMD_UP:
+    out->motor.left.speed = event->speed;
+    out->motor.right.speed = event->speed;
+    out->motor.left.direction = 0;
+    out->motor.right.direction = 0;
+    break;
+
+  case BLFM_ESP32_CMD_DOWN:
+    out->motor.left.speed = event->speed;
+    out->motor.right.speed = event->speed;
+    out->motor.left.direction = 1;
+    out->motor.right.direction = 1;
+    break;
+
+  case BLFM_ESP32_CMD_LEFT:
+    out->motor.left.speed = event->speed / 2;
+    out->motor.right.speed = event->speed;
+    out->motor.left.direction = 1;
+    out->motor.right.direction = 0;
+    break;
+
+  case BLFM_ESP32_CMD_RIGHT:
+    out->motor.left.speed = event->speed;
+    out->motor.right.speed = event->speed / 2;
+    out->motor.left.direction = 0;
+    out->motor.right.direction = 1;
+    break;
+
+  case BLFM_ESP32_CMD_STOP:
+  default:
+    out->motor.left.speed = 0;
+    out->motor.right.speed = 0;
+    break;
+  }
+}

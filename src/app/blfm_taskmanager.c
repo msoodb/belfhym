@@ -23,11 +23,9 @@
 #include "blfm_actuator_hub.h"
 #include "blfm_controller.h"
 #include "blfm_ir_remote.h"
+#include "blfm_esp32.h"
 #include "blfm_mode_button.h"
 #include "blfm_sensor_hub.h"
-
-#include "blfm_gpio.h"
-#include "blfm_pins.h"
 
 static void vSensorHubTask(void *pvParameters);
 static void vControllerTask(void *pvParameters);
@@ -37,8 +35,8 @@ static void vActuatorHubTask(void *pvParameters);
 static void handle_sensor_data(void);
 static void handle_bigsound_event(void);
 static void handle_ir_remote_event(void);
-static void handle_joystick_event(void);
 static void handle_mode_button_event(void);
+static void handle_esp32_event(void);
 
 // Task and queue handles
 #define SENSOR_HUB_TASK_STACK 256
@@ -53,9 +51,9 @@ static void handle_mode_button_event(void);
 static QueueHandle_t xSensorDataQueue = NULL;
 static QueueHandle_t xBigSoundQueue = NULL;
 static QueueHandle_t xIRRemoteQueue = NULL;
-static QueueHandle_t xJoystickQueue = NULL;
 static QueueHandle_t xModeButtonQueue = NULL;
 static QueueHandle_t xActuatorCmdQueue = NULL;
+static QueueHandle_t xESP32Queue = NULL;
 static QueueSetHandle_t xControllerQueueSet = NULL;
 
 void blfm_taskmanager_setup(void) {
@@ -69,11 +67,11 @@ void blfm_taskmanager_setup(void) {
   xIRRemoteQueue = xQueueCreate(5, sizeof(blfm_ir_remote_event_t));
   configASSERT(xIRRemoteQueue != NULL);
 
-  xJoystickQueue = xQueueCreate(5, sizeof(blfm_joystick_event_t));
-  configASSERT(xJoystickQueue != NULL);
-
   xModeButtonQueue = xQueueCreate(5, sizeof(blfm_mode_button_event_t));
   configASSERT(xModeButtonQueue != NULL);
+
+  xESP32Queue = xQueueCreate(5, sizeof(blfm_esp32_event_t));
+  configASSERT(xESP32Queue != NULL);
 
   xActuatorCmdQueue = xQueueCreate(5, sizeof(blfm_actuator_command_t));
   configASSERT(xActuatorCmdQueue != NULL);
@@ -85,7 +83,7 @@ void blfm_taskmanager_setup(void) {
   xQueueAddToSet(xSensorDataQueue, xControllerQueueSet);
   xQueueAddToSet(xBigSoundQueue, xControllerQueueSet);
   xQueueAddToSet(xIRRemoteQueue, xControllerQueueSet);
-  xQueueAddToSet(xJoystickQueue, xControllerQueueSet);
+  xQueueAddToSet(xESP32Queue, xControllerQueueSet);
   xQueueAddToSet(xModeButtonQueue, xControllerQueueSet);
 
   // Init subsystems
@@ -93,6 +91,7 @@ void blfm_taskmanager_setup(void) {
   blfm_mode_button_init(xModeButtonQueue);
   // blfm_bigsound_init(xBigSoundQueue);
   blfm_ir_remote_init(xIRRemoteQueue);
+  blfm_esp32_init();
   blfm_controller_init();
   blfm_actuator_hub_init();
 
@@ -124,31 +123,42 @@ static void vSensorHubTask(void *pvParameters) {
 
 static void vControllerTask(void *pvParameters) {
   (void)pvParameters;
+
   blfm_actuator_command_t command;
+  blfm_esp32_event_t esp32_event;
 
   for (;;) {
     QueueSetMemberHandle_t activated =
         xQueueSelectFromSet(xControllerQueueSet, pdMS_TO_TICKS(100));
 
+    // Handle IR timeout separately even if no event was received
     if (activated == NULL) {
-      // No event: just check timeout
       if (blfm_controller_check_ir_timeout(&command)) {
-        // Only send if a stop was issued
         xQueueSendToBack(xActuatorCmdQueue, &command, 0);
       }
+
+      // Also poll ESP32 for new bytes (serial input)
+      if (blfm_esp32_get_event(&esp32_event)) {
+        xQueueSendToBack(xESP32Queue, &esp32_event, 0);
+      }
+
       continue;
     }
-    
+
     if (activated == xSensorDataQueue) {
       handle_sensor_data();
-    } else if (activated == xBigSoundQueue) {
+    } 
+    else if (activated == xBigSoundQueue) {
       handle_bigsound_event();
-    } else if (activated == xIRRemoteQueue) {
+    } 
+    else if (activated == xIRRemoteQueue) {
       handle_ir_remote_event();
-    } else if (activated == xJoystickQueue) {
-      handle_joystick_event();
-    } else if (activated == xModeButtonQueue) {
+    } 
+    else if (activated == xModeButtonQueue) {
       handle_mode_button_event();
+    } 
+    else if (activated == xESP32Queue) {
+      handle_esp32_event();
     }
   }
 }
@@ -192,31 +202,10 @@ static void handle_bigsound_event(void) {
 static void handle_ir_remote_event(void) {
   blfm_ir_remote_event_t ir_event;
   blfm_actuator_command_t command;
-  
+
   if (xQueueReceive(xIRRemoteQueue, &ir_event, 0) == pdPASS) {
     blfm_controller_process_ir_remote(&ir_event, &command);
     xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-  }
-}
-
-static void handle_joystick_event(void) {
-  blfm_joystick_event_t joystick_event;
-  blfm_actuator_command_t command;
-
-  if (xQueueReceive(xJoystickQueue, &joystick_event, 0) == pdPASS) {
-    // Check if it's a click event
-    if (joystick_event.event_type == BLFM_JOYSTICK_EVENT_PRESSED) {
-      // Click detected
-      blfm_controller_process_joystick_click(&joystick_event, &command);
-      xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-    } else if (joystick_event.event_type == BLFM_JOYSTICK_EVENT_RELEASED) {
-      // Release detected (you can process if needed)
-      // Currently ignoring release
-    } else {
-      // Movement (no click/release), use normal joystick process
-      blfm_controller_process_joystick(&joystick_event, &command);
-      xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-    }
   }
 }
 
@@ -226,6 +215,16 @@ static void handle_mode_button_event(void) {
   if (xQueueReceive(xModeButtonQueue, &mode_event, 0) == pdPASS) {
     blfm_actuator_command_t command;
     blfm_controller_process_mode_button(&mode_event, &command);
+    xQueueSendToBack(xActuatorCmdQueue, &command, 0);
+  }
+}
+
+static void handle_esp32_event(void) {
+  blfm_esp32_event_t esp32_event;
+  blfm_actuator_command_t command;
+
+  if (xQueueReceive(xESP32Queue, &esp32_event, 0) == pdPASS) {
+    blfm_controller_process_esp32(&esp32_event, &command);
     xQueueSendToBack(xActuatorCmdQueue, &command, 0);
   }
 }
