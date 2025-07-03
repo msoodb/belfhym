@@ -16,21 +16,21 @@
 #include "blfm_adc.h"
 #include "blfm_delay.h"
 #include "blfm_pwm.h"
-#include "blfm_pins.h"
 
 void blfm_board_init(void) {
-  blfm_clock_init();
-  blfm_gpio_init();
+  blfm_clock_init();    // System clocks
+  blfm_gpio_init();     // All GPIO modes
+
+  // Peripheral inits
   blfm_pwm_init();
-  
-// Correct and early, but *after clocks are stable*
+  blfm_uart_init();
+  blfm_i2c_init();
+  blfm_adc_init();
+
+  // Enable cycle counter
   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
   DWT->CYCCNT = 0;
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
-  
-  blfm_uart_init();
-  blfm_i2c_init();
-  blfm_adc_init();
   blfm_delay_init();
 }

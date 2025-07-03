@@ -13,11 +13,12 @@
  * @brief Main entry point for the Belfhym lunar rover system.
  *
  * Sets up hardware and launches FreeRTOS task management. This file contains
- * the `main()` function which initializes core subsystems and starts the scheduler.
+ * the `main()` function which initializes core subsystems and starts the
+ * scheduler.
  */
 
-#include "blfm_taskmanager.h"
 #include "blfm_board.h"
+#include "blfm_taskmanager.h"
 #include "stdint.h"
 
 /**
@@ -27,7 +28,6 @@
  * launches the FreeRTOS task manager. If the scheduler starts
  * successfully, execution should never return from `vTaskStartScheduler()`.
  */
-
 
 int main(void) {
 

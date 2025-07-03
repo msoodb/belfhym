@@ -49,6 +49,7 @@ void blfm_servomotor_init(void) {
 void blfm_servomotor_apply(const blfm_servomotor_command_t *cmd) {
   if (!cmd || !servo_command_queue)
     return;
+
   xQueueOverwrite(servo_command_queue, cmd);
 }
 
