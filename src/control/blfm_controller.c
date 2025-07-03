@@ -323,6 +323,10 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
   case BLFM_IR_CMD_3:
     blfm_controller_change_mode(BLFM_MODE_EMERGENCY, out);
     break;
+
+  default:
+    blfm_controller_change_mode(BLFM_MODE_EMERGENCY, out);
+    break;
   }
   
   if (blfm_system_state.current_mode != BLFM_MODE_MANUAL)
@@ -390,11 +394,11 @@ void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command) {
   static uint32_t last_press_tick = 0;
-
+  
   if (event && event->event_type == BLFM_MODE_BUTTON_EVENT_PRESSED) {
     uint32_t now = xTaskGetTickCount();
     if ((now - last_press_tick) > pdMS_TO_TICKS(MODE_BUTTON_DEBOUNCE_MS)) {
-      blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+      blfm_controller_change_mode(BLFM_MODE_EMERGENCY, command);
       last_press_tick = now;
     }
   }
