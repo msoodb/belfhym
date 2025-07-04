@@ -16,7 +16,7 @@
 #include <stdbool.h>
 
 void blfm_sensor_hub_init(void) {
-  blfm_ultrasonic_init();
+  //blfm_ultrasonic_init();
   //blfm_potentiometer_init();
   // blfm_temperature_init();
 }
@@ -28,7 +28,7 @@ bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
 
   bool ok = true;
 
-  ok &= blfm_ultrasonic_read(&out->ultrasonic);
+  //ok &= blfm_ultrasonic_read(&out->ultrasonic);
   //ok &= blfm_potentiometer_read(&out->potentiometer);
   // ok &= blfm_temperature_read(&out->temperature);
 

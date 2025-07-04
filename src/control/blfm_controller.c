@@ -245,7 +245,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   //uint16_t blink_speed = pot_val; // + (pot_val * (1500 - 200)) / 4095;
   
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 100;;
+  out->led.blink_speed_ms = 500;;
 
   // Alarm
   if (in->ultrasonic.distance_mm < 100) {
@@ -303,6 +303,8 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
                                        blfm_actuator_command_t *out) {
   if (!in || !out)
     return;
+
+  int16_t speed = DEFAULT_SPEED;
   
   switch (in->command) {
   case BLFM_IR_CMD_1:
@@ -314,8 +316,10 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     break;
 
   case BLFM_IR_CMD_3:
-  default:
     blfm_controller_change_mode(BLFM_MODE_EMERGENCY, out);
+    break;
+
+  default:
     break;
   }
   
@@ -341,12 +345,13 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
 
   case BLFM_IR_CMD_OK:
   default:
+    speed = 0;
     blfm_system_state.motion_state = BLFM_MOTION_STOP;
     break;
   }
 
   int angle = motion_state_to_angle(blfm_system_state.motion_state);
-  set_motor_motion_by_angle(angle, DEFAULT_SPEED, &out->motor);
+  set_motor_motion_by_angle(angle, speed, &out->motor);
 }
 
 void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,

@@ -14,6 +14,8 @@
 #include "queue.h"
 #include "task.h"
 #include <stddef.h>
+#include "blfm_gpio.h"
+#include "blfm_pins.h"
 
 #define SERVO_TASK_STACK_SIZE 256
 #define SERVO_TASK_PRIORITY 2
@@ -98,5 +100,6 @@ static void vServoTask(void *pvParameters) {
 
     // Move one step toward the target
     servo_smooth_move(&current_pulse, target_pulse);
+    blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
   }
 }

@@ -88,9 +88,9 @@ void blfm_taskmanager_setup(void) {
 
   // Init subsystems
   blfm_sensor_hub_init();
-  blfm_mode_button_init(xModeButtonQueue);
+  //blfm_mode_button_init(xModeButtonQueue);
   // blfm_bigsound_init(xBigSoundQueue);
-  blfm_ir_remote_init(xIRRemoteQueue);
+  //blfm_ir_remote_init(xIRRemoteQueue);
   //blfm_esp32_init();
   blfm_controller_init();
   blfm_actuator_hub_init();
