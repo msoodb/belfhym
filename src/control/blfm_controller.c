@@ -170,14 +170,12 @@ static void blfm_set_mode_auto(blfm_actuator_command_t *out) {
 
 static void blfm_set_mode_manual(blfm_actuator_command_t *out) {
   blfm_system_state.current_mode = BLFM_MODE_MANUAL;
-  out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 100;
+  out->led.mode = BLFM_LED_MODE_OFF;
 }
 
 static void blfm_set_mode_emergency(blfm_actuator_command_t *out) {
   blfm_system_state.current_mode = BLFM_MODE_EMERGENCY;
   out->led.mode = BLFM_LED_MODE_ON;
-  out->led.blink_speed_ms = 0;
 }
 
 // --- Public interface to change mode ---
@@ -195,7 +193,6 @@ void blfm_controller_change_mode(blfm_mode_t mode, blfm_actuator_command_t *out)
       break;
   }
 
-  blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
   set_motor_motion_by_angle(0, 0, &out->motor);
   blfm_system_state.motion_state = BLFM_MOTION_STOP;
 }
@@ -244,10 +241,12 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   //uint16_t pot_val = in->potentiometer.raw_value;
   //uint16_t blink_speed = pot_val; // + (pot_val * (1500 - 200)) / 4095;
   
-  out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 500;;
-
+  /*out->led.mode = BLFM_LED_MODE_BLINK;
+  out->led.blink_speed_ms = 10 + in->ultrasonic.distance_mm;
+  */
+  
   // Alarm
+  /*
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
     out->alarm.pattern_id = 1;
@@ -256,6 +255,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   } else {
     out->alarm.active = false;
   }
+  */
 
   // Servo sweeping
   if (direction)
@@ -391,6 +391,7 @@ void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
   if (event && event->event_type == BLFM_MODE_BUTTON_EVENT_PRESSED) {
     uint32_t now = xTaskGetTickCount();
     if ((now - last_press_tick) > pdMS_TO_TICKS(MODE_BUTTON_DEBOUNCE_MS)) {
+      blfm_gpio_toggle_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
       last_press_tick = now;
     }
   }
