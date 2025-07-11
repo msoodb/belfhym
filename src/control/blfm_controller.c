@@ -258,15 +258,17 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   */
 
   // Servo sweeping
-  if (direction)
-    out->servo.angle += 5;
-  else
-    out->servo.angle -= 5;
+  if (blfm_system_state.current_mode != BLFM_MODE_EMERGENCY) {
+    if (direction)
+      out->servo.angle += 5;
+    else
+      out->servo.angle -= 5;
 
-  if (out->servo.angle >= SWEEP_MAX_ANGLE)
-    direction = false;
-  else if (out->servo.angle <= SWEEP_MIN_ANGLE)
-    direction = true;
+    if (out->servo.angle >= SWEEP_MAX_ANGLE)
+      direction = false;
+    else if (out->servo.angle <= SWEEP_MIN_ANGLE)
+      direction = true;
+  }
 
   // LCD Display
   char buf1[17];
