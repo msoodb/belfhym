@@ -8,6 +8,9 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_LED
+
 #include "blfm_led.h"
 #include "FreeRTOS.h"
 #include "blfm_gpio.h"
@@ -35,7 +38,7 @@ void blfm_led_init(void) {
   blfm_gpio_config_output((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
   blfm_gpio_config_output((uint32_t)BLFM_LED_EXTERNAL_PORT, BLFM_LED_EXTERNAL_PIN);
   blfm_gpio_config_output((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-  //blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
       
   if (led_command_queue == NULL) {
     led_command_queue =
@@ -115,3 +118,5 @@ static void vLedTask(void *pvParameters) {
     vTaskDelay(pdMS_TO_TICKS(10));
   }
 }
+
+#endif /* BLFM_ENABLED_LED */

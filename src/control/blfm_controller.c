@@ -8,6 +8,7 @@
  */
 
 #include "blfm_controller.h"
+#include "blfm_config.h"
 #include "FreeRTOS.h"
 #include "blfm_gpio.h"
 #include "blfm_pins.h"
@@ -23,26 +24,31 @@
 #define SWEEP_MAX_ANGLE 180
 
 #define ULTRASONIC_FORWARD_THRESH 20
-#define BACKWARD_TICKS_MAX 2
-#define MIN_ROTATE_TICKS 4
-#define MAX_ROTATE_TICKS 6
+#define MOTOR_BACKWARD_TICKS_MAX 2
+#define MOTOR_MIN_ROTATE_TICKS 4
+#define MOTOR_MAX_ROTATE_TICKS 6
 #define MODE_BUTTON_DEBOUNCE_MS 100
 #define IR_CONTROL_TIMEOUT_MS 200
 
-#define DEFAULT_SPEED 255
+#define MOTOR_DEFAULT_SPEED 255
 
+#if BLFM_ENABLED_DISPLAY
 static int lcd_mode = 0;
 static int lcd_counter = 0;
-static bool direction = true;
+#endif
 
-static int backward_ticks = 0;
-static int rotate_ticks = 0;
-static int rotate_duration = 0;
+#if BLFM_ENABLED_SERVO
+static bool servo_direction = true;
+#endif
+
+#if BLFM_ENABLED_MOTOR
+static int motor_backward_ticks = 0;
+static int motor_rotate_ticks = 0;
+static int motor_rotate_duration = 0;
+#endif
 
 static blfm_system_state_t blfm_system_state = {
     .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_STOP};
-
-static void uint_to_str(char *buf, uint16_t value);
 
 /**
  * Helper: set motor motion from angle (-180 to 180) and speed.
@@ -52,12 +58,15 @@ static void set_motor_motion_by_angle(int angle, int speed,
 
 /* -------------------- Utilities -------------------- */
 
+#if BLFM_ENABLED_ULTRASONIC
 static int pseudo_random(int min, int max) {
   static uint32_t seed = 123456789;
   seed = seed * 1664525 + 1013904223;
   return min + (seed % (max - min + 1));
 }
+#endif
 
+#if BLFM_ENABLED_DISPLAY
 static void uint_to_str(char *buf, uint16_t value) {
   if (value >= 100) {
     buf[0] = '0' + (value / 100) % 10;
@@ -73,9 +82,10 @@ static void uint_to_str(char *buf, uint16_t value) {
     buf[1] = '\0';
   }
 }
-
+#endif
 /* -------------------- Motion Helpers -------------------- */
 
+#if BLFM_ENABLED_MOTOR
 static int motion_state_to_angle(blfm_motion_state_t motion) {
   switch (motion) {
   case BLFM_MOTION_FORWARD:
@@ -91,6 +101,7 @@ static int motion_state_to_angle(blfm_motion_state_t motion) {
     return 0;
   }
 }
+#endif
 
 /**
  * Map angle (-180 to 180) and speed (0-255) to motor command.
@@ -202,32 +213,37 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   if (!in || !out)
     return;
 
-  if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
+  uint16_t led_blink_speed = 100;
+  blfm_led_mode_t led_mode =  BLFM_LED_MODE_BLINK;
+  
+#if BLFM_ENABLED_ULTRASONIC
+ if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     switch (blfm_system_state.motion_state) {
     case BLFM_MOTION_STOP:
     case BLFM_MOTION_FORWARD:
       if (in->ultrasonic.distance_mm <= ULTRASONIC_FORWARD_THRESH) {
-        backward_ticks = 0;
+        motor_backward_ticks = 0;
         blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
       } else {
-        set_motor_motion_by_angle(0, DEFAULT_SPEED, &out->motor);
+        set_motor_motion_by_angle(0, MOTOR_DEFAULT_SPEED, &out->motor);
       }
       break;
 
     case BLFM_MOTION_BACKWARD:
-      set_motor_motion_by_angle(180, DEFAULT_SPEED, &out->motor);
-      backward_ticks++;
-      if (backward_ticks >= BACKWARD_TICKS_MAX) {
-        rotate_ticks = 0;
-        rotate_duration = pseudo_random(MIN_ROTATE_TICKS, MAX_ROTATE_TICKS);
+      set_motor_motion_by_angle(180, MOTOR_DEFAULT_SPEED, &out->motor);
+      motor_backward_ticks++;
+      if (motor_backward_ticks >= MOTOR_BACKWARD_TICKS_MAX) {
+        motor_rotate_ticks = 0;
+        motor_rotate_duration =
+	  pseudo_random(MOTOR_MIN_ROTATE_TICKS, MOTOR_MAX_ROTATE_TICKS);
         blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
       }
       break;
 
     case BLFM_MOTION_ROTATE_LEFT:
-      set_motor_motion_by_angle(-90, DEFAULT_SPEED, &out->motor);
-      rotate_ticks++;
-      if (rotate_ticks >= rotate_duration) {
+      set_motor_motion_by_angle(-90, MOTOR_DEFAULT_SPEED, &out->motor);
+      motor_rotate_ticks++;
+      if (motor_rotate_ticks >= motor_rotate_duration) {
         blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
       }
       break;
@@ -237,16 +253,8 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
       break;
     }
   }
-
-  //uint16_t pot_val = in->potentiometer.raw_value;
-  //uint16_t blink_speed = pot_val; // + (pot_val * (1500 - 200)) / 4095;
-  
-  /*out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 10 + in->ultrasonic.distance_mm;
-  */
-  
-  // Alarm
-  /*
+ 
+#if BLFM_ENABLED_ALARM
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
     out->alarm.pattern_id = 1;
@@ -255,22 +263,36 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   } else {
     out->alarm.active = false;
   }
-  */
+#endif /* BLFM_ENABLED_ALARM */
+#endif /* BLFM_ENABLED_ULTRASONIC */
+  
+#if BLFM_ENABLED_ULTRASONIC
+  uint16_t pot_val = in->potentiometer.raw_value;
+  
+  led_mode = BLFM_LED_MODE_BLINK;
+  led_blink_speed_ms = pot_val; // + (pot_val * (1500 - 200)) / 4095;
+#endif
 
-  // Servo sweeping
+#if BLFM_ENABLED_LED
+  out->led.mode = led_mode;
+  out->led.blink_speed_ms = led_blink_speed;
+#endif
+  
+#if BLFM_ENABLED_SERVO
   if (blfm_system_state.current_mode != BLFM_MODE_EMERGENCY) {
-    if (direction)
+    if (servo_direction)
       out->servo.angle += 5;
     else
       out->servo.angle -= 5;
 
     if (out->servo.angle >= SWEEP_MAX_ANGLE)
-      direction = false;
+      servo_direction = false;
     else if (out->servo.angle <= SWEEP_MIN_ANGLE)
-      direction = true;
+      servo_direction = true;
   }
+#endif
 
-  // LCD Display
+#if BLFM_ENABLED_DISPLAY
   char buf1[17];
   char num_buf[12];
 
@@ -299,14 +321,16 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 
   strcpy(out->display.line1, buf1);
   strcpy(out->display.line2, num_buf);
+#endif
 }
 
+#if BLFM_ENABLED_IR_REMOTE
 void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
                                        blfm_actuator_command_t *out) {
   if (!in || !out)
     return;
 
-  int16_t speed = DEFAULT_SPEED;
+  int16_t speed = MOTOR_DEFAULT_SPEED;
   
   switch (in->command) {
   case BLFM_IR_CMD_1:
@@ -355,7 +379,9 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
   int angle = motion_state_to_angle(blfm_system_state.motion_state);
   set_motor_motion_by_angle(angle, speed, &out->motor);
 }
+#endif /* BLFM_ENABLED_IR_REMOTE */
 
+#if BLFM_ENABLED_JOYSTICK
 void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
                                       blfm_actuator_command_t *out) {
   if (!evt || !out)
@@ -382,9 +408,11 @@ void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
   }
 
   int angle = motion_state_to_angle(blfm_system_state.motion_state);
-  set_motor_motion_by_angle(angle, DEFAULT_SPEED, &out->motor);
+  set_motor_motion_by_angle(angle, MOTOR_DEFAULT_SPEED, &out->motor);
 }
+#endif /* BLFM_ENABLED_JOYSTICK */
 
+#if BLFM_ENABLED_MODE_BUTTON
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command) {
   static uint32_t last_press_tick = 0;
@@ -398,20 +426,26 @@ void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
     }
   }
 }
+#endif /* BLFM_ENABLED_MODE_BUTTON */
 
+
+#if BLFM_ENABLED_IR_REMOTE
 bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out) {
   (void)out;
   return false;
 }
+#endif /* BLFM_ENABLED_IR_REMOTE */
 
-// In blfm_controller.c
+#if BLFM_ENABLED_BIGSOUND
 void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
                                       blfm_actuator_command_t *out) {
   if (!event || !out)
     return;
   // You can implement this or leave empty
 }
+#endif /* BLFM_ENABLED_BIGSOUND */
 
+#if BLFM_ENABLED_ESP32
 void blfm_controller_process_esp32(const blfm_esp32_event_t *event,
                                    blfm_actuator_command_t *out) {
   memset(out, 0, sizeof(*out));
@@ -442,3 +476,4 @@ void blfm_controller_process_esp32(const blfm_esp32_event_t *event,
 
   set_motor_motion_by_angle(angle, speed, &out->motor);
 }
+#endif /* BLFM_ENABLED_ESP32 */
