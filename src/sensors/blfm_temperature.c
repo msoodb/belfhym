@@ -12,7 +12,6 @@
 #include "blfm_adc.h"
 #include "blfm_pins.h"
 #include <stdbool.h>
-#include "blfm_config.h"
 
 void blfm_temperature_init(void) {
   // Initialize ADC, if needed

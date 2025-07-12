@@ -16,7 +16,6 @@
 #include "stm32f1xx.h"
 #include "task.h"
 #include "blfm_pins.h"
-#include "blfm_config.h"
 
 // Internal state for blinking
 #define LED_TASK_INTERVAL_MS 10

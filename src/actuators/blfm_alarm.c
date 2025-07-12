@@ -9,7 +9,6 @@
  */
 
 #include "blfm_alarm.h"
-#include "blfm_config.h"
 
 void blfm_alarm_init(void) {
 #if BLFM_ALARM_DISABLED

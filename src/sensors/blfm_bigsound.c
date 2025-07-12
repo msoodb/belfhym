@@ -3,8 +3,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "stm32f1xx.h"
-#include "blfm_config.h"
-#include "blfm_exti_dispatcher.h"  // Clean dispatcher interface
+#include "blfm_exti_dispatcher.h"
 
 #define BIGSOUND_EVENT_DETECTED 1
 

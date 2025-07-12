@@ -10,7 +10,7 @@
 
 #include "blfm_sensor_hub.h"
 #include "blfm_ultrasonic.h"
-#include "blfm_potentiometer.h"
+//#include "blfm_potentiometer.h"
 //#include "blfm_temperature.h"
 
 #include <stdbool.h>

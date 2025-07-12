@@ -11,7 +11,6 @@
 #include "blfm_motor.h"
 #include "blfm_gpio.h"
 #include "stm32f1xx.h"
-#include "blfm_config.h"
 #include "blfm_pins.h"
 
 // TIM2 PWM channels

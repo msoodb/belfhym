@@ -13,7 +13,6 @@
 #include "blfm_gpio.h"
 #include "stm32f1xx.h"
 #include "blfm_pins.h"
-#include "blfm_config.h"
 
 static void lcd_pulse_enable(void);
 static void lcd_write_nibble(uint8_t nibble);

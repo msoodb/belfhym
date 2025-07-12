@@ -9,8 +9,8 @@
  */
 
 #include "blfm_stepmotor.h"
-#include "blfm_gpio.h" // For pin control (assumed)
-#include "blfm_config.h"
+#include "blfm_gpio.h"
+
 
 // === Placeholder motor pin map ===
 // You should define proper step/dir/en pins per motor
