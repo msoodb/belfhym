@@ -94,6 +94,7 @@ static QueueHandle_t xModeButtonQueue = NULL;
 #if BLFM_ENABLED_ESP32
 static QueueHandle_t xESP32Queue = NULL;
 #endif
+
 static QueueSetHandle_t xControllerQueueSet = NULL;
 
 void blfm_taskmanager_setup(void) {

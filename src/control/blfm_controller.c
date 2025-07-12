@@ -254,6 +254,8 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     }
   }
  
+#endif /* BLFM_ENABLED_ULTRASONIC */
+
 #if BLFM_ENABLED_ALARM
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
@@ -264,13 +266,12 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     out->alarm.active = false;
   }
 #endif /* BLFM_ENABLED_ALARM */
-#endif /* BLFM_ENABLED_ULTRASONIC */
-  
-#if BLFM_ENABLED_ULTRASONIC
+
+#if BLFM_ENABLED_POTENTIOMETER
   uint16_t pot_val = in->potentiometer.raw_value;
   
   led_mode = BLFM_LED_MODE_BLINK;
-  led_blink_speed_ms = pot_val; // + (pot_val * (1500 - 200)) / 4095;
+  led_blink_speed = pot_val; // + (pot_val * (1500 - 200)) / 4095;
 #endif
 
 #if BLFM_ENABLED_LED
