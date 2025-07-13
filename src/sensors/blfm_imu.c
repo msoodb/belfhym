@@ -11,21 +11,21 @@
 /* MPU-6050 */
 
 #include "blfm_imu.h"
-#include "blfm_i2c.h"
+#include "blfm_i2c1.h"
 
 #define MPU6050_ADDR          0x68
 #define MPU6050_REG_PWR_MGMT  0x6B
 #define MPU6050_REG_ACCEL_X   0x3B
 
 void blfm_imu_init(void) {
-  blfm_i2c_write_byte(MPU6050_ADDR, MPU6050_REG_PWR_MGMT, 0x00);
+  blfm_i2c1_write_byte(MPU6050_ADDR, MPU6050_REG_PWR_MGMT, 0x00);
 }
 
 bool blfm_imu_read(blfm_imu_data_t *data) {
   if (!data) return false;
 
   uint8_t raw[14];
-  blfm_i2c_read_bytes(MPU6050_ADDR, MPU6050_REG_ACCEL_X, raw, 14);
+  blfm_i2c1_read_bytes(MPU6050_ADDR, MPU6050_REG_ACCEL_X, raw, 14);
 
   data->acc_x = (int16_t)(raw[0] << 8 | raw[1]);
   data->acc_y = (int16_t)(raw[2] << 8 | raw[3]);

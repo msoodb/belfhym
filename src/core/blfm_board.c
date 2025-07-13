@@ -11,7 +11,7 @@
 #include "blfm_board.h"
 #include "blfm_clock.h"
 #include "blfm_gpio.h"
-#include "blfm_i2c.h"
+#include "blfm_i2c1.h"
 #include "blfm_uart.h"
 #include "blfm_adc.h"
 #include "blfm_delay.h"
@@ -24,7 +24,7 @@ void blfm_board_init(void) {
   // Peripheral inits
   blfm_pwm_init();
   blfm_uart_init();
-  blfm_i2c_init();
+  blfm_i2c1_init();
   blfm_adc_init();
 
   // Enable cycle counter

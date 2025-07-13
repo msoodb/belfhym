@@ -8,8 +8,8 @@
  * See LICENSE file for details.
  */
 
-#ifndef LIBC_STUB_H
-#define LIBC_STUB_H
+#ifndef LIBC_STUBS_H
+#define LIBC_STUBS_H
 
 #include <stddef.h>
 

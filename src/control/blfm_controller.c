@@ -18,6 +18,7 @@
 #include "task.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include "blfm_font8x8.h"
 
 #define LCD_CYCLE_COUNT 50
 #define SWEEP_MIN_ANGLE 0
@@ -47,6 +48,10 @@ static int motor_rotate_ticks = 0;
 static int motor_rotate_duration = 0;
 #endif
 
+#if BLFM_ENABLED_DISPLAY || BLFM_ENABLED_OLED
+  char num_buf[12];
+#endif
+
 static blfm_system_state_t blfm_system_state = {
     .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_STOP};
 
@@ -66,7 +71,7 @@ static int pseudo_random(int min, int max) {
 }
 #endif
 
-#if BLFM_ENABLED_DISPLAY
+#if BLFM_ENABLED_DISPLAY || BLFM_ENABLED_OLED
 static void uint_to_str(char *buf, uint16_t value) {
   if (value >= 100) {
     buf[0] = '0' + (value / 100) % 10;
@@ -323,7 +328,30 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   strcpy(out->display.line1, buf1);
   strcpy(out->display.line2, num_buf);
 #endif
-}
+
+#if BLFM_ENABLED_OLED
+  // Clear OLED buffer
+  for (uint8_t page = 0; page < BLFM_OLED_PAGES; page++) {
+    for (uint8_t col = 0; col < BLFM_OLED_WIDTH; col++) {
+      out->oled.buffer[page][col] = 0x00;
+    }
+  }
+
+  // Write "Belfhym" using real font
+  const char *text = "Belfhym";
+  uint8_t x = 0;
+  for (size_t i = 0; text[i] != '\0'; i++) {
+    char c = text[i];
+    if (c < 0x20 || c > 0x7F) c = '?'; // sanitize
+    const uint8_t *glyph = blfm_font8x8_basic[c - 0x20];
+    for (uint8_t col = 0; col < 8; col++) {
+      if (x >= BLFM_OLED_WIDTH) break;
+      out->oled.buffer[0][x] = glyph[col];
+      x++;
+    }
+  }
+#endif
+  }
 
 #if BLFM_ENABLED_IR_REMOTE
 void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,

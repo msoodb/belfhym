@@ -16,6 +16,9 @@
 
 #define BLFM_DISPLAY_LINE_LENGTH 17 // 16 chars + '\0'
 
+#define BLFM_OLED_WIDTH 128
+#define BLFM_OLED_HEIGHT 32
+#define BLFM_OLED_PAGES (BLFM_OLED_HEIGHT / 8)
 
 //-----------------------
 //  communication - ESP32
@@ -193,6 +196,11 @@ typedef struct {
   char line2[BLFM_DISPLAY_LINE_LENGTH];
 } blfm_display_command_t;
 
+
+typedef struct {
+  uint8_t buffer[BLFM_OLED_PAGES][BLFM_OLED_WIDTH];
+} blfm_oled_command_t;
+
 typedef struct {
   bool active;
   uint8_t pattern_id;
@@ -223,6 +231,7 @@ typedef struct {
 typedef struct {
   blfm_motor_command_t motor;
   blfm_display_command_t display;
+  blfm_oled_command_t oled;
   blfm_led_command_t led;
   blfm_alarm_command_t alarm;
   blfm_radio_command_t radio;
