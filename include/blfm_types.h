@@ -19,7 +19,8 @@
 #define BLFM_OLED_WIDTH 128
 #define BLFM_OLED_HEIGHT 32
 #define BLFM_OLED_PAGES (BLFM_OLED_HEIGHT / 8)
-
+#define BLFM_OLED_MAX_SMALL_TEXT_LEN 12
+#define BLFM_OLED_MAX_BIG_TEXT_LEN 16
 //-----------------------
 //  communication - ESP32
 //-----------------------
@@ -197,8 +198,26 @@ typedef struct {
 } blfm_display_command_t;
 
 
+typedef enum {
+  BLFM_OLED_ICON_NONE = 0,
+  BLFM_OLED_ICON_HEART,
+  BLFM_OLED_ICON_SMILEY,
+  BLFM_OLED_ICON_STAR,
+} blfm_oled_icon_t;
+
 typedef struct {
-  uint8_t buffer[BLFM_OLED_PAGES][BLFM_OLED_WIDTH];
+  blfm_oled_icon_t icon1;  // top-left icon
+  blfm_oled_icon_t icon2;  // top-left icon (next to icon1)
+  blfm_oled_icon_t icon3;  // top-right icon
+  blfm_oled_icon_t icon4;  // top-right icon (next to icon3)
+
+  char smalltext1[BLFM_OLED_MAX_SMALL_TEXT_LEN];
+  char bigtext[BLFM_OLED_MAX_BIG_TEXT_LEN];
+  char smalltext2[BLFM_OLED_MAX_SMALL_TEXT_LEN];
+
+  uint8_t invert;          // invert display
+  uint8_t progress_percent; // optional progress bar
+
 } blfm_oled_command_t;
 
 typedef struct {

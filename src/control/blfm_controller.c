@@ -8,8 +8,9 @@
  */
 
 #include "blfm_controller.h"
-#include "blfm_config.h"
 #include "FreeRTOS.h"
+#include "blfm_config.h"
+#include "blfm_font8x8.h"
 #include "blfm_gpio.h"
 #include "blfm_pins.h"
 #include "blfm_state.h"
@@ -18,7 +19,6 @@
 #include "task.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include "blfm_font8x8.h"
 
 #define LCD_CYCLE_COUNT 50
 #define SWEEP_MIN_ANGLE 0
@@ -49,7 +49,7 @@ static int motor_rotate_duration = 0;
 #endif
 
 #if BLFM_ENABLED_DISPLAY || BLFM_ENABLED_OLED
-  char num_buf[12];
+char num_buf[12];
 #endif
 
 static blfm_system_state_t blfm_system_state = {
@@ -59,7 +59,7 @@ static blfm_system_state_t blfm_system_state = {
  * Helper: set motor motion from angle (-180 to 180) and speed.
  */
 static void set_motor_motion_by_angle(int angle, int speed,
-                               blfm_motor_command_t *out);
+                                      blfm_motor_command_t *out);
 
 /* -------------------- Utilities -------------------- */
 
@@ -71,7 +71,7 @@ static int pseudo_random(int min, int max) {
 }
 #endif
 
-#if BLFM_ENABLED_DISPLAY || BLFM_ENABLED_OLED
+#if BLFM_ENABLED_DISPLAY
 static void uint_to_str(char *buf, uint16_t value) {
   if (value >= 100) {
     buf[0] = '0' + (value / 100) % 10;
@@ -88,6 +88,7 @@ static void uint_to_str(char *buf, uint16_t value) {
   }
 }
 #endif
+
 /* -------------------- Motion Helpers -------------------- */
 
 #if BLFM_ENABLED_MOTOR
@@ -115,10 +116,10 @@ static int motion_state_to_angle(blfm_motion_state_t motion) {
  * No floating point used.
  */
 static void set_motor_motion_by_angle(int angle, int speed,
-                               blfm_motor_command_t *out) {
+                                      blfm_motor_command_t *out) {
   if (!out)
     return;
-  
+
   // Normalize angle to -180..180
   while (angle > 180)
     angle -= 360;
@@ -195,18 +196,19 @@ static void blfm_set_mode_emergency(blfm_actuator_command_t *out) {
 }
 
 // --- Public interface to change mode ---
-void blfm_controller_change_mode(blfm_mode_t mode, blfm_actuator_command_t *out) {
+void blfm_controller_change_mode(blfm_mode_t mode,
+                                 blfm_actuator_command_t *out) {
   switch (mode) {
-    case BLFM_MODE_AUTO:
-      blfm_set_mode_auto(out);
-      break;
-    case BLFM_MODE_MANUAL:
-      blfm_set_mode_manual(out);
-      break;
-    case BLFM_MODE_EMERGENCY:
-    default:
-      blfm_set_mode_emergency(out);
-      break;
+  case BLFM_MODE_AUTO:
+    blfm_set_mode_auto(out);
+    break;
+  case BLFM_MODE_MANUAL:
+    blfm_set_mode_manual(out);
+    break;
+  case BLFM_MODE_EMERGENCY:
+  default:
+    blfm_set_mode_emergency(out);
+    break;
   }
 
   set_motor_motion_by_angle(0, 0, &out->motor);
@@ -219,10 +221,10 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     return;
 
   uint16_t led_blink_speed = 100;
-  blfm_led_mode_t led_mode =  BLFM_LED_MODE_BLINK;
-  
+  blfm_led_mode_t led_mode = BLFM_LED_MODE_BLINK;
+
 #if BLFM_ENABLED_ULTRASONIC
- if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
+  if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     switch (blfm_system_state.motion_state) {
     case BLFM_MOTION_STOP:
     case BLFM_MOTION_FORWARD:
@@ -240,7 +242,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
       if (motor_backward_ticks >= MOTOR_BACKWARD_TICKS_MAX) {
         motor_rotate_ticks = 0;
         motor_rotate_duration =
-	  pseudo_random(MOTOR_MIN_ROTATE_TICKS, MOTOR_MAX_ROTATE_TICKS);
+            pseudo_random(MOTOR_MIN_ROTATE_TICKS, MOTOR_MAX_ROTATE_TICKS);
         blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
       }
       break;
@@ -258,7 +260,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
       break;
     }
   }
- 
+
 #endif /* BLFM_ENABLED_ULTRASONIC */
 
 #if BLFM_ENABLED_ALARM
@@ -274,7 +276,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 
 #if BLFM_ENABLED_POTENTIOMETER
   uint16_t pot_val = in->potentiometer.raw_value;
-  
+
   led_mode = BLFM_LED_MODE_BLINK;
   led_blink_speed = pot_val; // + (pot_val * (1500 - 200)) / 4095;
 #endif
@@ -283,7 +285,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   out->led.mode = led_mode;
   out->led.blink_speed_ms = led_blink_speed;
 #endif
-  
+
 #if BLFM_ENABLED_SERVO
   if (blfm_system_state.current_mode != BLFM_MODE_EMERGENCY) {
     if (servo_direction)
@@ -330,28 +332,19 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 #endif
 
 #if BLFM_ENABLED_OLED
-  // Clear OLED buffer
-  for (uint8_t page = 0; page < BLFM_OLED_PAGES; page++) {
-    for (uint8_t col = 0; col < BLFM_OLED_WIDTH; col++) {
-      out->oled.buffer[page][col] = 0x00;
-    }
-  }
+  out->oled.icon1 = BLFM_OLED_ICON_NONE;
+  out->oled.icon2 = BLFM_OLED_ICON_NONE;
+  out->oled.icon3 = BLFM_OLED_ICON_SMILEY;
+  out->oled.icon4 = BLFM_OLED_ICON_NONE;
 
-  // Write "Belfhym" using real font
-  const char *text = "Belfhym";
-  uint8_t x = 0;
-  for (size_t i = 0; text[i] != '\0'; i++) {
-    char c = text[i];
-    if (c < 0x20 || c > 0x7F) c = '?'; // sanitize
-    const uint8_t *glyph = blfm_font8x8_basic[c - 0x20];
-    for (uint8_t col = 0; col < 8; col++) {
-      if (x >= BLFM_OLED_WIDTH) break;
-      out->oled.buffer[0][x] = glyph[col];
-      x++;
-    }
-  }
+  safe_strncpy(out->oled.smalltext1, "OK", BLFM_OLED_MAX_SMALL_TEXT_LEN);
+  safe_strncpy(out->oled.bigtext, "BELFHYM", BLFM_OLED_MAX_BIG_TEXT_LEN);
+  safe_strncpy(out->oled.smalltext2, "V1", BLFM_OLED_MAX_SMALL_TEXT_LEN);
+
+  out->oled.invert = 0;
+  out->oled.progress_percent = 75;
 #endif
-  }
+}
 
 #if BLFM_ENABLED_IR_REMOTE
 void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
@@ -360,7 +353,7 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     return;
 
   int16_t speed = MOTOR_DEFAULT_SPEED;
-  
+
   switch (in->command) {
   case BLFM_IR_CMD_1:
     blfm_controller_change_mode(BLFM_MODE_MANUAL, out);
@@ -377,7 +370,7 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
   default:
     break;
   }
-  
+
   if (blfm_system_state.current_mode != BLFM_MODE_MANUAL)
     return;
 
@@ -385,15 +378,15 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
   case BLFM_IR_CMD_UP:
     blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
     break;
-    
+
   case BLFM_IR_CMD_DOWN:
     blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
     break;
-    
+
   case BLFM_IR_CMD_LEFT:
     blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
     break;
-    
+
   case BLFM_IR_CMD_RIGHT:
     blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
     break;
@@ -445,8 +438,8 @@ void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command) {
   static uint32_t last_press_tick = 0;
-  (void) command;
-  
+  (void)command;
+
   if (event && event->event_type == BLFM_MODE_BUTTON_EVENT_PRESSED) {
     uint32_t now = xTaskGetTickCount();
     if ((now - last_press_tick) > pdMS_TO_TICKS(MODE_BUTTON_DEBOUNCE_MS)) {
@@ -456,7 +449,6 @@ void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
   }
 }
 #endif /* BLFM_ENABLED_MODE_BUTTON */
-
 
 #if BLFM_ENABLED_IR_REMOTE
 bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out) {

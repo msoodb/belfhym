@@ -56,3 +56,16 @@ char *strcat(char *dest, const char *src) {
     ;
   return dest;
 }
+
+// Minimal abs implementation
+int abs(int v) {
+  return v < 0 ? -v : v;
+}
+
+void safe_strncpy(char *dest, const char *src, size_t max_len) {
+  if (max_len == 0) return;
+  size_t src_len = strlen(src);
+  size_t copy_len = (src_len < max_len) ? src_len : max_len - 1;
+  memcpy(dest, src, copy_len);
+  dest[copy_len] = '\0';  // Ensure null termination
+}

@@ -18,6 +18,8 @@ void *memcpy(void *dest, const void *src, size_t len);
 char *strcpy(char *dest, const char *src);
 char *strcat(char *dest, const char *src);
 size_t strlen(const char *s);
+int abs(int v);
+void safe_strncpy(char *dest, const char *src, size_t max_len);
 
 // Special init function (does nothing)
 void __libc_init_array(void);
