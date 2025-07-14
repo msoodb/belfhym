@@ -53,7 +53,7 @@ char num_buf[12];
 #endif
 
 static blfm_system_state_t blfm_system_state = {
-    .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_STOP};
+    .current_mode = BLFM_MODE_AUTO, .motion_state = BLFM_MOTION_STOP};
 
 /**
  * Helper: set motor motion from angle (-180 to 180) and speed.
@@ -221,8 +221,9 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     return;
 
   uint16_t led_blink_speed = 100;
-  blfm_led_mode_t led_mode = BLFM_LED_MODE_BLINK;
+  blfm_led_mode_t led_mode = BLFM_LED_MODE_OFF;
 
+  
 #if BLFM_ENABLED_ULTRASONIC
   if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     switch (blfm_system_state.motion_state) {
@@ -282,8 +283,8 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 #endif
 
 #if BLFM_ENABLED_LED
-  out->led.mode = led_mode;
-  out->led.blink_speed_ms = led_blink_speed;
+  //out->led.mode = led_mode;
+  //out->led.blink_speed_ms = led_blink_speed;
 #endif
 
 #if BLFM_ENABLED_SERVO
@@ -334,12 +335,12 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 #if BLFM_ENABLED_OLED
   out->oled.icon1 = BLFM_OLED_ICON_NONE;
   out->oled.icon2 = BLFM_OLED_ICON_NONE;
-  out->oled.icon3 = BLFM_OLED_ICON_SMILEY;
+  out->oled.icon3 = BLFM_OLED_ICON_NONE;
   out->oled.icon4 = BLFM_OLED_ICON_NONE;
 
-  safe_strncpy(out->oled.smalltext1, "OK", BLFM_OLED_MAX_SMALL_TEXT_LEN);
-  safe_strncpy(out->oled.bigtext, "BELFHYM", BLFM_OLED_MAX_BIG_TEXT_LEN);
-  safe_strncpy(out->oled.smalltext2, "V1", BLFM_OLED_MAX_SMALL_TEXT_LEN);
+  //safe_strncpy(out->oled.smalltext1, "OK", BLFM_OLED_MAX_SMALL_TEXT_LEN);
+  safe_strncpy(out->oled.bigtext, "BELFHYM VZA-993", BLFM_OLED_MAX_BIG_TEXT_LEN);
+  //safe_strncpy(out->oled.smalltext2, "V1", BLFM_OLED_MAX_SMALL_TEXT_LEN);
 
   out->oled.invert = 0;
   out->oled.progress_percent = 75;
@@ -353,7 +354,7 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     return;
 
   int16_t speed = MOTOR_DEFAULT_SPEED;
-
+  
   switch (in->command) {
   case BLFM_IR_CMD_1:
     blfm_controller_change_mode(BLFM_MODE_MANUAL, out);
@@ -398,8 +399,10 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     break;
   }
 
+#if BLFM_ENABLED_MOTOR
   int angle = motion_state_to_angle(blfm_system_state.motion_state);
   set_motor_motion_by_angle(angle, speed, &out->motor);
+#endif /* BLFM_ENABLED_MOTOR */
 }
 #endif /* BLFM_ENABLED_IR_REMOTE */
 

@@ -17,6 +17,10 @@
 // ===============================================================
 // NEC IR Decoder - Clean, Tested Version (Active Low)
 // ===============================================================
+
+#include "blfm_config.h"
+#if BLFM_ENABLED_IR_REMOTE
+
 #include "blfm_ir_remote.h"
 #include "FreeRTOS.h"
 #include "blfm_exti_dispatcher.h"
@@ -224,3 +228,5 @@ void blfm_ir_remote_init(QueueHandle_t controller_queue) {
   // Enable NVIC
   NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
+
+#endif /* BLFM_ENABLED_IR_REMOTE */
