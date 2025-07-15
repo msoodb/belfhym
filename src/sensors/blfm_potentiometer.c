@@ -4,6 +4,9 @@
  * GPLv3
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_POTENTIOMETER
+
 #include "blfm_potentiometer.h"
 #include "blfm_adc.h"
 #include "blfm_pins.h"
@@ -26,3 +29,5 @@ bool blfm_potentiometer_read(blfm_potentiometer_data_t *data) {
   data->raw_value = raw_value;
   return true;
 }
+
+#endif /* BLFM_ENABLED_POTENTIOMETER */

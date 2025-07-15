@@ -7,6 +7,9 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_DISPLAY
+
 #include "FreeRTOS.h"
 #include "task.h"
 #include "blfm_display.h"
@@ -131,3 +134,5 @@ static void safe_delay_ms(uint32_t ms) {
     }
   }
 }
+
+#endif /* BLFM_ENABLED_DISPLAY */

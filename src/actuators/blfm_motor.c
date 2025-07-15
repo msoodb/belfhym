@@ -8,6 +8,9 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_MOTOR
+
 #include "blfm_motor.h"
 #include "blfm_gpio.h"
 #include "stm32f1xx.h"
@@ -87,3 +90,5 @@ static void blfm_motor_set_side(const blfm_single_motor_command_t *cmd, bool is_
   // Speed
   *pwm_ccr = (cmd->speed > 255) ? 255 : cmd->speed;
 }
+
+#endif /* BLFM_ENABLED_MOTOR */

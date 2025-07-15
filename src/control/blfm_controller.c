@@ -220,9 +220,9 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   if (!in || !out)
     return;
 
-  uint16_t led_blink_speed = 100;
+  /*uint16_t led_blink_speed = 100;
   blfm_led_mode_t led_mode = BLFM_LED_MODE_OFF;
-
+  */
   
 #if BLFM_ENABLED_ULTRASONIC
   if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {

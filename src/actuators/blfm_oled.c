@@ -1,7 +1,10 @@
+#include "blfm_config.h"
+#if BLFM_ENABLED_OLED
+
 #include "blfm_oled.h"
 #include "blfm_delay.h"
 #include "blfm_font8x8.h"
-#include "blfm_i2c1.h"
+#include "blfm_i2c.h"
 #include "blfm_types.h"
 #include "libc_stubs.h"
 
@@ -11,12 +14,12 @@ static uint8_t oled_framebuffer[BLFM_OLED_PAGES][BLFM_OLED_WIDTH];
 
 static void oled_send_command(uint8_t cmd) {
   uint8_t buffer[2] = {0x00, cmd};
-  blfm_i2c1_write(OLED_I2C_ADDR, buffer, 2);
+  blfm_i2c_write(BLFM_I2C1, OLED_I2C_ADDR, buffer, 2);
 }
 
 static void oled_send_data(uint8_t data) {
   uint8_t buffer[2] = {0x40, data};
-  blfm_i2c1_write(OLED_I2C_ADDR, buffer, 2);
+  blfm_i2c_write(BLFM_I2C1, OLED_I2C_ADDR, buffer, 2);
 }
 
 void blfm_oled_init(void) {
@@ -298,3 +301,5 @@ void blfm_oled_blink(uint8_t times, uint16_t delay_ms) {
     blfm_delay_ms(delay_ms);
   }
 }
+
+#endif /* BLFM_ENABLED_OLED */

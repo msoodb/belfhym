@@ -1,4 +1,7 @@
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_BIGSOUND
+
 #include "blfm_bigsound.h"
 #include "FreeRTOS.h"
 #include "queue.h"
@@ -51,3 +54,5 @@ void blfm_bigsound_init(QueueHandle_t controller_queue) {
   // Enable EXTI9_5 IRQ in NVIC (covers EXTI7)
   NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
+
+#endif /* BLFM_ENABLED_BIGSOUND */

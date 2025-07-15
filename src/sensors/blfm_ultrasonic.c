@@ -8,6 +8,9 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_ULTRASONIC
+
 #include "blfm_ultrasonic.h"
 #include "FreeRTOS.h"
 #include "blfm_gpio.h"
@@ -133,3 +136,5 @@ static void vUltrasonicTask(void *pvParameters) {
     }
   }
 }
+
+#endif /* BLFM_ENABLED_ULTRASONIC */

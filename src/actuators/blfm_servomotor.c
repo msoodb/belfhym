@@ -8,6 +8,9 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_SERVO
+
 #include "blfm_servomotor.h"
 #include "FreeRTOS.h"
 #include "blfm_pwm.h"
@@ -103,3 +106,5 @@ static void vServoTask(void *pvParameters) {
     blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
   }
 }
+
+#endif /* BLFM_ENABLED_SERVO */

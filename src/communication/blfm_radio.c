@@ -8,6 +8,9 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_RADIO
+
 #include "blfm_radio.h"
 
 void blfm_radio_init(void) {
@@ -20,4 +23,6 @@ void blfm_radio_apply(const blfm_radio_command_t *cmd){
   if (!cmd ) return;
   return;
 }
+
+#endif /* BLFM_ENABLED_RADIO */
 
