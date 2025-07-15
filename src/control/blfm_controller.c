@@ -53,7 +53,7 @@ char num_buf[12];
 #endif
 
 static blfm_system_state_t blfm_system_state = {
-    .current_mode = BLFM_MODE_AUTO, .motion_state = BLFM_MOTION_STOP};
+    .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_STOP};
 
 /**
  * Helper: set motor motion from angle (-180 to 180) and speed.
