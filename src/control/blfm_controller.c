@@ -353,25 +353,22 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
   if (!in || !out)
     return;
 
-  int16_t speed = MOTOR_DEFAULT_SPEED;
-  
+  // Handle mode changes (available in all modes)
   switch (in->command) {
   case BLFM_IR_CMD_1:
     blfm_controller_change_mode(BLFM_MODE_MANUAL, out);
-    break;
-
+    return;
   case BLFM_IR_CMD_2:
     blfm_controller_change_mode(BLFM_MODE_AUTO, out);
-    break;
-
+    return;
   case BLFM_IR_CMD_3:
     blfm_controller_change_mode(BLFM_MODE_EMERGENCY, out);
-    break;
-
+    return;
   default:
     break;
   }
 
+  // Handle motion commands (only in manual mode)
   if (blfm_system_state.current_mode != BLFM_MODE_MANUAL)
     return;
 
@@ -379,29 +376,25 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
   case BLFM_IR_CMD_UP:
     blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
     break;
-
   case BLFM_IR_CMD_DOWN:
     blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
     break;
-
   case BLFM_IR_CMD_LEFT:
     blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
     break;
-
   case BLFM_IR_CMD_RIGHT:
     blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
     break;
-
   case BLFM_IR_CMD_OK:
   default:
-    speed = 0;
     blfm_system_state.motion_state = BLFM_MOTION_STOP;
     break;
   }
 
 #if BLFM_ENABLED_MOTOR
   int angle = motion_state_to_angle(blfm_system_state.motion_state);
-  set_motor_motion_by_angle(angle, speed, &out->motor);
+  int motor_speed = (blfm_system_state.motion_state == BLFM_MOTION_STOP) ? 0 : MOTOR_DEFAULT_SPEED;
+  set_motor_motion_by_angle(angle, motor_speed, &out->motor);
 #endif /* BLFM_ENABLED_MOTOR */
 }
 #endif /* BLFM_ENABLED_IR_REMOTE */

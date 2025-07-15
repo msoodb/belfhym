@@ -11,6 +11,8 @@
 #define OLED_I2C_ADDR 0x3C
 
 static uint8_t oled_framebuffer[BLFM_OLED_PAGES][BLFM_OLED_WIDTH];
+static uint8_t oled_prev_framebuffer[BLFM_OLED_PAGES][BLFM_OLED_WIDTH];
+static bool oled_full_update_needed = true;
 
 static void oled_send_command(uint8_t cmd) {
   uint8_t buffer[2] = {0x00, cmd};
@@ -59,6 +61,10 @@ void blfm_oled_clear(void) {
       oled_framebuffer[p][x] = 0x00;
 }
 
+void blfm_oled_force_full_update(void) {
+  oled_full_update_needed = true;
+}
+
 void blfm_oled_draw_pixel(uint8_t x, uint8_t y, uint8_t color) {
   if (x >= BLFM_OLED_WIDTH || y >= BLFM_OLED_HEIGHT)
     return;
@@ -71,12 +77,44 @@ void blfm_oled_draw_pixel(uint8_t x, uint8_t y, uint8_t color) {
 }
 
 void blfm_oled_flush(void) {
+  // Force full update on first call or when explicitly requested
+  if (oled_full_update_needed) {
+    for (uint8_t page = 0; page < BLFM_OLED_PAGES; page++) {
+      oled_send_command(0xB0 | page);
+      oled_send_command(0x00);
+      oled_send_command(0x10);
+      for (uint8_t col = 0; col < BLFM_OLED_WIDTH; col++) {
+        oled_send_data(oled_framebuffer[page][col]);
+        oled_prev_framebuffer[page][col] = oled_framebuffer[page][col];
+      }
+    }
+    oled_full_update_needed = false;
+    return;
+  }
+
+  // Optimized differential update - only send changed regions
   for (uint8_t page = 0; page < BLFM_OLED_PAGES; page++) {
-    oled_send_command(0xB0 | page);
-    oled_send_command(0x00);
-    oled_send_command(0x10);
+    uint8_t start_col = 0xFF;
+    uint8_t end_col = 0;
+    
+    // Find changed region in this page
     for (uint8_t col = 0; col < BLFM_OLED_WIDTH; col++) {
-      oled_send_data(oled_framebuffer[page][col]);
+      if (oled_framebuffer[page][col] != oled_prev_framebuffer[page][col]) {
+        if (start_col == 0xFF) start_col = col;
+        end_col = col;
+      }
+    }
+    
+    // Send only changed columns if any changes detected
+    if (start_col != 0xFF) {
+      oled_send_command(0xB0 | page);
+      oled_send_command(0x00 | (start_col & 0x0F));
+      oled_send_command(0x10 | ((start_col >> 4) & 0x0F));
+      
+      for (uint8_t col = start_col; col <= end_col; col++) {
+        oled_send_data(oled_framebuffer[page][col]);
+        oled_prev_framebuffer[page][col] = oled_framebuffer[page][col];
+      }
     }
   }
 }
@@ -102,12 +140,29 @@ static void blfm_oled_clear_buf(uint8_t buf[BLFM_OLED_PAGES][BLFM_OLED_WIDTH]) {
 }
 
 static void blfm_oled_flush_buf(uint8_t buf[BLFM_OLED_PAGES][BLFM_OLED_WIDTH]) {
+  // For temporary buffers, do differential update against main framebuffer
   for (uint8_t page = 0; page < BLFM_OLED_PAGES; page++) {
-    oled_send_command(0xB0 | page);
-    oled_send_command(0x00);
-    oled_send_command(0x10);
+    uint8_t start_col = 0xFF;
+    uint8_t end_col = 0;
+    
+    // Find changed region in this page
     for (uint8_t col = 0; col < BLFM_OLED_WIDTH; col++) {
-      oled_send_data(buf[page][col]);
+      if (buf[page][col] != oled_prev_framebuffer[page][col]) {
+        if (start_col == 0xFF) start_col = col;
+        end_col = col;
+      }
+    }
+    
+    // Send only changed columns if any changes detected
+    if (start_col != 0xFF) {
+      oled_send_command(0xB0 | page);
+      oled_send_command(0x00 | (start_col & 0x0F));
+      oled_send_command(0x10 | ((start_col >> 4) & 0x0F));
+      
+      for (uint8_t col = start_col; col <= end_col; col++) {
+        oled_send_data(buf[page][col]);
+        oled_prev_framebuffer[page][col] = buf[page][col];
+      }
     }
   }
 }
@@ -221,6 +276,25 @@ blfm_oled_draw_icon_buf(uint8_t x, uint8_t page, blfm_oled_icon_t icon,
 // --- Apply full layout from command struct ---
 
 void blfm_oled_apply(const blfm_oled_command_t *data) {
+  // Static cache to avoid unnecessary updates
+  static blfm_oled_command_t last_cmd = {0};
+  static bool first_call = true;
+  
+  // Quick check if content has changed (simple optimization)
+  if (!first_call && 
+      data->icon1 == last_cmd.icon1 && 
+      data->icon2 == last_cmd.icon2 && 
+      data->icon3 == last_cmd.icon3 && 
+      data->icon4 == last_cmd.icon4 &&
+      data->progress_percent == last_cmd.progress_percent &&
+      data->invert == last_cmd.invert &&
+      strcmp(data->smalltext1, last_cmd.smalltext1) == 0 &&
+      strcmp(data->smalltext2, last_cmd.smalltext2) == 0 &&
+      strcmp(data->bigtext, last_cmd.bigtext) == 0) {
+    return; // No changes, skip update
+  }
+  
+  // Content has changed, update display
   blfm_oled_clear_buf(oled_framebuffer);
 
   blfm_oled_draw_icon_buf(0, 0, data->icon1, oled_framebuffer);
@@ -252,6 +326,10 @@ void blfm_oled_apply(const blfm_oled_command_t *data) {
   }
 
   blfm_oled_flush_buf(oled_framebuffer);
+  
+  // Cache the current command for next comparison
+  last_cmd = *data;
+  first_call = false;
 }
 
 // --- Scrolling text animation ---

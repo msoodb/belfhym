@@ -8,6 +8,7 @@
 void blfm_oled_init(void);
 void blfm_oled_clear(void);
 void blfm_oled_flush(void);
+void blfm_oled_force_full_update(void);
 void blfm_oled_draw_pixel(uint8_t x, uint8_t y, uint8_t color);
 void blfm_oled_draw_line(int x0, int y0, int x1, int y1);
 void blfm_oled_draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
