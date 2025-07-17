@@ -53,26 +53,12 @@ typedef struct {
   uint32_t timestamp;
 } blfm_mode_button_event_t;
 
-typedef struct {
-  int16_t acc_x;
-  int16_t acc_y;
-  int16_t acc_z;
-  int16_t gyro_x;
-  int16_t gyro_y;
-  int16_t gyro_z;
-} blfm_imu_data_t;
 
 typedef struct {
   uint16_t distance_mm;
 } blfm_ultrasonic_data_t;
 
-typedef struct {
-  uint16_t raw_value;  // raw ADC reading from potentiometer (0-4095)
-} blfm_potentiometer_data_t;
 
-typedef struct {
-  int32_t temperature_mc;
-} blfm_temperature_data_t;
 
 typedef enum {
   BLFM_IR_CMD_NONE = 0,
@@ -133,11 +119,8 @@ typedef struct {
 
 typedef struct {
   blfm_ultrasonic_data_t ultrasonic;
-  blfm_imu_data_t imu;
-  blfm_temperature_data_t temperature;
   blfm_joystick_data_t joystick;
   blfm_joystick_event_t joystick_event;     // Interpreted direction + event
-  blfm_potentiometer_data_t potentiometer;
 } blfm_sensor_data_t;
 
 // Raw ADC data from the joystick (X and Y axis)

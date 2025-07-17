@@ -236,7 +236,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     out->alarm.active = false;
   }
 
-  /* uint16_t pot_val = in->potentiometer.raw_value; */
 
   if (blfm_system_state.current_mode != BLFM_MODE_EMERGENCY) {
     // Debug: Toggle debug LED to show servo logic is running
