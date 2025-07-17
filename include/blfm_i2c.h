@@ -14,22 +14,11 @@
 #include <stddef.h>
 
 /**
- * @brief I2C peripheral selection
- */
-typedef enum {
-  BLFM_I2C1 = 0,
-  BLFM_I2C2 = 1,
-  BLFM_I2C_COUNT
-} blfm_i2c_peripheral_t;
-
-/**
  * @brief I2C error codes
  */
 typedef enum {
   BLFM_I2C_OK = 0,
-  BLFM_I2C_ERR_INVALID_PERIPHERAL,
   BLFM_I2C_ERR_NULL_PTR,
-  BLFM_I2C_ERR_INVALID_LENGTH,
   BLFM_I2C_ERR_TIMEOUT,
   BLFM_I2C_ERR_NOT_INITIALIZED
 } blfm_i2c_error_t;
@@ -43,67 +32,60 @@ typedef struct {
 } blfm_i2c_config_t;
 
 /**
- * @brief Initialize I2C peripheral
- * @param peripheral I2C peripheral to initialize
+ * @brief Initialize I2C1 peripheral (PB6=SCL, PB7=SDA)
  * @param config Configuration parameters (NULL for default config)
  * @return BLFM_I2C_OK on success, error code on failure
  */
-blfm_i2c_error_t blfm_i2c_init(blfm_i2c_peripheral_t peripheral, const blfm_i2c_config_t *config);
+blfm_i2c_error_t blfm_i2c_init(const blfm_i2c_config_t *config);
 
 /**
- * @brief Deinitialize I2C peripheral
- * @param peripheral I2C peripheral to deinitialize
+ * @brief Deinitialize I2C1 peripheral
  * @return BLFM_I2C_OK on success, error code on failure
  */
-blfm_i2c_error_t blfm_i2c_deinit(blfm_i2c_peripheral_t peripheral);
+blfm_i2c_error_t blfm_i2c_deinit(void);
 
 /**
  * @brief Write data to I2C device
- * @param peripheral I2C peripheral to use
  * @param addr 7-bit device address
  * @param data Pointer to data buffer
  * @param len Number of bytes to write
  * @return BLFM_I2C_OK on success, error code on failure
  */
-blfm_i2c_error_t blfm_i2c_write(blfm_i2c_peripheral_t peripheral, uint8_t addr, const uint8_t *data, size_t len);
+blfm_i2c_error_t blfm_i2c_write(uint8_t addr, const uint8_t *data, size_t len);
 
 /**
  * @brief Read data from I2C device
- * @param peripheral I2C peripheral to use
  * @param addr 7-bit device address
  * @param data Pointer to data buffer
  * @param len Number of bytes to read
  * @return BLFM_I2C_OK on success, error code on failure
  */
-blfm_i2c_error_t blfm_i2c_read(blfm_i2c_peripheral_t peripheral, uint8_t addr, uint8_t *data, size_t len);
+blfm_i2c_error_t blfm_i2c_read(uint8_t addr, uint8_t *data, size_t len);
 
 /**
  * @brief Write single byte to I2C device register
- * @param peripheral I2C peripheral to use
  * @param addr 7-bit device address
  * @param reg Register address
  * @param data Data byte to write
  * @return BLFM_I2C_OK on success, error code on failure
  */
-blfm_i2c_error_t blfm_i2c_write_byte(blfm_i2c_peripheral_t peripheral, uint8_t addr, uint8_t reg, uint8_t data);
+blfm_i2c_error_t blfm_i2c_write_byte(uint8_t addr, uint8_t reg, uint8_t data);
 
 /**
  * @brief Read bytes from I2C device register
- * @param peripheral I2C peripheral to use
  * @param addr 7-bit device address
  * @param reg Register address
  * @param data Pointer to data buffer
  * @param len Number of bytes to read
  * @return BLFM_I2C_OK on success, error code on failure
  */
-blfm_i2c_error_t blfm_i2c_read_bytes(blfm_i2c_peripheral_t peripheral, uint8_t addr, uint8_t reg, uint8_t *data, size_t len);
+blfm_i2c_error_t blfm_i2c_read_bytes(uint8_t addr, uint8_t reg, uint8_t *data, size_t len);
 
 /**
  * @brief Check if I2C device is present on the bus
- * @param peripheral I2C peripheral to use
  * @param addr 7-bit device address
  * @return BLFM_I2C_OK if device responds, error code otherwise
  */
-blfm_i2c_error_t blfm_i2c_device_present(blfm_i2c_peripheral_t peripheral, uint8_t addr);
+blfm_i2c_error_t blfm_i2c_device_present(uint8_t addr);
 
 #endif // BLFM_I2C_H

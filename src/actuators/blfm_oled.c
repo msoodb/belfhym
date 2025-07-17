@@ -13,12 +13,12 @@ static bool oled_full_update_needed = true;
 
 static void oled_send_command(uint8_t cmd) {
   uint8_t buffer[2] = {0x00, cmd};
-  blfm_i2c_write(BLFM_I2C1, OLED_I2C_ADDR, buffer, 2);
+  blfm_i2c_write(OLED_I2C_ADDR, buffer, 2);
 }
 
 static void oled_send_data(uint8_t data) {
   uint8_t buffer[2] = {0x40, data};
-  blfm_i2c_write(BLFM_I2C1, OLED_I2C_ADDR, buffer, 2);
+  blfm_i2c_write(OLED_I2C_ADDR, buffer, 2);
 }
 
 void blfm_oled_init(void) {

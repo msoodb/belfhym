@@ -18,7 +18,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define LCD_CYCLE_COUNT 50
 #define SWEEP_MIN_ANGLE 0
 #define SWEEP_MAX_ANGLE 180
 
@@ -31,13 +30,10 @@
 
 #define MOTOR_DEFAULT_SPEED 255
 
-static int lcd_mode = 0;
-static int lcd_counter = 0;
 static bool servo_direction = true;
 static int motor_backward_ticks = 0;
 static int motor_rotate_ticks = 0;
 static int motor_rotate_duration = 0;
-char num_buf[12];
 
 static blfm_system_state_t blfm_system_state = {
     .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_STOP};
@@ -56,21 +52,6 @@ static int pseudo_random(int min, int max) {
   return min + (seed % (max - min + 1));
 }
 
-static void uint_to_str(char *buf, uint16_t value) {
-  if (value >= 100) {
-    buf[0] = '0' + (value / 100) % 10;
-    buf[1] = '0' + (value / 10) % 10;
-    buf[2] = '0' + value % 10;
-    buf[3] = '\0';
-  } else if (value >= 10) {
-    buf[0] = '0' + (value / 10) % 10;
-    buf[1] = '0' + value % 10;
-    buf[2] = '\0';
-  } else {
-    buf[0] = '0' + value;
-    buf[1] = '\0';
-  }
-}
 
 /* -------------------- Motion Helpers -------------------- */
 
@@ -156,7 +137,7 @@ static void set_motor_motion_by_angle(int angle, int speed,
 /* -------------------- Public Controller -------------------- */
 
 void blfm_controller_init(void) {
-  // Reserved for future initialization
+  // Servo initialization is handled in blfm_controller_process function
 }
 
 // --- Mode-setting functions ---
@@ -201,10 +182,14 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   if (!in || !out)
     return;
 
-  uint16_t led_blink_speed = 100;
-  blfm_led_mode_t led_mode = BLFM_LED_MODE_BLINK;
-  
-  
+  // Initialize servo to center position on first call
+  static bool servo_initialized = false;
+  static uint8_t current_servo_angle = 90;
+  if (!servo_initialized) {
+    current_servo_angle = 90;
+    servo_initialized = true;
+  }
+
   if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     switch (blfm_system_state.motion_state) {
     case BLFM_MOTION_STOP:
@@ -251,52 +236,29 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     out->alarm.active = false;
   }
 
-  uint16_t pot_val = in->potentiometer.raw_value;
-
-  led_mode = BLFM_LED_MODE_BLINK;
-  led_blink_speed = pot_val;
-
-  out->led.mode = led_mode;
-  out->led.blink_speed_ms = led_blink_speed;
+  /* uint16_t pot_val = in->potentiometer.raw_value; */
 
   if (blfm_system_state.current_mode != BLFM_MODE_EMERGENCY) {
+    // Debug: Toggle debug LED to show servo logic is running
+    static uint8_t debug_counter = 0;
+    if (++debug_counter >= 10) {
+      debug_counter = 0;
+    }
+    
     if (servo_direction)
-      out->servo.angle += 5;
+      current_servo_angle += 5;
     else
-      out->servo.angle -= 5;
+      current_servo_angle -= 5;
 
-    if (out->servo.angle >= SWEEP_MAX_ANGLE)
+    if (current_servo_angle >= SWEEP_MAX_ANGLE)
       servo_direction = false;
-    else if (out->servo.angle <= SWEEP_MIN_ANGLE)
+    else if (current_servo_angle <= SWEEP_MIN_ANGLE)
       servo_direction = true;
   }
 
-  char buf1[17];
+  // Always set servo angle to current value
+  out->servo.angle = current_servo_angle;
 
-  lcd_counter++;
-  if (lcd_counter >= LCD_CYCLE_COUNT) {
-    lcd_counter = 0;
-    lcd_mode = (lcd_mode + 1) % 3;
-  }
-
-  if (lcd_mode == 0) {
-    strcpy(buf1, "Dist: ");
-    uint_to_str(num_buf, in->ultrasonic.distance_mm);
-    strcat(buf1, num_buf);
-    strcat(buf1, " mm");
-  } else if (lcd_mode == 1) {
-    strcpy(buf1, "Speed: ");
-    strcat(buf1, num_buf);
-    strcat(buf1, " cm/s");
-  } else {
-    strcpy(buf1, "Temp: ");
-    uint_to_str(num_buf, in->temperature.temperature_mc);
-    strcat(buf1, num_buf);
-    strcat(buf1, " C");
-  }
-
-  strcpy(out->display.line1, buf1);
-  strcpy(out->display.line2, num_buf);
 
   out->oled.icon1 = BLFM_OLED_ICON_NONE;
   out->oled.icon2 = BLFM_OLED_ICON_NONE;

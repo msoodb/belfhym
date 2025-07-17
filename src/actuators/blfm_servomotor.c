@@ -86,16 +86,13 @@ static void vServoTask(void *pvParameters) {
   uint16_t target_pulse = current_pulse;
 
   for (;;) {
-    // Only take a new command if we're at the target
-    if (current_pulse == target_pulse) {
-      blfm_servomotor_command_t new_cmd;
-      if (xQueueReceive(servo_command_queue, &new_cmd, portMAX_DELAY) ==
-          pdPASS) {
-        if (new_cmd.pulse_width_us >= 1000 && new_cmd.pulse_width_us <= 2000)
-          target_pulse = new_cmd.pulse_width_us;
-        else
-          target_pulse = angle_to_pulse_us(new_cmd.angle);
-      }
+    // Always check for new commands (non-blocking)
+    blfm_servomotor_command_t new_cmd;
+    if (xQueueReceive(servo_command_queue, &new_cmd, pdMS_TO_TICKS(10)) == pdPASS) {
+      if (new_cmd.pulse_width_us >= 1000 && new_cmd.pulse_width_us <= 2000)
+        target_pulse = new_cmd.pulse_width_us;
+      else
+        target_pulse = angle_to_pulse_us(new_cmd.angle);
     }
 
     // Move one step toward the target

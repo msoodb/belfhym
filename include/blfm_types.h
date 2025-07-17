@@ -14,7 +14,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define BLFM_DISPLAY_LINE_LENGTH 17 // 16 chars + '\0'
 
 #define BLFM_OLED_WIDTH 128
 #define BLFM_OLED_HEIGHT 32
@@ -192,10 +191,6 @@ typedef enum {
   BLFM_SERVOMOTOR_COUNT
 } blfm_servomotor_id_t;
 
-typedef struct {
-  char line1[BLFM_DISPLAY_LINE_LENGTH];
-  char line2[BLFM_DISPLAY_LINE_LENGTH];
-} blfm_display_command_t;
 
 
 typedef enum {
@@ -249,7 +244,6 @@ typedef struct {
 
 typedef struct {
   blfm_motor_command_t motor;
-  blfm_display_command_t display;
   blfm_oled_command_t oled;
   blfm_led_command_t led;
   blfm_alarm_command_t alarm;
