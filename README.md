@@ -1,171 +1,179 @@
-# Belfhym: FreeRTOS-Based Lunar Rover Robot
+# Belfhym: STM32F103C8T6 Embedded Template
 
-**Belfhym** is a modular, real-time lunar rover robot powered by **FreeRTOS** and **CMSIS**, designed for:
+**Belfhym** is a streamlined embedded project template for **STM32F103C8T6 (Blue Pill)** microcontrollers, featuring:
 
-- Autonomous terrain navigation
-- Multi-sensor fusion
-- Real-time telemetry
-- Manual override via remote command
-  
-Built for the **STM32F103C8T6 (Blue Pill)**, Belfhym integrates multiple control and sensing subsystems into a clean, multitasking environment with well-defined inter-task communication and scheduling policies.
+- **FreeRTOS** real-time operating system
+- **CMSIS** bare-metal targeting (no HAL)
+- Clean modular architecture
+- Template-ready for copy-paste usage
+- Minimal resource footprint (21,584 bytes)
+
+This template provides a solid foundation for embedded projects with essential components: motors, sensors, OLED display, and basic I/O control.
 
 ---
 
-## Project Highlights
+## Current Features
 
-- 6-Wheel Motor Control with PID regulation
-- Multi-Sensor Fusion: Ultrasonic, IMU, thermal, power, radio, etc.
-- Failsafe and Safety System
-- Real-Time Telemetry over UART/radio
-- Manual Control Mode
-- FreeRTOS Scheduling with queues, semaphores, and notifications
-- CMSIS Bare-Metal Targeting (no HAL, clean hardware control)
-- Well-Structured Codebase with modular architecture and make-based build system
+### Hardware Components
+- **Motors**: Dual DC motor control (L298N compatible)
+- **Servo**: Single servo motor control (PWM)
+- **Sensors**: Ultrasonic distance sensor (HC-SR04), IR remote, mode button
+- **Display**: OLED display (I2C, SSD1306 compatible)
+- **LEDs**: Onboard LED, external LED, debug LED
+- **Communication**: I2C protocol for display
+
+### Software Architecture
+- **Task-based design** with FreeRTOS
+- **Hub pattern**: Sensor Hub → Controller → Actuator Hub
+- **Modular structure** with clear separation of concerns
+- **Template-friendly**: No conditional compilation (#ifdef guards)
+
 ---
 
-
-## Software Design Overview
-
-1. Task Architecture
-
-This table outlines the tasks in the system, their responsibilities, priorities, and communication mechanisms.
-**This section needs to be updated!**
-
-| Task Name         | Responsibility                               | Priority | Communication                    |
-|------------------|----------------------------------------------|----------|----------------------------------|
-| **SensorTask**    | Polls ultrasonic, IMU, thermal sensors       | Med      | Sends readings via **queues**    |
-| **MotorTask**     | Drives motors using PID control              | High     | Gets target direction from queue |
-| **PathFinding**   | Receives sensor input, computes direction    | Med      | Queue input/output               |
-| **SafetyTask**    | Monitors danger conditions (thermal, power)  | High     | Uses **event group + notify**    |
-| **FailsafeTask**  | Triggers alarm, stops motors in emergency    | High     | Reacts to event bits             |
-| **CommTask**      | Handles telemetry and manual command input   | Low      | **Queue + semaphore** for UART   |
-| **ManualControl** | Overrides auto pathing based on command mode | Med      | Waits on a **binary semaphore**  |
-| **LED/DebugTask** | Visual debug with LED pattern/status blink   | Low      | Receives status messages         |
-
-
-2. Inter-Task Communication
-**This section needs to be updated!**
-- SensorTask → PathFinding: via Queue<SensorPacket>
-- PathFinding → MotorTask: via Queue<DriveCommand>
-- Safety events (thermal, power): via EventGroup or TaskNotify
-- Manual control trigger: via BinarySemaphore or mode bit flag
-- CommTask → ManualControl: via Queue<Command> + mode flag
-- Telemetry logging: via MessageBuffer or streaming queue
-
-
-
-3. Conceptual Communication Flow
-```
-[ Ultrasonic (polling) ] → [ Sensor Hub (task) ] → 
-                            [ Controller (task) ] → 
-                            [ Actuator Hub (task) ] → [ LEDs, LCD, Motors ]
-
-[ BigSound (interrupt) ] → [ ISR Handler ] → 
-                            [ Controller (task) ] → 
-                            [ Actuator Hub (task) ] → [ LEDs, LCD, Motors ]
-```
-- Sensors: Collect raw data from environment (IMU, Ultrasonic, etc.)
-- Sensor Hub: Polls sensors, aggregates and timestamps data
-- Controller: Performs logic decisions (PID, pathfinding, safety checks)
-- Actuator Hub: Receives commands and routes them to the appropriate actuator
-- Actuators: Motor, LED, Alarm, Display, etc.
-
-4. Data Flow and Task Design (FreeRTOS)
-   1. Tasks
-	  - SensorTask: Reads raw sensor data, sends it to SensorDataQueue.
-	  - ControllerTask: Receives from SensorDataQueue, processes data, sends output to ControlCommandQueue.
-	  - ActuatorTask: Reads from ControlCommandQueue, executes actuator commands.
-	2. Queues
-	  - SensorDataQueue: Transmits blfm_sensor_data_t (struct with all sensor data).
-	  - ControlCommandQueue: Transmits blfm_actuator_command_t (per-actuator commands).
+## Project Structure
 
 ```
-+---------------------+
-|    Main Entry       |   (belfhym.c)
-+----------+----------+
-           |
-           v
-+---------------------+
-|     System Init     |  (board init, clocks, RTOS)
-+----------+----------+
-           |
-           v
-+=====================+
-||   Task Manager    ||  ← starts all system tasks
-+=====================+
-           |
-           v
-+--------------------------------------+
-|         System Services Layer        |
-+-------------------+------------------+
-| Sensor Hub        | Actuator Hub     |
-| (all sensors)     | (all motors, LED)|
-+-------------------+------------------+
-| Communication     | Logging          |
-| (Manual + Remote) | (Telemetry/Debug)|
-+-------------------+------------------+
-| Safety Monitor    | Power Manager    |
-+-------------------+------------------+
-
-Tasks in Services Layer exchange data via FreeRTOS queues/events/mutexes
-           |
-           v
-+---------------------+
-| Application Logic   | ← Pathfinding, PID, AI, etc.
-+---------------------+
-
+src/
+├── actuators/          # Output devices
+│   ├── blfm_actuator_hub.c
+│   ├── blfm_led.c
+│   ├── blfm_motor.c
+│   ├── blfm_oled.c
+│   └── blfm_servomotor.c
+├── logic/              # Control logic
+│   └── blfm_controller.c
+├── core/               # System core
+│   ├── blfm_board.c
+│   ├── blfm_clock.c
+│   ├── blfm_exti_dispatcher.c
+│   ├── blfm_taskmanager.c
+│   └── libc_stubs.c
+├── drivers/            # Hardware drivers
+│   ├── blfm_gpio.c
+│   └── blfm_pwm.c
+├── protocols/          # Communication protocols
+│   └── blfm_i2c.c
+├── sensors/            # Input devices
+│   ├── blfm_sensor_hub.c
+│   ├── blfm_ultrasonic.c
+│   ├── blfm_ir_remote.c
+│   └── blfm_mode_button.c
+├── utils/              # Utilities
+│   ├── blfm_debug.c
+│   ├── blfm_delay.c
+│   └── blfm_font8x8.c
+└── belfhym.c           # Main entry point
 ```
 
-## WARNING
-FreeRTOS/portable/GCC/ARM_CM3/port.c
-```code 
-const portISR_t * const pxVectorTable = portSCB_VTOR_REG;
-(void)pxVectorTable;  // Suppress unused variable warning added by me.
+---
+
+## Task Architecture
+
+| Task Name | Responsibility | Priority | Communication |
+|-----------|---------------|----------|---------------|
+| **SensorTask** | Polls ultrasonic sensor, handles inputs | Medium | Sends data via queues |
+| **ControllerTask** | Processes sensor data, makes decisions | High | Receives from sensor, sends to actuators |
+| **ActuatorTask** | Controls motors, LEDs, display, servo | High | Receives commands via queues |
+| **IRTask** | Handles IR remote commands | Medium | Interrupt-driven |
+| **ButtonTask** | Handles mode button presses | Low | Interrupt-driven |
+
+## Communication Flow
+
 ```
+[Sensors] → [Sensor Hub] → [Controller] → [Actuator Hub] → [Hardware]
+    ↓           ↓             ↓              ↓
+[Ultrasonic] [Data Queue] [Logic/PID] [LED/Motor/OLED]
+[IR Remote]
+[Button]
+```
+
+---
 
 ## Hardware Requirements
 
-| Component             | Description                                              |
-| --------------------- | -------------------------------------------------------- |
-| **MCU**               | STM32F103C8T6 (Blue Pill) – Cortex-M3, 72 MHz, 20 KB RAM |
-| **Motors**            | 6 DC or geared motors with PWM drivers (e.g., L298N)     |
-| **Motor Driver**      | 2x L298N or equivalent                                   |
-| **Ultrasonic Sensor** | HC-SR04 or similar                                       |
-| **IMU Sensor**        | MPU6050 (via I2C)                                        |
-| **Thermal Sensor**    | MLX90614 or analog sensor                                |
-| **Power Monitor**     | Voltage divider or INA219                                |
-| **Alarm**             | Buzzer (digital control)                                 |
-| **Radio Module**      | NRF24L01, LoRa, or UART-based module                     |
-| **LEDs**              | Debug/status LEDs                                        |
-| **Button**            | For mode toggle / emergency stop                         |
-| **Power Source**      | Li-ion battery pack with regulation                      |
+| Component | Description | Pins Used |
+|-----------|-------------|-----------|
+| **MCU** | STM32F103C8T6 (Blue Pill) | - |
+| **Motors** | Dual DC motors with L298N driver | PA0, PA1, PB0, PB1, PB10, PB11 |
+| **Servo** | Standard servo motor | PA7 (TIM3_CH2) |
+| **Ultrasonic** | HC-SR04 distance sensor | PB3 (Echo), PB4 (Trigger) |
+| **OLED** | SSD1306 128x64 I2C display | PB6 (SCL), PB7 (SDA) |
+| **IR Remote** | IR receiver module | PA8 |
+| **Button** | Mode selection button | PA4 |
+| **LEDs** | Status indicators | PC13 (onboard), PB5 (external), PC15 (debug) |
 
 ---
 
 ## Getting Started
 
-### Prerequisites toolchain for Development Environment (Fedora Linux)
+### Prerequisites
 
 ```bash
+# Fedora/RHEL
 sudo dnf install arm-none-eabi-gcc-cs arm-none-eabi-newlib
+
+# Ubuntu/Debian
+sudo apt install gcc-arm-none-eabi
+
+# Verify installation
 arm-none-eabi-gcc --version
 ```
 
-### 1. Clone the Repository
+### Build and Flash
 
 ```bash
+# Clone and build
 git clone https://github.com/msoodb/belfhym.git
 cd belfhym
+make
+
+# Flash to device (multiple methods available)
+make flash                    # Default: ST-Link
+make METHOD=openocd flash     # OpenOCD
+make METHOD=dfu flash         # DFU mode
 ```
 
-### 2. Build and Flash
+### Flash Methods
 
 ```bash
-make
-make flash
+make METHOD=stlink flash      # ST-Link (default)
+make METHOD=openocd flash     # OpenOCD
+make METHOD=gdb flash         # GDB with OpenOCD
+make METHOD=serial flash      # Serial bootloader
+make METHOD=dfu flash         # DFU mode
 ```
 
-### License
+---
+
+## Using as Template
+
+1. **Copy the project**: `cp -r belfhym my_new_project`
+2. **Rename**: Update `PROJECT` name in `Makefile`
+3. **Customize**: Add/remove components as needed
+4. **Build**: `make clean && make`
+
+### Template Benefits
+
+- **No configuration overhead**: No #ifdef guards or config files
+- **Modular design**: Easy to add/remove components
+- **Clean structure**: Logical separation of concerns
+- **Ready-to-use**: Compile and flash immediately
+- **Minimal footprint**: Optimized for STM32F103C8T6's limited resources
+
+---
+
+## Binary Size
+
+Current template size: **21,584 bytes** (Flash) + **17,920 bytes** (RAM)
+
+---
+
+## License
+
 This project is licensed under the GNU General Public License v3. See the LICENSE file for details.
 
 ---
+
+## Contributing
+
+This template is designed to be a starting point for embedded projects. Feel free to fork and adapt for your specific needs.

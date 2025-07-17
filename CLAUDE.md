@@ -31,43 +31,50 @@ Multiple deployment methods are available via the `METHOD` variable:
 
 ## Project Architecture
 
-**Belfhym** is a FreeRTOS-based lunar rover system for STM32F103C8T6 (Blue Pill) with a modular, task-oriented architecture.
+**Belfhym** is a streamlined embedded template for STM32F103C8T6 (Blue Pill) with a clean, modular architecture optimized for template usage.
 
 ### Core Structure
 
-1. **Entry Point**: `src/app/belfhym.c` - Main function that initializes board and starts task manager
-2. **Task Management**: `src/app/blfm_taskmanager.c` - Sets up and manages all FreeRTOS tasks
+1. **Entry Point**: `src/belfhym.c` - Main function that initializes board and starts task manager
+2. **Task Management**: `src/core/blfm_taskmanager.c` - Sets up and manages all FreeRTOS tasks
 3. **Board Initialization**: `src/core/blfm_board.c` - Hardware setup and peripheral initialization
 
 ### Module Organization
 
 The codebase is organized into logical modules under `src/`:
 
-- **actuators/**: Output devices (motors, LEDs, servos, display, alarm)
-- **sensors/**: Input devices (ultrasonic, IMU, temperature, IR remote, buttons)
-- **communication/**: UART, radio, ESP32 interfaces
-- **control/**: PID controller, pathfinding algorithms
-- **core/**: Board setup, clocks, I2C, interrupt dispatcher
-- **drivers/**: Low-level hardware drivers (GPIO, PWM, ADC, delays)
-- **safety/**: Failsafe mechanisms and safety monitoring
-- **power/**: Power management
-- **monitoring/**: System monitoring and telemetry
-- **logging/**: Debug and telemetry logging
+- **actuators/**: Output devices (motors, LEDs, servo, OLED display)
+- **sensors/**: Input devices (ultrasonic, IR remote, mode button)
+- **logic/**: Control logic and decision making
+- **core/**: Board setup, clocks, task management, interrupt dispatcher
+- **drivers/**: Low-level hardware drivers (GPIO, PWM)
+- **protocols/**: Communication protocols (I2C)
+- **utils/**: Utility functions (debug, delay, font)
 
-### Configuration System
+### Current Components
 
-Module presence is controlled via compile-time flags in `include/blfm_config.h`:
-- `BLFM_ENABLED_*` flags enable/disable specific sensors, actuators, and features
-- Allows building minimal configurations for different hardware setups
+**Active Components:**
+- **Motors**: Dual DC motor control with L298N driver
+- **Servo**: Single servo motor (PWM-based)
+- **Ultrasonic**: HC-SR04 distance sensor
+- **OLED**: SSD1306 128x64 I2C display
+- **IR Remote**: IR receiver for remote control
+- **Mode Button**: Physical button for mode switching
+- **LEDs**: Onboard, external, and debug LEDs
+
+**Protocols:**
+- **I2C**: Simple I2C1-only implementation for OLED display
+- **GPIO**: Pin control for sensors and actuators
+- **PWM**: Timer-based PWM for servo control
 
 ### Task Communication Pattern
 
-The system follows a hub-based architecture:
-- **Sensor Hub**: Aggregates all sensor data
-- **Controller**: Processes sensor data and makes decisions
-- **Actuator Hub**: Routes commands to appropriate actuators
+The system follows a streamlined hub-based architecture:
+- **Sensor Hub**: Aggregates sensor data (ultrasonic readings)
+- **Controller**: Processes sensor data and makes control decisions
+- **Actuator Hub**: Routes commands to motors, LEDs, servo, and display
 
-Tasks communicate via FreeRTOS primitives (queues, event groups, semaphores) as defined in the task manager.
+Tasks communicate via FreeRTOS primitives (queues, notifications) with minimal overhead.
 
 ### Hardware Target
 
@@ -75,33 +82,65 @@ Tasks communicate via FreeRTOS primitives (queues, event groups, semaphores) as 
 - **RTOS**: FreeRTOS with CMSIS (no HAL)
 - **Toolchain**: arm-none-eabi-gcc
 - **Linker Script**: `ld/stm32f103.ld`
+- **Binary Size**: 21,584 bytes (Flash) + 17,920 bytes (RAM)
+
+### Template-Specific Features
+
+- **No Configuration System**: No blfm_config.h or #ifdef guards
+- **Copy-Paste Ready**: Clean code without conditional compilation
+- **Minimal Footprint**: Optimized for STM32F103C8T6's limited resources
+- **Modular Design**: Easy to add/remove components
+- **Clean Architecture**: Logical separation of concerns
+
+### Pin Assignments
+
+| Component | Port/Pin | Description |
+|-----------|----------|-------------|
+| Motor Left EN | PA0 | Left motor enable |
+| Motor Right EN | PA1 | Right motor enable |
+| Mode Button | PA4 | Mode selection button |
+| Servo PWM | PA7 | Servo control (TIM3_CH2) |
+| IR Remote | PA8 | IR receiver input |
+| Motor Left IN1 | PB0 | Left motor direction 1 |
+| Motor Left IN2 | PB1 | Left motor direction 2 |
+| Ultrasonic Echo | PB3 | Echo pin |
+| Ultrasonic Trig | PB4 | Trigger pin |
+| LED External | PB5 | External LED |
+| I2C SCL | PB6 | I2C clock |
+| I2C SDA | PB7 | I2C data |
+| Motor Right IN1 | PB10 | Right motor direction 1 |
+| Motor Right IN2 | PB11 | Right motor direction 2 |
+| LED Onboard | PC13 | Blue Pill onboard LED |
+| LED Debug | PC15 | Debug status LED |
 
 ### Development Notes
 
 - The system uses bare-metal CMSIS without STM32 HAL for direct hardware control
 - All source files include GPL-3.0 license headers
-- Configuration flags in `blfm_config.h` should be checked before working with specific modules
 - The build system automatically includes all `.c` files from the module directories
+- No configuration flags - all components are built and available
 
-## Refactoring Guidelines
+## Template Usage Guidelines
 
-Based on comprehensive codebase analysis, follow these guidelines when making improvements:
+When using Belfhym as a template:
 
-### Error Handling Standards
-- Use standardized error codes: `BLFM_OK`, `BLFM_ERR_NULL_PTR`, `BLFM_ERR_INVALID_PARAM`, `BLFM_ERR_TIMEOUT`, `BLFM_ERR_HARDWARE`
-- All functions that can fail should return `blfm_error_t`
-- Add null pointer validation at function entry points
-- Implement proper error propagation through the task communication chain
+### Adding New Components
+1. Create source file in appropriate module directory
+2. Add corresponding header file in `include/`
+3. Add pin definitions to `include/blfm_pins.h`
+4. Initialize component in appropriate hub (sensor/actuator)
+5. Add task if needed in `blfm_taskmanager.c`
 
-### Memory Optimization
-- Large structs (`blfm_sensor_data_t`, `blfm_actuator_command_t`) should use unions for optional components
-- Add timestamping to sensor data for temporal analysis
-- Consider selective updates rather than full struct copying through queues
-- Stack allocation preferred over dynamic allocation
+### Removing Components
+1. Remove source and header files
+2. Remove pin definitions from `blfm_pins.h`
+3. Remove initialization calls from hubs
+4. Remove task creation from task manager
+5. Update type definitions in `blfm_types.h`
 
 ### Code Quality Standards
 - Maintain consistent `blfm_` prefixing for all functions and types
-- Use symbolic constants instead of magic numbers (define in `include/blfm_constants.h`)
+- Use symbolic constants instead of magic numbers
 - Implement proper resource cleanup functions (`*_deinit()`) for all modules
 - Add comprehensive function documentation with parameters, return values, and usage notes
 
@@ -111,25 +150,29 @@ Based on comprehensive codebase analysis, follow these guidelines when making im
 - Maintain clear separation between driver and application layers
 - Use consistent peripheral initialization patterns
 
-### Safety and Monitoring
-- Implement system health monitoring for sensor/actuator failures
-- Add watchdog integration for autonomous operation safety
-- Implement proper failsafe mechanisms for critical operations
-- Add communication timeout detection and recovery
+### Error Handling
+- Use standardized return codes for consistency
+- Add null pointer validation at function entry points
+- Implement proper error propagation through the task communication chain
+- Consider watchdog integration for autonomous operation safety
+
+### Memory Optimization
+- Large structs should use unions for optional components
+- Add timestamping to sensor data for temporal analysis
+- Consider selective updates rather than full struct copying through queues
+- Stack allocation preferred over dynamic allocation
 
 ### Task Communication
-- Add bi-directional communication for actuator command feedback
+- Use FreeRTOS queues for data transfer between tasks
 - Implement command validation and bounds checking
 - Use priority-based task scheduling for real-time requirements
 - Add queue overflow handling and recovery mechanisms
 
-### Configuration Management
-- Centralize configuration constants in dedicated header files
-- Use descriptive names for threshold values and timing parameters
-- Document configuration dependencies between modules
-- Maintain backward compatibility when adding new config options
+## Template Benefits
 
-### Priority Implementation Order
-1. **High Priority**: Error handling standardization, memory optimization, safety systems
-2. **Medium Priority**: Configuration management, hardware abstraction consistency, documentation
-3. **Low Priority**: Performance optimization, testing infrastructure, advanced features
+1. **Immediate Usability**: Compile and flash without configuration
+2. **Modular Design**: Easy to add/remove components
+3. **Clean Architecture**: Logical separation of concerns
+4. **Minimal Footprint**: Optimized for resource-constrained MCUs
+5. **Template-Friendly**: No conditional compilation overhead
+6. **Well-Documented**: Clear structure and usage guidelines
