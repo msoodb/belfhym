@@ -8,9 +8,6 @@
  * See LICENSE file for details.
  */
 
-#include "blfm_config.h"
-#if BLFM_ENABLED_STEPMOTOR
-
 #include "blfm_stepmotor.h"
 #include "blfm_gpio.h"
 
@@ -76,4 +73,3 @@ void blfm_stepmotor_apply_all(const blfm_stepmotor_command_t cmds[BLFM_STEPMOTOR
   }
 }
 
-#endif /* BLFM_ENABLED_STEPMOTOR */

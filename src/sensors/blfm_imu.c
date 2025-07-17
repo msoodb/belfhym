@@ -10,9 +10,6 @@
 
 /* MPU-6050 */
 
-#include "blfm_config.h"
-#if BLFM_ENABLED_IMU
-
 #include "blfm_imu.h"
 #include "blfm_i2c.h"
 
@@ -41,4 +38,3 @@ bool blfm_imu_read(blfm_imu_data_t *data) {
   return true;
 }
 
-#endif /* BLFM_ENABLED_IMU */

@@ -8,9 +8,6 @@
  * See LICENSE file for details.
  */
 
-#include "blfm_config.h"
-#if BLFM_ENABLED_LED
-
 #include "blfm_led.h"
 #include "FreeRTOS.h"
 #include "blfm_gpio.h"
@@ -118,5 +115,3 @@ static void vLedTask(void *pvParameters) {
     vTaskDelay(pdMS_TO_TICKS(10));
   }
 }
-
-#endif /* BLFM_ENABLED_LED */

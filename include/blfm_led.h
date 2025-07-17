@@ -8,10 +8,6 @@
  * See LICENSE file for details.
  */
 
-#include "blfm_config.h"
-
-#if BLFM_ENABLED_LED
-
 #ifndef BLFM_LED_H
 #define BLFM_LED_H
 
@@ -20,6 +16,4 @@
 void blfm_led_init(void);
 void blfm_led_apply(const blfm_led_command_t *cmd);
 
-#endif /* BLFM_ALARM_H */
-
-#endif /* BLFM_ENABLED_LED */
+#endif /* BLFM_LED_H */

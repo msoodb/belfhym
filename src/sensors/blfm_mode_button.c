@@ -9,9 +9,6 @@
  * See LICENSE file for details.
  */
 
-#include "blfm_config.h"
-#if BLFM_ENABLED_MODE_BUTTON
-
 #include "blfm_mode_button.h"
 #include "FreeRTOS.h"
 #include "blfm_exti_dispatcher.h"
@@ -75,4 +72,3 @@ void blfm_mode_button_init(QueueHandle_t controller_queue) {
   NVIC_EnableIRQ(EXTI4_IRQn);
 }
 
-#endif /* BLFM_ENABLED_MODE_BUTTON */

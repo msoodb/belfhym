@@ -8,9 +8,6 @@
  * See LICENSE file for details.
  */
 
-#include "blfm_config.h"
-#if BLFM_ENABLED_ALARM
-
 #include "blfm_alarm.h"
 
 void blfm_alarm_init(void) {
@@ -43,4 +40,3 @@ void blfm_alarm_apply(const blfm_alarm_command_t *cmd) {
   }
 }
 
-#endif /* BLFM_ENABLED_ALARM */

@@ -8,35 +8,17 @@
  * See LICENSE file for details.
  */
 
-#include "blfm_config.h"
 #include "blfm_sensor_hub.h"
-
-#if BLFM_ENABLED_ULTRASONIC
 #include "blfm_ultrasonic.h"
-#endif
-
-#if BLFM_ENABLED_POTENTIOMETER
 #include "blfm_potentiometer.h"
-#endif
-
-#if BLFM_ENABLED_TEMPERATURE
 #include "blfm_temperature.h"
-#endif
 
 #include <stdbool.h>
 
 void blfm_sensor_hub_init(void) {
-#if BLFM_ENABLED_ULTRASONIC
   blfm_ultrasonic_init();
-#endif
-
-#if BLFM_ENABLED_POTENTIOMETER
   blfm_potentiometer_init();
-#endif
-
-#if BLFM_ENABLED_TEMPERATURE
   blfm_temperature_init();
-#endif
 }
 
 bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
@@ -46,17 +28,9 @@ bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
 
   bool ok = true;
 
-#if BLFM_ENABLED_ULTRASONIC
   ok &= blfm_ultrasonic_read(&out->ultrasonic);
-#endif
-
-#if BLFM_ENABLED_POTENTIOMETER
   ok &= blfm_potentiometer_read(&out->potentiometer);
-#endif
-
-#if BLFM_ENABLED_TEMPERATURE
   ok &= blfm_temperature_read(&out->temperature);
-#endif
 
   return ok;
 }

@@ -9,8 +9,6 @@
 
 #include "blfm_controller.h"
 #include "FreeRTOS.h"
-#include "blfm_config.h"
-#include "blfm_font8x8.h"
 #include "blfm_gpio.h"
 #include "blfm_pins.h"
 #include "blfm_state.h"
@@ -33,24 +31,13 @@
 
 #define MOTOR_DEFAULT_SPEED 255
 
-#if BLFM_ENABLED_DISPLAY
 static int lcd_mode = 0;
 static int lcd_counter = 0;
-#endif
-
-#if BLFM_ENABLED_SERVO
 static bool servo_direction = true;
-#endif
-
-#if BLFM_ENABLED_MOTOR
 static int motor_backward_ticks = 0;
 static int motor_rotate_ticks = 0;
 static int motor_rotate_duration = 0;
-#endif
-
-#if BLFM_ENABLED_DISPLAY || BLFM_ENABLED_OLED
 char num_buf[12];
-#endif
 
 static blfm_system_state_t blfm_system_state = {
     .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_STOP};
@@ -63,15 +50,12 @@ static void set_motor_motion_by_angle(int angle, int speed,
 
 /* -------------------- Utilities -------------------- */
 
-#if BLFM_ENABLED_ULTRASONIC
 static int pseudo_random(int min, int max) {
   static uint32_t seed = 123456789;
   seed = seed * 1664525 + 1013904223;
   return min + (seed % (max - min + 1));
 }
-#endif
 
-#if BLFM_ENABLED_DISPLAY
 static void uint_to_str(char *buf, uint16_t value) {
   if (value >= 100) {
     buf[0] = '0' + (value / 100) % 10;
@@ -87,11 +71,9 @@ static void uint_to_str(char *buf, uint16_t value) {
     buf[1] = '\0';
   }
 }
-#endif
 
 /* -------------------- Motion Helpers -------------------- */
 
-#if BLFM_ENABLED_MOTOR
 static int motion_state_to_angle(blfm_motion_state_t motion) {
   switch (motion) {
   case BLFM_MOTION_FORWARD:
@@ -107,7 +89,6 @@ static int motion_state_to_angle(blfm_motion_state_t motion) {
     return 0;
   }
 }
-#endif
 
 /**
  * Map angle (-180 to 180) and speed (0-255) to motor command.
@@ -224,7 +205,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   blfm_led_mode_t led_mode = BLFM_LED_MODE_BLINK;
   
   
-#if BLFM_ENABLED_ULTRASONIC
   if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     switch (blfm_system_state.motion_state) {
     case BLFM_MOTION_STOP:
@@ -262,9 +242,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     }
   }
 
-#endif /* BLFM_ENABLED_ULTRASONIC */
-
-#if BLFM_ENABLED_ALARM
   if (in->ultrasonic.distance_mm < 100) {
     out->alarm.active = true;
     out->alarm.pattern_id = 1;
@@ -273,21 +250,15 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   } else {
     out->alarm.active = false;
   }
-#endif /* BLFM_ENABLED_ALARM */
 
-#if BLFM_ENABLED_POTENTIOMETER
   uint16_t pot_val = in->potentiometer.raw_value;
 
   led_mode = BLFM_LED_MODE_BLINK;
-  led_blink_speed = pot_val; // + (pot_val * (1500 - 200)) / 4095;
-#endif
+  led_blink_speed = pot_val;
 
-#if BLFM_ENABLED_LED
   out->led.mode = led_mode;
   out->led.blink_speed_ms = led_blink_speed;
-#endif
 
-#if BLFM_ENABLED_SERVO
   if (blfm_system_state.current_mode != BLFM_MODE_EMERGENCY) {
     if (servo_direction)
       out->servo.angle += 5;
@@ -299,11 +270,8 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     else if (out->servo.angle <= SWEEP_MIN_ANGLE)
       servo_direction = true;
   }
-#endif
 
-#if BLFM_ENABLED_DISPLAY
   char buf1[17];
-  char num_buf[12];
 
   lcd_counter++;
   if (lcd_counter >= LCD_CYCLE_COUNT) {
@@ -318,7 +286,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     strcat(buf1, " mm");
   } else if (lcd_mode == 1) {
     strcpy(buf1, "Speed: ");
-    // uint_to_str(num_buf, in->imu.speed_cm_s);
     strcat(buf1, num_buf);
     strcat(buf1, " cm/s");
   } else {
@@ -330,24 +297,18 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 
   strcpy(out->display.line1, buf1);
   strcpy(out->display.line2, num_buf);
-#endif
 
-#if BLFM_ENABLED_OLED
   out->oled.icon1 = BLFM_OLED_ICON_NONE;
   out->oled.icon2 = BLFM_OLED_ICON_NONE;
   out->oled.icon3 = BLFM_OLED_ICON_NONE;
   out->oled.icon4 = BLFM_OLED_ICON_NONE;
 
-  //safe_strncpy(out->oled.smalltext1, "OK", BLFM_OLED_MAX_SMALL_TEXT_LEN);
   safe_strncpy(out->oled.bigtext, "BELFHYM VZA-993", BLFM_OLED_MAX_BIG_TEXT_LEN);
-  //safe_strncpy(out->oled.smalltext2, "V1", BLFM_OLED_MAX_SMALL_TEXT_LEN);
 
   out->oled.invert = 0;
   out->oled.progress_percent = 75;
-#endif
 }
 
-#if BLFM_ENABLED_IR_REMOTE
 void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
                                        blfm_actuator_command_t *out) {
   if (!in || !out)
@@ -391,15 +352,11 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     break;
   }
 
-#if BLFM_ENABLED_MOTOR
   int angle = motion_state_to_angle(blfm_system_state.motion_state);
   int motor_speed = (blfm_system_state.motion_state == BLFM_MOTION_STOP) ? 0 : MOTOR_DEFAULT_SPEED;
   set_motor_motion_by_angle(angle, motor_speed, &out->motor);
-#endif /* BLFM_ENABLED_MOTOR */
 }
-#endif /* BLFM_ENABLED_IR_REMOTE */
 
-#if BLFM_ENABLED_JOYSTICK
 void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
                                       blfm_actuator_command_t *out) {
   if (!evt || !out)
@@ -428,9 +385,7 @@ void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
   int angle = motion_state_to_angle(blfm_system_state.motion_state);
   set_motor_motion_by_angle(angle, MOTOR_DEFAULT_SPEED, &out->motor);
 }
-#endif /* BLFM_ENABLED_JOYSTICK */
 
-#if BLFM_ENABLED_MODE_BUTTON
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command) {
   static uint32_t last_press_tick = 0;
@@ -444,25 +399,18 @@ void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
     }
   }
 }
-#endif /* BLFM_ENABLED_MODE_BUTTON */
 
-#if BLFM_ENABLED_IR_REMOTE
 bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out) {
   (void)out;
   return false;
 }
-#endif /* BLFM_ENABLED_IR_REMOTE */
 
-#if BLFM_ENABLED_BIGSOUND
 void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
                                       blfm_actuator_command_t *out) {
   if (!event || !out)
     return;
-  // You can implement this or leave empty
 }
-#endif /* BLFM_ENABLED_BIGSOUND */
 
-#if BLFM_ENABLED_ESP32
 void blfm_controller_process_esp32(const blfm_esp32_event_t *event,
                                    blfm_actuator_command_t *out) {
   memset(out, 0, sizeof(*out));
@@ -493,4 +441,3 @@ void blfm_controller_process_esp32(const blfm_esp32_event_t *event,
 
   set_motor_motion_by_angle(angle, speed, &out->motor);
 }
-#endif /* BLFM_ENABLED_ESP32 */

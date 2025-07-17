@@ -8,9 +8,6 @@
  * See LICENSE file for details.
  */
 
-#include "blfm_config.h"
-#if BLFM_ENABLED_SERVO
-
 #include "blfm_servomotor.h"
 #include "FreeRTOS.h"
 #include "blfm_pwm.h"
@@ -106,4 +103,3 @@ static void vServoTask(void *pvParameters) {
   }
 }
 
-#endif /* BLFM_ENABLED_SERVO */
