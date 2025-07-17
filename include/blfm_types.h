@@ -20,23 +20,6 @@
 #define BLFM_OLED_PAGES (BLFM_OLED_HEIGHT / 8)
 #define BLFM_OLED_MAX_SMALL_TEXT_LEN 12
 #define BLFM_OLED_MAX_BIG_TEXT_LEN 16
-//-----------------------
-//  communication - ESP32
-//-----------------------
-typedef enum {
-  BLFM_ESP32_CMD_NONE = 0,
-  BLFM_ESP32_CMD_UP,
-  BLFM_ESP32_CMD_DOWN,
-  BLFM_ESP32_CMD_LEFT,
-  BLFM_ESP32_CMD_RIGHT,
-  BLFM_ESP32_CMD_STOP
-} blfm_esp32_command_type_t;
-
-typedef struct {
-  blfm_esp32_command_type_t command;
-  uint8_t speed;         // 0-255, optional: speed level from gamepad
-  uint32_t timestamp;    // Tick count when received
-} blfm_esp32_event_t;
 
 //-----------------------
 //  sensors
@@ -125,15 +108,6 @@ typedef struct {
 
 // Raw ADC data from the joystick (X and Y axis)
 
-//-----------------------
-//  bigsound
-//-----------------------
-typedef enum { BIGSOUND_EVENT_DETECTED = 1 } blfm_bigsound_event_type_t;
-
-typedef struct {
-  uint32_t timestamp;                    // Tick count when event happened
-  blfm_bigsound_event_type_t event_type; // Type of bigsound event
-} blfm_bigsound_event_t;
 
 
 //-----------------------

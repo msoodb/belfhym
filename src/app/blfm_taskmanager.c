@@ -27,8 +27,6 @@
 
 #include "blfm_mode_button.h"
 #include "blfm_ir_remote.h"
-#include "blfm_esp32.h"
-#include "blfm_bigsound.h"
 
 // --- Task declarations ---
 static void vSensorHubTask(void *pvParameters);
@@ -38,10 +36,8 @@ static void vActuatorHubTask(void *pvParameters);
 // --- Event Handlers ---
 static void handle_sensor_data(void);
 
-static void handle_bigsound_event(void);
 static void handle_ir_remote_event(void);
 static void handle_mode_button_event(void);
-static void handle_esp32_event(void);
 
 // --- Task and queue settings ---
 #define SENSOR_HUB_TASK_STACK 256
@@ -56,10 +52,8 @@ static void handle_esp32_event(void);
 static QueueHandle_t xSensorDataQueue = NULL;
 static QueueHandle_t xActuatorCmdQueue = NULL;
 
-static QueueHandle_t xBigSoundQueue = NULL;
 static QueueHandle_t xIRRemoteQueue = NULL;
 static QueueHandle_t xModeButtonQueue = NULL;
-static QueueHandle_t xESP32Queue = NULL;
 
 static QueueSetHandle_t xControllerQueueSet = NULL;
 
@@ -72,8 +66,6 @@ void blfm_taskmanager_setup(void) {
   configASSERT(xActuatorCmdQueue != NULL);
 
   // Event queues
-  xBigSoundQueue = xQueueCreate(5, sizeof(blfm_bigsound_event_t));
-  configASSERT(xBigSoundQueue != NULL);
 
   xIRRemoteQueue = xQueueCreate(5, sizeof(blfm_ir_remote_event_t));
   configASSERT(xIRRemoteQueue != NULL);
@@ -81,18 +73,14 @@ void blfm_taskmanager_setup(void) {
   xModeButtonQueue = xQueueCreate(5, sizeof(blfm_mode_button_event_t));
   configASSERT(xModeButtonQueue != NULL);
 
-  xESP32Queue = xQueueCreate(5, sizeof(blfm_esp32_event_t));
-  configASSERT(xESP32Queue != NULL);
 
   // Queue set
   xControllerQueueSet = xQueueCreateSet(10);
   configASSERT(xControllerQueueSet != NULL);
 
   xQueueAddToSet(xSensorDataQueue, xControllerQueueSet);
-  xQueueAddToSet(xBigSoundQueue, xControllerQueueSet);
   xQueueAddToSet(xIRRemoteQueue, xControllerQueueSet);
   xQueueAddToSet(xModeButtonQueue, xControllerQueueSet);
-  xQueueAddToSet(xESP32Queue, xControllerQueueSet);
 
   // Init all modules
   blfm_sensor_hub_init();
@@ -100,9 +88,7 @@ void blfm_taskmanager_setup(void) {
   blfm_controller_init();
 
   blfm_mode_button_init(xModeButtonQueue);
-  blfm_bigsound_init(xBigSoundQueue);
   blfm_ir_remote_init(xIRRemoteQueue);
-  blfm_esp32_init();
 
   // Tasks (always run sensor and actuator hub)
   xTaskCreate(vSensorHubTask, "SensorHub", SENSOR_HUB_TASK_STACK, NULL,
@@ -133,37 +119,18 @@ static void vSensorHubTask(void *pvParameters) {
 static void vControllerTask(void *pvParameters) {
   (void)pvParameters;
 
-  blfm_actuator_command_t command;
-  blfm_esp32_event_t esp32_event;
-
   for (;;) {
     QueueSetMemberHandle_t activated =
         xQueueSelectFromSet(xControllerQueueSet, pdMS_TO_TICKS(100));
 
-    if (activated == NULL) {
-      if (blfm_controller_check_ir_timeout(&command)) {
-        xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-      }
-      if (blfm_esp32_get_event(&esp32_event)) {
-        xQueueSendToBack(xESP32Queue, &esp32_event, 0);
-      }
-      continue;
-    }
-
     if (activated == xSensorDataQueue) {
       handle_sensor_data();
-    }
-    else if (activated == xBigSoundQueue) {
-      handle_bigsound_event();
     }
     else if (activated == xIRRemoteQueue) {
       handle_ir_remote_event();
     }
     else if (activated == xModeButtonQueue) {
       handle_mode_button_event();
-    }
-    else if (activated == xESP32Queue) {
-      handle_esp32_event();
     }
   }
 }
@@ -193,15 +160,6 @@ static void handle_sensor_data(void) {
   }
 }
 
-static void handle_bigsound_event(void) {
-  blfm_bigsound_event_t event;
-  blfm_actuator_command_t command;
-
-  if (xQueueReceive(xBigSoundQueue, &event, 0) == pdPASS) {
-    blfm_controller_process_bigsound(&event, &command);
-    xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-  }
-}
 
 static void handle_ir_remote_event(void) {
   blfm_ir_remote_event_t event;
@@ -223,12 +181,3 @@ static void handle_mode_button_event(void) {
   }
 }
 
-static void handle_esp32_event(void) {
-  blfm_esp32_event_t event;
-  blfm_actuator_command_t command;
-
-  if (xQueueReceive(xESP32Queue, &event, 0) == pdPASS) {
-    blfm_controller_process_esp32(&event, &command);
-    xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-  }
-}

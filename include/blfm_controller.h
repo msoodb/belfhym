@@ -68,25 +68,4 @@ void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
                                          blfm_actuator_command_t *command);
 
-/**
- * Check if the IR remote has timed out.
- * Currently always returns false.
- */
-bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out);
-
-/**
- * Handle ESP32 command events.
- * Sets motor commands directly from remote input.
- */
-void blfm_controller_process_esp32(const blfm_esp32_event_t *event,
-                                   blfm_actuator_command_t *out);
-
-/**
- * Handle Big Sound events.
- * Triggers display or alarm patterns when noise is detected.
- */
-void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
-                                      blfm_actuator_command_t *out);
-
-
 #endif /* BLFM_CONTROLLER_H */
