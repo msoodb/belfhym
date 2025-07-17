@@ -227,14 +227,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     }
   }
 
-  if (in->ultrasonic.distance_mm < 100) {
-    out->alarm.active = true;
-    out->alarm.pattern_id = 1;
-    out->alarm.duration_ms = 500;
-    out->alarm.volume = 10;
-  } else {
-    out->alarm.active = false;
-  }
 
 
   if (blfm_system_state.current_mode != BLFM_MODE_EMERGENCY) {

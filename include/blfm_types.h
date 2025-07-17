@@ -123,19 +123,6 @@ typedef struct {
   blfm_single_motor_command_t right;
 } blfm_motor_command_t;
 
-typedef struct {
-  int32_t target_position; // e.g., in steps
-  uint16_t speed;          // steps per second
-  bool direction;          // false = CW, true = CCW, or use enum
-  bool enabled;            // whether to drive this motor or ignore it
-} blfm_stepmotor_command_t;
-
-typedef enum {
-  BLFM_STEPMOTOR_NECK = 0,
-  BLFM_STEPMOTOR_ELBOW,
-  BLFM_STEPMOTOR_WRIST,
-  BLFM_STEPMOTOR_COUNT
-} blfm_stepmotor_id_t;
 
 typedef struct {
   uint8_t angle;           // Servo angle in degrees (0-180)
@@ -172,12 +159,6 @@ typedef struct {
 
 } blfm_oled_command_t;
 
-typedef struct {
-  bool active;
-  uint8_t pattern_id;
-  uint16_t duration_ms;
-  uint8_t volume;
-} blfm_alarm_command_t;
 
 typedef enum {
   BLFM_LED_MODE_OFF = 0,
@@ -194,19 +175,12 @@ typedef struct {
       brightness; // brightness level (0-255), optional if hardware supports PWM
 } blfm_led_command_t;
 
-typedef struct {
-  uint8_t data[64];
-  uint8_t length;
-} blfm_radio_command_t;
 
 typedef struct {
   blfm_motor_command_t motor;
   blfm_oled_command_t oled;
   blfm_led_command_t led;
-  blfm_alarm_command_t alarm;
-  blfm_radio_command_t radio;
   blfm_servomotor_command_t servo;
-  blfm_stepmotor_command_t stepmotor;
 } blfm_actuator_command_t;
 
 #endif // BLFM_TYPES_H

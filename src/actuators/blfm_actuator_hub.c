@@ -11,8 +11,6 @@
 #include "blfm_led.h"
 #include "blfm_motor.h"
 #include "blfm_oled.h"
-#include "blfm_alarm.h"
-#include "blfm_radio.h"
 #include "blfm_servomotor.h"
 #include "blfm_actuator_hub.h"
 #include "blfm_types.h"
@@ -22,8 +20,6 @@ void blfm_actuator_hub_init(void) {
   blfm_motor_init();
   blfm_oled_init();
   blfm_servomotor_init();
-  blfm_alarm_init();
-  blfm_radio_init();
 }
 
 void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
@@ -34,6 +30,4 @@ void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
   blfm_motor_apply(&cmd->motor);
   blfm_oled_apply(&cmd->oled);
   blfm_servomotor_apply(&cmd->servo);
-  blfm_alarm_apply(&cmd->alarm);
-  blfm_radio_apply(&cmd->radio);
 }
