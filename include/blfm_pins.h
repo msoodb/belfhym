@@ -44,6 +44,33 @@
 #define BLFM_ESP32_UART_RX_PORT GPIOA
 #define BLFM_ESP32_UART_RX_PIN 10
 
+// CAN bus pins
+#define BLFM_CAN_TX_PORT GPIOA
+#define BLFM_CAN_TX_PIN 12
+
+#define BLFM_CAN_RX_PORT GPIOA
+#define BLFM_CAN_RX_PIN 11
+
+// SPI1 pins (alternative mapping)
+#define BLFM_SPI1_SCK_PORT GPIOA
+#define BLFM_SPI1_SCK_PIN 5  // Shared with temp sensor - NOTE: conflicts possible
+
+#define BLFM_SPI1_MISO_PORT GPIOA
+#define BLFM_SPI1_MISO_PIN 6  // Shared with potentiometer - NOTE: conflicts possible
+
+#define BLFM_SPI1_MOSI_PORT GPIOA
+#define BLFM_SPI1_MOSI_PIN 7  // Shared with servo PWM - NOTE: conflicts possible
+
+// SPI2 pins 
+#define BLFM_SPI2_SCK_PORT GPIOB
+#define BLFM_SPI2_SCK_PIN 13  // Shared with LCD_E - NOTE: conflicts possible
+
+#define BLFM_SPI2_MISO_PORT GPIOB
+#define BLFM_SPI2_MISO_PIN 14  // Shared with LCD_D4 - NOTE: conflicts possible
+
+#define BLFM_SPI2_MOSI_PORT GPIOB
+#define BLFM_SPI2_MOSI_PIN 15  // Shared with LCD_D5 - NOTE: conflicts possible
+
 
 // =============================
 // === PORT B ==================
