@@ -179,7 +179,7 @@ void blfm_controller_init(void) {
 static void blfm_set_mode_auto(blfm_actuator_command_t *out) {
   blfm_system_state.current_mode = BLFM_MODE_AUTO;
   out->led.mode = BLFM_LED_MODE_BLINK;
-  out->led.blink_speed_ms = 500;
+  out->led.blink_speed_ms = 250;
 }
 
 static void blfm_set_mode_manual(blfm_actuator_command_t *out) {
@@ -334,12 +334,12 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   out->oled.icon3 = BLFM_OLED_ICON_SMILEY;
   out->oled.icon4 = BLFM_OLED_ICON_NONE;
 
-  safe_strncpy(out->oled.smalltext1, "OK", BLFM_OLED_MAX_SMALL_TEXT_LEN);
-  safe_strncpy(out->oled.bigtext, "BELFHYM", BLFM_OLED_MAX_BIG_TEXT_LEN);
+  safe_strncpy(out->oled.smalltext1, "Pass", BLFM_OLED_MAX_SMALL_TEXT_LEN);
+  safe_strncpy(out->oled.bigtext, "BELFHYM 2025", BLFM_OLED_MAX_BIG_TEXT_LEN);
   safe_strncpy(out->oled.smalltext2, "V1", BLFM_OLED_MAX_SMALL_TEXT_LEN);
 
   out->oled.invert = 0;
-  out->oled.progress_percent = 75;
+  out->oled.progress_percent = 100;
 #endif
 }
 
