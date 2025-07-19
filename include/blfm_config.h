@@ -24,7 +24,7 @@
 #define BLFM_ENABLED_ALARM 0
 #define BLFM_ENABLED_SERVO 1
 #define BLFM_ENABLED_RADIO 0
-#define BLFM_ENABLED_OLED 0
+#define BLFM_ENABLED_OLED 1
 
 /* === input/event features === */
 #define BLFM_ENABLED_BIGSOUND 0
