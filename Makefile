@@ -26,7 +26,7 @@ CFLAGS += -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
 LDFLAGS := -T$(LD_SCRIPT) -nostdlib -ffreestanding -mcpu=cortex-m3 -mthumb
 
 # Sources
-SRC_SUBDIRS := actuators app communication control core drivers interface logging logic monitoring power safety sensors
+SRC_SUBDIRS := actuators app communication control core drivers logic safety sensors utils
 SRC_DIRS := $(addprefix $(SRC_DIR)/,$(SRC_SUBDIRS))
 USER_SRCS := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
 
