@@ -90,8 +90,6 @@ static void uint_to_str(char *buf, uint16_t value) {
 #endif
 
 /* -------------------- Motion Helpers -------------------- */
-
-#if BLFM_ENABLED_MOTOR
 static int motion_state_to_angle(blfm_motion_state_t motion) {
   switch (motion) {
   case BLFM_MOTION_FORWARD:
@@ -107,7 +105,6 @@ static int motion_state_to_angle(blfm_motion_state_t motion) {
     return 0;
   }
 }
-#endif
 
 /**
  * Map angle (-180 to 180) and speed (0-255) to motor command.
