@@ -16,6 +16,8 @@ void blfm_oled_draw_text(uint8_t x, uint8_t page, const char *str);
 void blfm_oled_invert(void);
 void blfm_oled_draw_progress_bar(uint8_t percent);
 void blfm_oled_scroll_horizontal(const char *text, uint8_t speed);
+void blfm_oled_scroll_text(const char *text, uint8_t speed_ms);
+void blfm_oled_blink(uint8_t times, uint16_t delay_ms);
 void blfm_oled_apply(const blfm_oled_command_t *cmd);
 
 #endif
