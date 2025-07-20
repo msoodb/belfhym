@@ -1,4 +1,8 @@
 
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_OLED
+
 #ifndef BLFM_OLED_H
 #define BLFM_OLED_H
 
@@ -21,3 +25,5 @@ void blfm_oled_blink(uint8_t times, uint16_t delay_ms);
 void blfm_oled_apply(const blfm_oled_command_t *cmd);
 
 #endif
+
+#endif /* BLFM_ENABLED_OLED */

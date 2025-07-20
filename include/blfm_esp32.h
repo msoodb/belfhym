@@ -1,4 +1,8 @@
 
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_ESP32
+
 #ifndef BLFM_ESP32_H
 #define BLFM_ESP32_H
 
@@ -17,3 +21,5 @@ void blfm_esp32_receive_byte(uint8_t byte);
 bool blfm_esp32_get_event(blfm_esp32_event_t *out_event);
 
 #endif // BLFM_ESP32_H
+
+#endif /* BLFM_ENABLED_ESP32 */

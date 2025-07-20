@@ -8,6 +8,10 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_MODE_BUTTON
+
 #ifndef BLFM_MODE_BUTTON_H
 #define BLFM_MODE_BUTTON_H
 
@@ -21,3 +25,5 @@
 void blfm_mode_button_init(QueueHandle_t controller_queue);
 
 #endif // BLFM_MODE_BUTTON_H
+
+#endif /* BLFM_ENABLED_MODE_BUTTON */

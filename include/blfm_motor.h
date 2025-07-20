@@ -8,6 +8,10 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_MOTOR
+
 #ifndef BLFM_MOTOR_H
 #define BLFM_MOTOR_H
 
@@ -17,4 +21,6 @@ void blfm_motor_init(void);
 void blfm_motor_apply(const blfm_motor_command_t *cmd);
 
 #endif // BLFM_MOTOR_H
+
+#endif /* BLFM_ENABLED_MOTOR */
 

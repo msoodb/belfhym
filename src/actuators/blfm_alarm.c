@@ -8,20 +8,16 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_ALARM
+
 #include "blfm_alarm.h"
 
 void blfm_alarm_init(void) {
-#if BLFM_ALARM_DISABLED
-  return;
-#endif
   
 }
 
 void blfm_alarm_apply(const blfm_alarm_command_t *cmd) {
-#if BLFM_ALARM_DISABLED
-  return;
-#endif
-
   if (!cmd || !cmd->active) {
     // Turn alarm off
     // e.g., hardware_stop_alarm();
@@ -45,3 +41,5 @@ void blfm_alarm_apply(const blfm_alarm_command_t *cmd) {
       break;
   }
 }
+
+#endif /* BLFM_ENABLED_ALARM */

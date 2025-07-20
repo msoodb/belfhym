@@ -8,6 +8,10 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_SERVO
+
 #ifndef BLFM_SERVOMOTOR_H
 #define BLFM_SERVOMOTOR_H
 
@@ -18,3 +22,5 @@ void blfm_servomotor_init(void);
 void blfm_servomotor_apply(const blfm_servomotor_command_t *cmd);
 
 #endif // BLFM_SERVOMOTOR_H
+
+#endif /* BLFM_ENABLED_SERVO */

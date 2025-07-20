@@ -7,6 +7,10 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_DISPLAY
+
 #ifndef BLFM_DISPLAY_H
 #define BLFM_DISPLAY_H
 
@@ -20,3 +24,5 @@ void blfm_display_startup_sequence(void);
 void blfm_display_apply(const blfm_display_command_t *cmd);
 
 #endif // BLFM_DISPLAY_H
+
+#endif /* BLFM_ENABLED_DISPLAY */

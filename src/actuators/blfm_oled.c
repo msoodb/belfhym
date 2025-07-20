@@ -7,6 +7,9 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_OLED
+
 #include "blfm_oled.h"
 #include "blfm_delay.h"
 #include "blfm_font8x8.h"
@@ -505,3 +508,5 @@ void blfm_oled_blink(uint8_t times, uint16_t delay_ms) {
         }
     }
 }
+
+#endif /* BLFM_ENABLED_OLED */

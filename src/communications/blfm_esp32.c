@@ -1,4 +1,7 @@
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_ESP32
+
 #include "blfm_esp32.h"
 #include "libc_stubs.h"
 
@@ -47,3 +50,5 @@ bool blfm_esp32_get_event(blfm_esp32_event_t *out_event) {
   event_ready = false;
   return true;
 }
+
+#endif /* BLFM_ENABLED_ESP32 */
