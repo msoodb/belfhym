@@ -7,6 +7,10 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_IR_REMOTE
+
 #ifndef BLFM_IR_REMOTE_H
 #define BLFM_IR_REMOTE_H
 
@@ -19,3 +23,5 @@ void blfm_ir_remote_init(QueueHandle_t controller_queue);
 void ir_exti_handler(void);
 
 #endif // BLFM_IR_REMOTE_H
+
+#endif /* BLFM_ENABLED_IR_REMOTE */

@@ -40,7 +40,7 @@ void blfm_pwm_init(void) {
   RCC->APB1ENR |= PWM_RCC_APB1ENR_MASK;   // TIM3 clock
 
   // Configure PA7 as AF Push-Pull (TIM3_CH2)
-  blfm_gpio_config_alternate_pushpull((uint32_t)BLFM_SERVO_PWM_PORT, BLFM_SERVO_PWM_PIN);
+  blfm_gpio_config_alternate_pushpull((uint32_t)BLFM_PWM_PORT, BLFM_PWM_PIN);
 
   // Timer base setup
   PWM_TIMER->PSC = PWM_PRESCALER;         // 1 MHz tick
