@@ -106,11 +106,7 @@
 #define BLFM_PWM_PORT GPIOA
 #define BLFM_PWM_PIN 7  // TIM3_CH2
 
-// =============================
-// === COMMUNICATIONS ==========
-// =============================
-
-/* --- SPI1 MODULE (NRF24L01) --- */
+/* --- SPI1 PROTOCOL --- */
 //#define BLFM_SPI1_NSS_PORT  GPIOA
 //#define BLFM_SPI1_NSS_PIN   4
 
@@ -123,12 +119,16 @@
 //#define BLFM_SPI1_MOSI_PORT GPIOA
 //#define BLFM_SPI1_MOSI_PIN  7
 
-/* --- I2C1 MODULE (OLED) --- */
+/* --- I2C1 PROTOCOL --- */
 #define BLFM_I2C1_SCL_PORT GPIOB
 #define BLFM_I2C1_SCL_PIN 6
 
 #define BLFM_I2C1_SDA_PORT GPIOB
 #define BLFM_I2C1_SDA_PIN 7
+
+// =============================
+// === COMMUNICATIONS ==========
+// =============================
 
 /* --- ESP32 MODULE --- */
 //#define BLFM_ESP32_UART_TX_PORT GPIOA
