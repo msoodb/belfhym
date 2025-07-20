@@ -14,6 +14,21 @@
 #include "stm32f1xx.h"
 
 // =============================
+// === SPI1 PINS ===============
+// =============================
+#define BLFM_SPI1_NSS_PORT  GPIOA
+#define BLFM_SPI1_NSS_PIN   4
+
+#define BLFM_SPI1_SCK_PORT  GPIOA
+#define BLFM_SPI1_SCK_PIN   5
+
+#define BLFM_SPI1_MISO_PORT GPIOA
+#define BLFM_SPI1_MISO_PIN  6
+
+#define BLFM_SPI1_MOSI_PORT GPIOA
+#define BLFM_SPI1_MOSI_PIN  7
+
+// =============================
 // === PORT A ==================
 // =============================
 #define BLFM_MOTOR_LEFT_EN_PORT GPIOA
