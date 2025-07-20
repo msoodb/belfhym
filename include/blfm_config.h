@@ -12,23 +12,23 @@
 #define BLFM_CONFIG_H
 
 /* === Sensors presence flags === */
-#define BLFM_ENABLED_ULTRASONIC 1
+#define BLFM_ENABLED_ULTRASONIC 0
 #define BLFM_ENABLED_POTENTIOMETER 0
 #define BLFM_ENABLED_TEMPERATURE 0
 #define BLFM_ENABLED_JOYSTICK 0
 
 /* === Actuators presence flags === */
 #define BLFM_ENABLED_LED 1
-#define BLFM_ENABLED_MOTOR 1
+#define BLFM_ENABLED_MOTOR 0
 #define BLFM_ENABLED_DISPLAY 0
 #define BLFM_ENABLED_ALARM 0
-#define BLFM_ENABLED_SERVO 1
+#define BLFM_ENABLED_SERVO 0
 #define BLFM_ENABLED_RADIO 0
 #define BLFM_ENABLED_OLED 0
 
 /* === input/event features === */
 #define BLFM_ENABLED_BIGSOUND 0
-#define BLFM_ENABLED_IR_REMOTE 1
+#define BLFM_ENABLED_IR_REMOTE 0
 #define BLFM_ENABLED_MODE_BUTTON 1
 #define BLFM_ENABLED_ESP32 0
 
