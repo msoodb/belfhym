@@ -8,6 +8,9 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+#if BLFM_ENABLED_TEMPERATURE
+
 #include "blfm_temperature.h"
 #include "blfm_adc.h"
 #include "blfm_pins.h"
@@ -22,10 +25,6 @@ void blfm_temperature_init(void) {
 }
 
 bool blfm_temperature_read(blfm_temperature_data_t *temp) {
-#if BLFM_TEMPRATURE_DISABLED
-  return true;
-#endif
-
   if (!temp)
     return false;
 
@@ -46,3 +45,5 @@ bool blfm_temperature_read(blfm_temperature_data_t *temp) {
   temp->temperature_mc = temperature_mc;
   return true;
 }
+
+#endif /* BLFM_ENABLED_TEMPERATURE */

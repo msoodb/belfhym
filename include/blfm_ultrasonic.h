@@ -8,6 +8,10 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_ULTRASONIC
+
 #ifndef BLFM_ULTRASONIC_H
 #define BLFM_ULTRASONIC_H
 
@@ -18,4 +22,6 @@ void blfm_ultrasonic_init(void);
 bool blfm_ultrasonic_read(blfm_ultrasonic_data_t *data);
 
 #endif // BLFM_ULTRASONIC_H
+
+#endif /* BLFM_ENABLED_ULTRASONIC */
 

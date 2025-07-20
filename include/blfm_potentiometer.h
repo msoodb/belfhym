@@ -1,3 +1,7 @@
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_POTENTIOMETER
+
 #ifndef BLFM_POTENTIOMETER_H
 #define BLFM_POTENTIOMETER_H
 
@@ -16,3 +20,5 @@ void blfm_potentiometer_init(void);
 bool blfm_potentiometer_read(blfm_potentiometer_data_t *data);
 
 #endif /* BLFM_POTENTIOMETER_H */
+
+#endif /* BLFM_ENABLED_POTENTIOMETER */

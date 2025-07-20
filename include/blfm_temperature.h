@@ -8,6 +8,10 @@
  * See LICENSE file for details.
  */
 
+#include "blfm_config.h"
+
+#if BLFM_ENABLED_TEMPERATURE
+
 #ifndef BLFM_TEMPERATURE_H
 #define BLFM_TEMPERATURE_H
 
@@ -18,3 +22,5 @@ void blfm_temperature_init(void);
 bool blfm_temperature_read(blfm_temperature_data_t *temp);
 
 #endif // BLFM_TEMPERATURE_H
+
+#endif /* BLFM_ENABLED_TEMPERATURE */
