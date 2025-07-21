@@ -42,7 +42,7 @@ static int lcd_counter = 0;
 static bool servo_direction = true;
 #endif
 
-#if BLFM_ENABLED_MOTOR
+#if BLFM_ENABLED_MOTOR && BLFM_ENABLED_ULTRASONIC
 static int motor_backward_ticks = 0;
 static int motor_rotate_ticks = 0;
 static int motor_rotate_duration = 0;
