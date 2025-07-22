@@ -43,10 +43,6 @@
 #define BLFM_LED_DEBUG_PORT GPIOC
 #define BLFM_LED_DEBUG_PIN 15
 
-/* --- SERVO MODULE --- */
-// #define BLFM_SERVO_PWM_PORT GPIOA
-// #define BLFM_SERVO_PWM_PIN 7  // TIM3_CH2
-
 /* --- DISPLAY MODULE (LCD) --- */
 // #define BLFM_LCD_RS_PORT GPIOB
 // #define BLFM_LCD_RS_PIN 12
@@ -125,6 +121,12 @@
 
 #define BLFM_I2C1_SDA_PORT GPIOB
 #define BLFM_I2C1_SDA_PIN 7
+
+
+/* --- SERVO MODULE --- */
+#define BLFM_SERVO_PWM_PORT BLFM_PWM_PORT
+#define BLFM_SERVO_PWM_PIN BLFM_PWM_PIN
+
 
 // =============================
 // === COMMUNICATIONS ==========

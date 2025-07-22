@@ -10,12 +10,10 @@
 #include "blfm_controller.h"
 #include "FreeRTOS.h"
 #include "blfm_config.h"
-#include "blfm_font8x8.h"
 #include "blfm_gpio.h"
 #include "blfm_pins.h"
 #include "blfm_state.h"
 #include "blfm_types.h"
-#include "libc_stubs.h"
 #include "task.h"
 #include <stdbool.h>
 #include <stdint.h>
