@@ -155,10 +155,10 @@ typedef enum {
   BLFM_STEPMOTOR_COUNT
 } blfm_stepmotor_id_t;
 
+// Simple servo command (no ID needed - each servo has its own field)
 typedef struct {
-  uint8_t angle;           // Servo angle in degrees (0-180)
-  uint16_t pulse_width_us; // Optional: pulse width in microseconds (e.g.,
-                           // 1000-2000us)
+  uint8_t angle;                    // Target angle (0-180)
+  uint16_t pulse_width_us;          // Optional: direct pulse width
 } blfm_servomotor_command_t;
 
 typedef struct {
@@ -222,7 +222,11 @@ typedef struct {
   blfm_led_command_t led;
   blfm_alarm_command_t alarm;
   blfm_radio_command_t radio;
-  blfm_servomotor_command_t servo;
+  blfm_servomotor_command_t servo_neck;
+  blfm_servomotor_command_t servo_camera_pan;
+  blfm_servomotor_command_t servo_camera_tilt;
+  blfm_servomotor_command_t servo_sensor_pan;
+  blfm_servomotor_command_t servo_arm;
   blfm_stepmotor_command_t stepmotor;
 } blfm_actuator_command_t;
 

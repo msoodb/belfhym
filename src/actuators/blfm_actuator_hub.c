@@ -92,7 +92,7 @@ void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
 #endif
 
 #if BLFM_ENABLED_SERVO
-  blfm_servomotor_apply(&cmd->servo);
+  blfm_servomotor_apply(&cmd->servo_neck);
 #endif
 
 #if BLFM_ENABLED_ALARM

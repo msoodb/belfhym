@@ -123,9 +123,30 @@
 #define BLFM_I2C1_SDA_PIN 7
 
 
-/* --- SERVO MODULE --- */
-#define BLFM_SERVO_PWM_PORT BLFM_PWM_PORT
-#define BLFM_SERVO_PWM_PIN BLFM_PWM_PIN
+/* --- SERVO MODULE (Multiple Servos) --- */
+// Servo 0: Neck Scanner (PWM Channel 0)
+#define BLFM_SERVO_NECK_PORT         GPIOA
+#define BLFM_SERVO_NECK_PIN          7        // TIM3_CH2
+
+// Servo 1: Camera Pan (PWM Channel 1) 
+#define BLFM_SERVO_CAMERA_PAN_PORT   GPIOA
+#define BLFM_SERVO_CAMERA_PAN_PIN    6        // TIM3_CH1
+
+// Servo 2: Camera Tilt (PWM Channel 2)
+#define BLFM_SERVO_CAMERA_TILT_PORT  GPIOB
+#define BLFM_SERVO_CAMERA_TILT_PIN   0        // TIM3_CH3
+
+// Servo 3: Sensor Pan (PWM Channel 3)
+#define BLFM_SERVO_SENSOR_PAN_PORT   GPIOB
+#define BLFM_SERVO_SENSOR_PAN_PIN    1        // TIM3_CH4
+
+// Servo 4: Arm Servo (PWM Channel 4)
+#define BLFM_SERVO_ARM_PORT          GPIOA
+#define BLFM_SERVO_ARM_PIN           0        // TIM2_CH1
+
+// Legacy single servo support (maps to neck servo)
+#define BLFM_SERVO_PWM_PORT          BLFM_SERVO_NECK_PORT
+#define BLFM_SERVO_PWM_PIN           BLFM_SERVO_NECK_PIN
 
 
 // =============================
