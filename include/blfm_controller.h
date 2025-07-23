@@ -47,19 +47,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
                                        blfm_actuator_command_t *out);
 
-/**
- * Handle joystick direction events in MANUAL mode.
- * Sets motion state and actuator outputs.
- */
-void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
-                                      blfm_actuator_command_t *out);
-
-/**
- * Handle joystick button press events.
- * Typically used to cycle modes or trigger actions.
- */
-void blfm_controller_process_joystick_click(const blfm_joystick_event_t *event,
-                                            blfm_actuator_command_t *command);
 
 /**
  * Handle mode button events with debounce.

@@ -88,7 +88,7 @@ static void uint_to_str(char *buf, uint16_t value) {
 #endif
 
 /* -------------------- Motion Helpers -------------------- */
-#if BLFM_ENABLED_IR_REMOTE || BLFM_ENABLED_JOYSTICK
+#if BLFM_ENABLED_IR_REMOTE
 static int motion_state_to_angle(blfm_motion_state_t motion) {
   switch (motion) {
   case BLFM_MOTION_FORWARD:
@@ -104,7 +104,7 @@ static int motion_state_to_angle(blfm_motion_state_t motion) {
     return 0;
   }
 }
-#endif /* BLFM_ENABLED_IR_REMOTE || BLFM_ENABLED_JOYSTICK */
+#endif /* BLFM_ENABLED_IR_REMOTE */
 
 /**
  * Map angle (-180 to 180) and speed (0-255) to motor command.
@@ -400,36 +400,6 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
 }
 #endif /* BLFM_ENABLED_IR_REMOTE */
 
-#if BLFM_ENABLED_JOYSTICK
-void blfm_controller_process_joystick(const blfm_joystick_event_t *evt,
-                                      blfm_actuator_command_t *out) {
-  if (!evt || !out)
-    return;
-
-  if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
-    switch (evt->direction) {
-    case BLFM_JOYSTICK_DIR_UP:
-      blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
-      break;
-    case BLFM_JOYSTICK_DIR_DOWN:
-      blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
-      break;
-    case BLFM_JOYSTICK_DIR_LEFT:
-      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
-      break;
-    case BLFM_JOYSTICK_DIR_RIGHT:
-      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
-      break;
-    default:
-      blfm_system_state.motion_state = BLFM_MOTION_STOP;
-      break;
-    }
-  }
-
-  int angle = motion_state_to_angle(blfm_system_state.motion_state);
-  set_motor_motion_by_angle(angle, MOTOR_DEFAULT_SPEED, &out->motor);
-}
-#endif /* BLFM_ENABLED_JOYSTICK */
 
 #if BLFM_ENABLED_MODE_BUTTON
 void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,

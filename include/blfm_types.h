@@ -108,45 +108,13 @@ typedef struct {
   blfm_ir_command_t command; // Decoded command
 } blfm_ir_remote_event_t;
 
-typedef struct {
-  uint16_t x;  // ADC value from X-axis
-  uint16_t y;  // ADC value from Y-axis
-  bool pressed; // true if button is pressed
-} blfm_joystick_data_t;
-
-// Directional interpretation of the joystick position
-typedef enum {
-  BLFM_JOYSTICK_DIR_NONE = 0,
-  BLFM_JOYSTICK_DIR_UP,
-  BLFM_JOYSTICK_DIR_DOWN,
-  BLFM_JOYSTICK_DIR_LEFT,
-  BLFM_JOYSTICK_DIR_RIGHT
-} blfm_joystick_direction_t;
-
-// Type of joystick event (pressed/released)
-typedef enum {
-  BLFM_JOYSTICK_EVENT_NONE = 0,
-  BLFM_JOYSTICK_EVENT_PRESSED,
-  BLFM_JOYSTICK_EVENT_RELEASED
-} blfm_joystick_event_type_t;
-
-// Full interpreted joystick event
-typedef struct {
-  uint32_t timestamp;                        // Optional timestamp (e.g., from xTaskGetTickCount())
-  blfm_joystick_event_type_t event_type;     // Button event type
-  blfm_joystick_direction_t direction;       // Directional interpretation
-} blfm_joystick_event_t;
 
 typedef struct {
   blfm_ultrasonic_data_t ultrasonic;
   blfm_imu_data_t imu;
   blfm_temperature_data_t temperature;
-  blfm_joystick_data_t joystick;
-  blfm_joystick_event_t joystick_event;     // Interpreted direction + event
   blfm_potentiometer_data_t potentiometer;
 } blfm_sensor_data_t;
-
-// Raw ADC data from the joystick (X and Y axis)
 
 //==============================================================================
 // BIGSOUND
