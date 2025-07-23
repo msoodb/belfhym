@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2025 Masoud Bolhassani <masoud.bolhassani@gmail.com>
  *
@@ -14,6 +13,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+//==============================================================================
+// DISPLAY CONSTANTS
+//==============================================================================
+
 #define BLFM_DISPLAY_LINE_LENGTH 17 // 16 chars + '\0'
 
 #define BLFM_OLED_WIDTH 128
@@ -21,9 +24,11 @@
 #define BLFM_OLED_PAGES (BLFM_OLED_HEIGHT / 8)
 #define BLFM_OLED_MAX_SMALL_TEXT_LEN 12
 #define BLFM_OLED_MAX_BIG_TEXT_LEN 16
-//-----------------------
-//  communication - ESP32
-//-----------------------
+
+//==============================================================================
+// COMMUNICATION - ESP32
+//==============================================================================
+
 typedef enum {
   BLFM_ESP32_CMD_NONE = 0,
   BLFM_ESP32_CMD_UP,
@@ -39,9 +44,9 @@ typedef struct {
   uint32_t timestamp;    // Tick count when received
 } blfm_esp32_event_t;
 
-//-----------------------
-//  sensors
-//-----------------------
+//==============================================================================
+// SENSORS
+//==============================================================================
 
 // Event definitions
 typedef enum {
@@ -143,9 +148,10 @@ typedef struct {
 
 // Raw ADC data from the joystick (X and Y axis)
 
-//-----------------------
-//  bigsound
-//-----------------------
+//==============================================================================
+// BIGSOUND
+//==============================================================================
+
 typedef enum { BIGSOUND_EVENT_DETECTED = 1 } blfm_bigsound_event_type_t;
 
 typedef struct {
@@ -153,10 +159,10 @@ typedef struct {
   blfm_bigsound_event_type_t event_type; // Type of bigsound event
 } blfm_bigsound_event_t;
 
+//==============================================================================
+// ACTUATORS
+//==============================================================================
 
-//-----------------------
-//  actuators
-//-----------------------
 typedef struct {
   uint16_t speed;     // 0–255
   uint8_t direction; // 0 = forward, 1 = backward
@@ -187,16 +193,10 @@ typedef struct {
                            // 1000-2000us)
 } blfm_servomotor_command_t;
 
-typedef enum {
-  BLFM_SERVOMOTOR_NECK = 0,
-  BLFM_SERVOMOTOR_COUNT
-} blfm_servomotor_id_t;
-
 typedef struct {
   char line1[BLFM_DISPLAY_LINE_LENGTH];
   char line2[BLFM_DISPLAY_LINE_LENGTH];
 } blfm_display_command_t;
-
 
 typedef enum {
   BLFM_OLED_ICON_NONE = 0,
