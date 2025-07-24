@@ -297,26 +297,8 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     else if (servo_angle <= SWEEP_MIN_ANGLE)
       servo_direction = true;
 
-    // Apply angle to enabled servos
-    #if BLFM_SERVO_NECK_ENABLED
-    out->servo_neck.angle = servo_angle;
-    #endif
-    
-    #if BLFM_SERVO_CAMERA_PAN_ENABLED
-    out->servo_camera_pan.angle = servo_angle;
-    #endif
-    
-    #if BLFM_SERVO_CAMERA_TILT_ENABLED
-    out->servo_camera_tilt.angle = servo_angle;
-    #endif
-    
-    #if BLFM_SERVO_SENSOR_PAN_ENABLED
-    out->servo_sensor_pan.angle = servo_angle;
-    #endif
-    
-    #if BLFM_SERVO_ARM_ENABLED
-    out->servo_arm.angle = servo_angle;
-    #endif
+    out->servo.angle = servo_angle;
+    out->servo.pulse_width_us = 0; // Use angle instead
   }
 #endif
 

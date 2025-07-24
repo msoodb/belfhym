@@ -222,11 +222,7 @@ typedef struct {
   blfm_led_command_t led;
   blfm_alarm_command_t alarm;
   blfm_radio_command_t radio;
-  blfm_servomotor_command_t servo_neck;
-  blfm_servomotor_command_t servo_camera_pan;
-  blfm_servomotor_command_t servo_camera_tilt;
-  blfm_servomotor_command_t servo_sensor_pan;
-  blfm_servomotor_command_t servo_arm;
+  blfm_servomotor_command_t servo;
   blfm_stepmotor_command_t stepmotor;
 } blfm_actuator_command_t;
 
