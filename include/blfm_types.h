@@ -155,10 +155,39 @@ typedef enum {
   BLFM_STEPMOTOR_COUNT
 } blfm_stepmotor_id_t;
 
-// Simple servo command (no ID needed - each servo has its own field)
+typedef enum {
+  BLFM_SERVO_TYPE_SCANNER = 0,     // Continuous scanning motion
+  BLFM_SERVO_TYPE_TRACKER,         // Position tracking based on sensors
+  BLFM_SERVO_TYPE_MANUAL,          // Manual control only
+  BLFM_SERVO_TYPE_STATIC,          // Fixed position
+  BLFM_SERVO_TYPE_PROPORTIONAL,    // Precise proportional positioning
+  BLFM_SERVO_TYPE_RADAR            // Radar sweep from extreme left to right
+} blfm_servo_type_t;
+
 typedef struct {
   uint8_t angle;                    // Target angle (0-180)
-  uint16_t pulse_width_us;          // Optional: direct pulse width
+  uint16_t pulse_width_us;          // Optional: direct pulse width (1000-2000us)
+  
+  // Scanner-specific parameters
+  uint8_t scan_min_angle;           // Scanner minimum angle (default: 0)
+  uint8_t scan_max_angle;           // Scanner maximum angle (default: 180)
+  uint8_t scan_step;                // Scanner step size (default: 5)
+  uint16_t scan_delay_ms;           // Scanner delay between steps (default: 100)
+  
+  // Tracker-specific parameters
+  int16_t target_x;                 // Target X coordinate for tracking
+  int16_t target_y;                 // Target Y coordinate for tracking
+  uint8_t tracking_speed;           // Tracking movement speed (1-10)
+  
+  // Proportional-specific parameters
+  int16_t proportional_input;       // Input value (-1000 to +1000)
+  uint8_t deadband;                 // Deadband around center (0-50)
+  uint8_t travel_limit;             // Travel limit percentage (50-100)
+  
+  // General parameters
+  uint8_t speed;                    // Movement speed (1-10, 10=fastest)
+  bool enable_smooth;               // Enable smooth movement
+  bool reverse_direction;           // Reverse servo direction
 } blfm_servomotor_command_t;
 
 typedef struct {
