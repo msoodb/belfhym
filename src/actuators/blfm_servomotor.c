@@ -97,6 +97,7 @@ void blfm_servomotor_init(void) {
     BaseType_t res = xTaskCreate(vServoTask, "ServoTask", SERVO_TASK_STACK_SIZE,
                                  NULL, SERVO_TASK_PRIORITY, &servo_task_handle);
     configASSERT(res == pdPASS);
+    (void)res; // Suppress unused warning in release builds
   }
 }
 
@@ -111,10 +112,10 @@ void blfm_servomotor_apply(const blfm_servomotor_command_t *cmd) {
 
   switch (servo_state.type) {
     case BLFM_SERVO_TYPE_SCANNER:
-      if (cmd->scan_min_angle >= SERVO_MIN_ANGLE && cmd->scan_min_angle <= SERVO_MAX_ANGLE) {
+      if (cmd->scan_min_angle <= SERVO_MAX_ANGLE) {
         servo_state.scan_min_angle = (int8_t)cmd->scan_min_angle;
       }
-      if (cmd->scan_max_angle >= SERVO_MIN_ANGLE && cmd->scan_max_angle <= SERVO_MAX_ANGLE) {
+      if (cmd->scan_max_angle <= SERVO_MAX_ANGLE) {
         servo_state.scan_max_angle = (int8_t)cmd->scan_max_angle;
       }
       break;

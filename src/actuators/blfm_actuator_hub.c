@@ -60,7 +60,7 @@ void blfm_actuator_hub_init(void) {
 
 #if BLFM_ENABLED_SERVO
   blfm_servomotor_init();
-  blfm_servomotor_set_type(BLFM_SERVO_TYPE_RADAR);
+  blfm_servomotor_set_type(BLFM_SERVO_TYPE_PROPORTIONAL);
 #endif
 
 #if BLFM_ENABLED_ALARM

@@ -357,18 +357,21 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     blfm_controller_change_mode(BLFM_MODE_EMERGENCY, out);
     break;
 
-  // Temp servo testing - Scanner ranges for SG90
+  // Temp servo testing - Proportional RC plane control
   case BLFM_IR_CMD_4:
-    out->servo.scan_min_angle = -45;   // Full range
-    out->servo.scan_max_angle = 45;
+    out->servo.proportional_input = -800;  // Full deflection left/down
+    out->servo.deadband = 50;              // Small deadband for RC
+    out->servo.travel_limit = 80;          // 80% travel limit for safety
     break;
   case BLFM_IR_CMD_5:
-    out->servo.scan_min_angle = -30;   // Narrow range
-    out->servo.scan_max_angle = 30;
+    out->servo.proportional_input = 0;     // Center/neutral position
+    out->servo.deadband = 50;
+    out->servo.travel_limit = 80;
     break;
   case BLFM_IR_CMD_6:
-    out->servo.scan_min_angle = -15;   // Very narrow
-    out->servo.scan_max_angle = 15;
+    out->servo.proportional_input = 800;   // Full deflection right/up
+    out->servo.deadband = 50;
+    out->servo.travel_limit = 80;
     break;
 
   default:
