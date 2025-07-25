@@ -18,7 +18,7 @@
 
 /* === Actuators presence flags === */
 #define BLFM_ENABLED_LED 1
-#define BLFM_ENABLED_MOTOR 1
+#define BLFM_ENABLED_MOTOR 0
 #define BLFM_ENABLED_DISPLAY 0
 #define BLFM_ENABLED_ALARM 0
 #define BLFM_ENABLED_SERVO 1
