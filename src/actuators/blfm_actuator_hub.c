@@ -60,7 +60,19 @@ void blfm_actuator_hub_init(void) {
 
 #if BLFM_ENABLED_SERVO
   blfm_servomotor_init();
-  blfm_servomotor_set_type(BLFM_SERVO_TYPE_PROPORTIONAL);
+  // Set servo types for enabled servos only
+#if BLFM_ENABLED_SERVO1
+  blfm_servomotor_set_type(0, BLFM_SERVO_TYPE_PROPORTIONAL);  // Servo1 - PA0
+#endif
+#if BLFM_ENABLED_SERVO2
+  blfm_servomotor_set_type(1, BLFM_SERVO_TYPE_PROPORTIONAL);  // Servo2 - PA1
+#endif
+#if BLFM_ENABLED_SERVO3
+  blfm_servomotor_set_type(2, BLFM_SERVO_TYPE_PROPORTIONAL);  // Servo3 - PA2
+#endif
+#if BLFM_ENABLED_SERVO4
+  blfm_servomotor_set_type(3, BLFM_SERVO_TYPE_PROPORTIONAL);  // Servo4 - PA3
+#endif
 #endif
 
 #if BLFM_ENABLED_ALARM
@@ -93,7 +105,19 @@ void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
 #endif
 
 #if BLFM_ENABLED_SERVO
-  blfm_servomotor_apply(&cmd->servo);
+  // Apply commands to enabled servos only
+#if BLFM_ENABLED_SERVO1
+  blfm_servomotor_apply(0, &cmd->servo1);
+#endif
+#if BLFM_ENABLED_SERVO2
+  blfm_servomotor_apply(1, &cmd->servo2);
+#endif
+#if BLFM_ENABLED_SERVO3
+  blfm_servomotor_apply(2, &cmd->servo3);
+#endif
+#if BLFM_ENABLED_SERVO4
+  blfm_servomotor_apply(3, &cmd->servo4);
+#endif
 #endif
 
 #if BLFM_ENABLED_ALARM

@@ -23,6 +23,12 @@
 #define BLFM_ENABLED_ALARM 0
 #define BLFM_ENABLED_SERVO 1
 
+// Individual servo channel control - all servos enabled
+#define BLFM_ENABLED_SERVO1 1  // PA0 
+#define BLFM_ENABLED_SERVO2 1  // PA1
+#define BLFM_ENABLED_SERVO3 1  // PA2
+#define BLFM_ENABLED_SERVO4 1  // PA3
+
 #define BLFM_ENABLED_RADIO 0
 #define BLFM_ENABLED_OLED 0
 

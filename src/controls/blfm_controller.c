@@ -280,15 +280,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
   //out->led.blink_speed_ms = led_blink_speed;
 #endif
 
-#if BLFM_ENABLED_SERVO
-  // Only set default scanner parameters if not set by IR commands
-  if (blfm_system_state.current_mode != BLFM_MODE_EMERGENCY && 
-      out->servo.scan_min_angle == 0 && out->servo.scan_max_angle == 0) {
-    out->servo.scan_min_angle = SWEEP_MIN_ANGLE;  // 0 degrees
-    out->servo.scan_max_angle = SWEEP_MAX_ANGLE;  // 180 degrees
-    out->servo.speed = 1;
-  }
-#endif
+// Multiple servos - no default behavior needed, will be controlled by IR commands
 
 #if BLFM_ENABLED_DISPLAY
   char buf1[17];
@@ -357,21 +349,39 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     blfm_controller_change_mode(BLFM_MODE_EMERGENCY, out);
     break;
 
-  // Temp servo testing - Proportional RC plane control
+  // Test ONLY Servo1 (PA0) with different positions
   case BLFM_IR_CMD_4:
-    out->servo.proportional_input = -800;  // Full deflection left/down
-    out->servo.deadband = 50;              // Small deadband for RC
-    out->servo.travel_limit = 80;          // 80% travel limit for safety
+    // Servo1 to minimum (-45°)
+    out->servo1.proportional_input = -1000;
     break;
   case BLFM_IR_CMD_5:
-    out->servo.proportional_input = 0;     // Center/neutral position
-    out->servo.deadband = 50;
-    out->servo.travel_limit = 80;
+    // Servo1 to center (0°)
+    out->servo1.proportional_input = 0;
     break;
   case BLFM_IR_CMD_6:
-    out->servo.proportional_input = 800;   // Full deflection right/up
-    out->servo.deadband = 50;
-    out->servo.travel_limit = 80;
+    // Servo1 to maximum (+45°)
+    out->servo1.proportional_input = 1000;
+    break;
+  case BLFM_IR_CMD_8:
+    // All servos to center (0°)
+    out->servo1.proportional_input = 0;
+    out->servo2.proportional_input = 0;
+    out->servo3.proportional_input = 0;
+    out->servo4.proportional_input = 0;
+    break;
+  case BLFM_IR_CMD_9:
+    // All servos to minimum (-45°)
+    out->servo1.proportional_input = -1000;
+    out->servo2.proportional_input = -1000;
+    out->servo3.proportional_input = -1000;
+    out->servo4.proportional_input = -1000;
+    break;
+  case BLFM_IR_CMD_0:
+    // All servos to maximum (+45°)
+    out->servo1.proportional_input = 1000;
+    out->servo2.proportional_input = 1000;
+    out->servo3.proportional_input = 1000;
+    out->servo4.proportional_input = 1000;
     break;
 
   default:

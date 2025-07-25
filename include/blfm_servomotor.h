@@ -19,8 +19,8 @@
 #include "blfm_types.h"
 
 void blfm_servomotor_init(void);
-void blfm_servomotor_set_type(blfm_servo_type_t type);
-void blfm_servomotor_apply(const blfm_servomotor_command_t *cmd);
+void blfm_servomotor_set_type(uint8_t servo_id, blfm_servo_type_t type);
+void blfm_servomotor_apply(uint8_t servo_id, const blfm_servomotor_command_t *cmd);
 
 #endif /* BLFM_ENABLED_SERVO */
 

@@ -99,8 +99,7 @@
 // =============================
 
 /* --- PWM PROTOCOL --- */
-#define BLFM_PWM_PORT GPIOA
-#define BLFM_PWM_PIN 7  // TIM3_CH2
+// PWM pins are now defined in SERVO MODULES section below
 
 /* --- SPI1 PROTOCOL --- */
 //#define BLFM_SPI1_NSS_PORT  GPIOA
@@ -123,9 +122,19 @@
 #define BLFM_I2C1_SDA_PIN 7
 
 
-/* --- SERVO MODULE --- */
-#define BLFM_SERVO_PWM_PORT          GPIOA
-#define BLFM_SERVO_PWM_PIN           7        // TIM3_CH2
+/* --- SERVO MODULES --- */
+// 4 independent servos - conflict-free pins
+#define BLFM_SERVO1_PWM_PORT GPIOA
+#define BLFM_SERVO1_PWM_PIN  0
+
+#define BLFM_SERVO2_PWM_PORT GPIOA
+#define BLFM_SERVO2_PWM_PIN  1
+
+#define BLFM_SERVO3_PWM_PORT GPIOA
+#define BLFM_SERVO3_PWM_PIN  2
+
+#define BLFM_SERVO4_PWM_PORT GPIOA
+#define BLFM_SERVO4_PWM_PIN  3
 
 
 // =============================

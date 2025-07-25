@@ -13,8 +13,10 @@
 
 #include <stdint.h>
 
-void blfm_pwm_init();
-void blfm_pwm_set_pulse_us(uint16_t us);
+#define BLFM_PWM_MAX_CHANNELS 4
+
+void blfm_pwm_init(void);
+void blfm_pwm_set_pulse_us(uint8_t channel, uint16_t us);
 
 #endif // BLFM_PWM_H
 
