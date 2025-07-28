@@ -17,6 +17,7 @@
 
 void blfm_pwm_init(void);
 void blfm_pwm_set_pulse_us(uint8_t channel, uint16_t us);
+void blfm_pwm_generate_cycle(void);
 
 #endif // BLFM_PWM_H
 

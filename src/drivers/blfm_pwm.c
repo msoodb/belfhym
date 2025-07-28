@@ -13,16 +13,13 @@
 #include "blfm_pins.h"
 #include "blfm_gpio.h"
 
-// Software PWM using TIM4 as timebase
+// Simple PWM using TIM4 - based on working test
 #define PWM_TIMER TIM4
 #define PWM_RCC_APB1ENR_MASK RCC_APB1ENR_TIM4EN
-#define PWM_TIMER_CLOCK_HZ 72000000
-#define PWM_PERIOD_US 20000  // 20ms period for 50Hz
-#define PWM_PRESCALER (PWM_TIMER_CLOCK_HZ / 1000000 - 1)  // 1us tick
 
-// Software PWM state
-static volatile uint32_t pwm_counter = 0;
+// PWM state - simple and direct like the working test
 static volatile uint16_t pulse_widths[BLFM_PWM_MAX_CHANNELS] = {1500, 1500, 1500, 1500};
+static volatile uint32_t pwm_cycle_counter = 0;
 
 // Channel enabled flags based on individual servo config
 static const bool channel_enabled[BLFM_PWM_MAX_CHANNELS] = {
@@ -61,68 +58,7 @@ static const gpio_pin_config_t channel_pins[BLFM_PWM_MAX_CHANNELS] = {
   {BLFM_SERVO4_PWM_PORT, BLFM_SERVO4_PWM_PIN}   // PA3
 };
 
-// Timer interrupt handler for software PWM - optimized for servo control
-void TIM4_IRQHandler(void) {
-  if (PWM_TIMER->SR & TIM_SR_UIF) {
-    PWM_TIMER->SR &= ~TIM_SR_UIF;  // Clear interrupt flag
-    
-    static uint8_t pwm_state = 0;  // 0=start period, 1-4=channel end times
-    static uint16_t sorted_times[BLFM_PWM_MAX_CHANNELS];
-    static uint8_t sorted_channels[BLFM_PWM_MAX_CHANNELS];
-    static uint8_t next_event = 0;
-    
-    if (pwm_state == 0) {
-      // Start of new PWM period - set enabled pins HIGH and sort end times
-      for (int i = 0; i < BLFM_PWM_MAX_CHANNELS; i++) {
-        if (channel_enabled[i]) {
-          blfm_gpio_set_pin((uint32_t)channel_pins[i].port, channel_pins[i].pin);
-        }
-        sorted_times[i] = pulse_widths[i];
-        sorted_channels[i] = i;
-      }
-      
-      // Simple bubble sort for 4 elements
-      for (int i = 0; i < BLFM_PWM_MAX_CHANNELS - 1; i++) {
-        for (int j = 0; j < BLFM_PWM_MAX_CHANNELS - 1 - i; j++) {
-          if (sorted_times[j] > sorted_times[j + 1]) {
-            uint16_t temp_time = sorted_times[j];
-            uint8_t temp_ch = sorted_channels[j];
-            sorted_times[j] = sorted_times[j + 1];
-            sorted_channels[j] = sorted_channels[j + 1];
-            sorted_times[j + 1] = temp_time;
-            sorted_channels[j + 1] = temp_ch;
-          }
-        }
-      }
-      
-      next_event = 0;
-      pwm_state = 1;
-      
-      // Set timer for first channel end time
-      if (next_event < BLFM_PWM_MAX_CHANNELS) {
-        PWM_TIMER->ARR = sorted_times[next_event] - 1;
-      }
-    } else {
-      // Turn off the enabled channel(s) that should end now
-      while (next_event < BLFM_PWM_MAX_CHANNELS && sorted_times[next_event] <= (PWM_TIMER->ARR + 1)) {
-        uint8_t ch = sorted_channels[next_event];
-        if (channel_enabled[ch]) {
-          blfm_gpio_clear_pin((uint32_t)channel_pins[ch].port, channel_pins[ch].pin);
-        }
-        next_event++;
-      }
-      
-      if (next_event < BLFM_PWM_MAX_CHANNELS) {
-        // Set timer for next channel end time
-        PWM_TIMER->ARR = sorted_times[next_event] - 1;
-      } else {
-        // All channels done, wait for next period
-        PWM_TIMER->ARR = PWM_PERIOD_US - 1;
-        pwm_state = 0;
-      }
-    }
-  }
-}
+// No interrupt handler needed - we'll use direct PWM generation like the working test
 
 void blfm_pwm_init(void) {
   // Enable clocks
@@ -137,27 +73,41 @@ void blfm_pwm_init(void) {
     }
   }
 
-  // Configure TIM4 for optimized software PWM
+  // Configure TIM4 for 1us resolution - same as working test
   PWM_TIMER->CR1 = 0;  // Stop timer
-  PWM_TIMER->PSC = PWM_PRESCALER;  // 1us tick
-  PWM_TIMER->ARR = PWM_PERIOD_US - 1;  // Start with full period
+  PWM_TIMER->PSC = 71;  // 72MHz / 72 = 1MHz = 1us tick
+  PWM_TIMER->ARR = 0xFFFF;  // Max count for free running
   PWM_TIMER->CNT = 0;
-  PWM_TIMER->DIER |= TIM_DIER_UIE;  // Enable update interrupt
-
-  // Enable TIM4 interrupt in NVIC
-  NVIC_EnableIRQ(TIM4_IRQn);
-  NVIC_SetPriority(TIM4_IRQn, 6);  // Lower priority to not block other interrupts
-
-  // Start timer
-  PWM_TIMER->CR1 |= TIM_CR1_CEN;
+  PWM_TIMER->CR1 |= TIM_CR1_CEN;  // Start timer
 }
 
 void blfm_pwm_set_pulse_us(uint8_t channel, uint16_t us) {
   if (channel >= BLFM_PWM_MAX_CHANNELS || !channel_enabled[channel]) return;
   
-  // Allow wider range for SG90 servo testing
+  // Clamp to safe servo range
   if (us < 500) us = 500;
   else if (us > 2500) us = 2500;
 
   pulse_widths[channel] = us;
+}
+
+// Generate one PWM cycle for all enabled channels - based on working test
+void blfm_pwm_generate_cycle(void) {
+  // Set all enabled channels HIGH
+  for (uint8_t i = 0; i < BLFM_PWM_MAX_CHANNELS; i++) {
+    if (channel_enabled[i]) {
+      blfm_gpio_set_pin((uint32_t)channel_pins[i].port, channel_pins[i].pin);
+    }
+  }
+  
+  // Wait for each channel's pulse width and turn it LOW
+  for (uint8_t i = 0; i < BLFM_PWM_MAX_CHANNELS; i++) {
+    if (channel_enabled[i]) {
+      // Wait for this channel's pulse width using timer
+      uint16_t start = PWM_TIMER->CNT;
+      while ((uint16_t)(PWM_TIMER->CNT - start) < pulse_widths[i]);
+      
+      blfm_gpio_clear_pin((uint32_t)channel_pins[i].port, channel_pins[i].pin);
+    }
+  }
 }
