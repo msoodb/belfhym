@@ -25,9 +25,9 @@
 
 // Individual servo channel control - only servo1 for testing
 #define BLFM_ENABLED_SERVO1 1  // PA0 
-#define BLFM_ENABLED_SERVO2 0  // PA1
-#define BLFM_ENABLED_SERVO3 0  // PA2
-#define BLFM_ENABLED_SERVO4 0  // PA3
+#define BLFM_ENABLED_SERVO2 1  // PA1
+#define BLFM_ENABLED_SERVO3 1  // PA2
+#define BLFM_ENABLED_SERVO4 1  // PA3
 
 #define BLFM_ENABLED_RADIO 0
 #define BLFM_ENABLED_OLED 0

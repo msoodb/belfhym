@@ -91,23 +91,40 @@ void blfm_pwm_set_pulse_us(uint8_t channel, uint16_t us) {
   pulse_widths[channel] = us;
 }
 
-// Generate one PWM cycle for all enabled channels - based on working test
+// Generate one PWM cycle for all enabled channels - FIXED for multiple servos
 void blfm_pwm_generate_cycle(void) {
-  // Set all enabled channels HIGH
+  // Set all enabled channels HIGH simultaneously
   for (uint8_t i = 0; i < BLFM_PWM_MAX_CHANNELS; i++) {
     if (channel_enabled[i]) {
       blfm_gpio_set_pin((uint32_t)channel_pins[i].port, channel_pins[i].pin);
     }
   }
   
-  // Wait for each channel's pulse width and turn it LOW
+  // Record start time for all channels
+  uint16_t cycle_start = PWM_TIMER->CNT;
+  uint16_t current_time;
+  
+  // Keep checking and turn off channels at their specific times
+  bool channels_active[BLFM_PWM_MAX_CHANNELS];
   for (uint8_t i = 0; i < BLFM_PWM_MAX_CHANNELS; i++) {
-    if (channel_enabled[i]) {
-      // Wait for this channel's pulse width using timer
-      uint16_t start = PWM_TIMER->CNT;
-      while ((uint16_t)(PWM_TIMER->CNT - start) < pulse_widths[i]);
-      
-      blfm_gpio_clear_pin((uint32_t)channel_pins[i].port, channel_pins[i].pin);
+    channels_active[i] = channel_enabled[i];
+  }
+  
+  // Monitor all channels until all are turned off
+  while (1) {
+    current_time = (uint16_t)(PWM_TIMER->CNT - cycle_start);
+    bool any_active = false;
+    
+    // Check each channel if it's time to turn LOW
+    for (uint8_t i = 0; i < BLFM_PWM_MAX_CHANNELS; i++) {
+      if (channels_active[i] && current_time >= pulse_widths[i]) {
+        blfm_gpio_clear_pin((uint32_t)channel_pins[i].port, channel_pins[i].pin);
+        channels_active[i] = false;
+      }
+      if (channels_active[i]) any_active = true;
     }
+    
+    // Exit when all channels are turned off or max pulse time reached
+    if (!any_active || current_time >= 2500) break;
   }
 }

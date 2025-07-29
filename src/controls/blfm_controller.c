@@ -352,15 +352,15 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
   // Test ONLY Servo1 (PA0) with different positions
   case BLFM_IR_CMD_4:
     // Servo1 to minimum (-45°)
-    out->servo1.proportional_input = -1000;
+    out->servo3.proportional_input = -1000;
     break;
   case BLFM_IR_CMD_5:
     // Servo1 to center (0°)
-    out->servo1.proportional_input = 0;
+    out->servo3.proportional_input = 0;
     break;
   case BLFM_IR_CMD_6:
     // Servo1 to maximum (+45°)
-    out->servo1.proportional_input = 1000;
+    out->servo3.proportional_input = 1000;
     break;
   case BLFM_IR_CMD_8:
     // All servos to center (0°)
