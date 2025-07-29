@@ -349,35 +349,51 @@ void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
     blfm_controller_change_mode(BLFM_MODE_EMERGENCY, out);
     break;
 
-  // Test ONLY Servo1 (PA0) with different positions
+  // Servo1 control (PA0) - Keys 4, 5, 6
   case BLFM_IR_CMD_4:
-    // Servo1 to minimum (-45°)
-    out->servo3.proportional_input = -1000;
+    // Servo1 to minimum (-90°)
+    out->servo1.proportional_input = -1000;
     break;
   case BLFM_IR_CMD_5:
     // Servo1 to center (0°)
-    out->servo3.proportional_input = 0;
+    out->servo1.proportional_input = 0;
     break;
   case BLFM_IR_CMD_6:
-    // Servo1 to maximum (+45°)
-    out->servo3.proportional_input = 1000;
+    // Servo1 to maximum (+90°)
+    out->servo1.proportional_input = 1000;
+    break;
+    
+  // Servo2 control (PA1) - Keys 7, 8, 9
+  case BLFM_IR_CMD_7:
+    // Servo2 to minimum (-90°)
+    out->servo2.proportional_input = -1000;
     break;
   case BLFM_IR_CMD_8:
-    // All servos to center (0°)
-    out->servo1.proportional_input = 0;
+    // Servo2 to center (0°)
     out->servo2.proportional_input = 0;
-    out->servo3.proportional_input = 0;
-    out->servo4.proportional_input = 0;
     break;
   case BLFM_IR_CMD_9:
-    // All servos to minimum (-45°)
+    // Servo2 to maximum (+90°)
+    out->servo2.proportional_input = 1000;
+    break;
+    
+  // All servos control - Keys *, 0, #
+  case BLFM_IR_CMD_STAR:
+    // All servos to minimum (-90°)
     out->servo1.proportional_input = -1000;
     out->servo2.proportional_input = -1000;
     out->servo3.proportional_input = -1000;
     out->servo4.proportional_input = -1000;
     break;
   case BLFM_IR_CMD_0:
-    // All servos to maximum (+45°)
+    // All servos to center (0°)
+    out->servo1.proportional_input = 0;
+    out->servo2.proportional_input = 0;
+    out->servo3.proportional_input = 0;
+    out->servo4.proportional_input = 0;
+    break;
+  case BLFM_IR_CMD_HASH:
+    // All servos to maximum (+90°)
     out->servo1.proportional_input = 1000;
     out->servo2.proportional_input = 1000;
     out->servo3.proportional_input = 1000;
