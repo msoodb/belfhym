@@ -38,9 +38,6 @@
 #include "blfm_esp32.h"
 #endif
 
-#if BLFM_ENABLED_BIGSOUND
-#include "blfm_bigsound.h"
-#endif
 
 // --- Task declarations ---
 static void vSensorHubTask(void *pvParameters);
@@ -50,9 +47,6 @@ static void vActuatorHubTask(void *pvParameters);
 // --- Event Handlers ---
 static void handle_sensor_data(void);
 
-#if BLFM_ENABLED_BIGSOUND
-static void handle_bigsound_event(void);
-#endif
 
 #if BLFM_ENABLED_IR_REMOTE
 static void handle_ir_remote_event(void);
@@ -79,9 +73,6 @@ static void handle_esp32_event(void);
 static QueueHandle_t xSensorDataQueue = NULL;
 static QueueHandle_t xActuatorCmdQueue = NULL;
 
-#if BLFM_ENABLED_BIGSOUND
-static QueueHandle_t xBigSoundQueue = NULL;
-#endif
 
 #if BLFM_ENABLED_IR_REMOTE
 static QueueHandle_t xIRRemoteQueue = NULL;
@@ -106,10 +97,6 @@ void blfm_taskmanager_setup(void) {
   configASSERT(xActuatorCmdQueue != NULL);
 
   // Optional queues
-#if BLFM_ENABLED_BIGSOUND
-  xBigSoundQueue = xQueueCreate(5, sizeof(blfm_bigsound_event_t));
-  configASSERT(xBigSoundQueue != NULL);
-#endif
 
 #if BLFM_ENABLED_IR_REMOTE
   xIRRemoteQueue = xQueueCreate(5, sizeof(blfm_ir_remote_event_t));
@@ -132,9 +119,6 @@ void blfm_taskmanager_setup(void) {
 
   xQueueAddToSet(xSensorDataQueue, xControllerQueueSet);
 
-#if BLFM_ENABLED_BIGSOUND
-  xQueueAddToSet(xBigSoundQueue, xControllerQueueSet);
-#endif
 #if BLFM_ENABLED_IR_REMOTE
   xQueueAddToSet(xIRRemoteQueue, xControllerQueueSet);
 #endif
@@ -154,9 +138,6 @@ void blfm_taskmanager_setup(void) {
   blfm_mode_button_init(xModeButtonQueue);
 #endif
 
-#if BLFM_ENABLED_BIGSOUND
-  blfm_bigsound_init(xBigSoundQueue);
-#endif
 
 #if BLFM_ENABLED_IR_REMOTE
   blfm_ir_remote_init(xIRRemoteQueue);
@@ -224,11 +205,6 @@ static void vControllerTask(void *pvParameters) {
     if (activated == xSensorDataQueue) {
       handle_sensor_data();
     }
-#if BLFM_ENABLED_BIGSOUND
-    else if (activated == xBigSoundQueue) {
-      handle_bigsound_event();
-    }
-#endif
 #if BLFM_ENABLED_IR_REMOTE
     else if (activated == xIRRemoteQueue) {
       handle_ir_remote_event();
@@ -272,17 +248,6 @@ static void handle_sensor_data(void) {
   }
 }
 
-#if BLFM_ENABLED_BIGSOUND
-static void handle_bigsound_event(void) {
-  blfm_bigsound_event_t event;
-  blfm_actuator_command_t command;
-
-  if (xQueueReceive(xBigSoundQueue, &event, 0) == pdPASS) {
-    blfm_controller_process_bigsound(&event, &command);
-    xQueueSendToBack(xActuatorCmdQueue, &command, 0);
-  }
-}
-#endif
 
 #if BLFM_ENABLED_IR_REMOTE
 static void handle_ir_remote_event(void) {

@@ -401,14 +401,6 @@ bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out) {
 }
 #endif /* BLFM_ENABLED_IR_REMOTE */
 
-#if BLFM_ENABLED_BIGSOUND
-void blfm_controller_process_bigsound(const blfm_bigsound_event_t *event,
-                                      blfm_actuator_command_t *out) {
-  if (!event || !out)
-    return;
-  // You can implement this or leave empty
-}
-#endif /* BLFM_ENABLED_BIGSOUND */
 
 #if BLFM_ENABLED_ESP32
 void blfm_controller_process_esp32(const blfm_esp32_event_t *event,

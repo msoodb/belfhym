@@ -106,16 +106,6 @@ typedef struct {
   blfm_imu_data_t imu;
 } blfm_sensor_data_t;
 
-//==============================================================================
-// BIGSOUND
-//==============================================================================
-
-typedef enum { BIGSOUND_EVENT_DETECTED = 1 } blfm_bigsound_event_type_t;
-
-typedef struct {
-  uint32_t timestamp;                    // Tick count when event happened
-  blfm_bigsound_event_type_t event_type; // Type of bigsound event
-} blfm_bigsound_event_t;
 
 //==============================================================================
 // ACTUATORS
