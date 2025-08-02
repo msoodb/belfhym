@@ -8,30 +8,11 @@
  * See LICENSE file for details.
  */
 
-/**
- * @file belfhym.c
- * @brief Main entry point for the Belfhym lunar rover system.
- *
- * Sets up hardware and launches FreeRTOS task management. This file contains
- * the `main()` function which initializes core subsystems and starts the
- * scheduler.
- */
-
 #include "blfm_board.h"
 #include "blfm_taskmanager.h"
-#include "blfm_gpio.h"
-#include "blfm_pins.h"
-#include "stm32f1xx.h"
-
-/**
- * @brief Main function: Initializes hardware and starts RTOS task management.
- *
- * This function performs essential board-level initialization and
- * launches the FreeRTOS task manager. If the scheduler starts
- * successfully, execution should never return from `vTaskStartScheduler()`.
- */
 
 int main(void) {
+
   // Initialize system clocks, peripherals, and low-level hardware
   blfm_board_init();
 
