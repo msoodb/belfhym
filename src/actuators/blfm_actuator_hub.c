@@ -18,9 +18,6 @@
 #include "blfm_motor.h"
 #endif
 
-#if BLFM_ENABLED_DISPLAY
-#include "blfm_display.h"
-#endif
 
 #if BLFM_ENABLED_OLED
 #include "blfm_oled.h"
@@ -50,9 +47,6 @@ void blfm_actuator_hub_init(void) {
   blfm_motor_init();
 #endif
 
-#if BLFM_ENABLED_DISPLAY
-  blfm_display_init();
-#endif
 
 #if BLFM_ENABLED_OLED
   blfm_oled_init();
@@ -96,9 +90,6 @@ void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
   blfm_motor_apply(&cmd->motor);
 #endif
 
-#if BLFM_ENABLED_DISPLAY
-  blfm_display_apply(&cmd->display);
-#endif
 
 #if BLFM_ENABLED_OLED
   blfm_oled_apply(&cmd->oled);

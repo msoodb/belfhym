@@ -14,10 +14,8 @@
 #include <stdint.h>
 
 //==============================================================================
-// DISPLAY CONSTANTS
+// OLED DISPLAY CONSTANTS
 //==============================================================================
-
-#define BLFM_DISPLAY_LINE_LENGTH 17 // 16 chars + '\0'
 
 #define BLFM_OLED_WIDTH 128
 #define BLFM_OLED_HEIGHT 32
@@ -182,10 +180,6 @@ typedef struct {
   bool reverse_direction;           // Reverse servo direction
 } blfm_servomotor_command_t;
 
-typedef struct {
-  char line1[BLFM_DISPLAY_LINE_LENGTH];
-  char line2[BLFM_DISPLAY_LINE_LENGTH];
-} blfm_display_command_t;
 
 typedef enum {
   BLFM_OLED_ICON_NONE = 0,
@@ -238,7 +232,6 @@ typedef struct {
 
 typedef struct {
   blfm_motor_command_t motor;
-  blfm_display_command_t display;
   blfm_oled_command_t oled;
   blfm_led_command_t led;
   blfm_alarm_command_t alarm;

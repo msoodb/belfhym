@@ -31,10 +31,6 @@
 
 #define MOTOR_DEFAULT_SPEED 255
 
-#if BLFM_ENABLED_DISPLAY
-static int lcd_mode = 0;
-static int lcd_counter = 0;
-#endif
 
 
 #if BLFM_ENABLED_MOTOR && BLFM_ENABLED_ULTRASONIC
@@ -43,9 +39,7 @@ static int motor_rotate_ticks = 0;
 static int motor_rotate_duration = 0;
 #endif
 
-#if BLFM_ENABLED_DISPLAY || BLFM_ENABLED_OLED
 char num_buf[12];
-#endif
 
 static blfm_system_state_t blfm_system_state = {
     .current_mode = BLFM_MODE_MANUAL, .motion_state = BLFM_MOTION_STOP};
@@ -66,23 +60,6 @@ static int pseudo_random(int min, int max) {
 }
 #endif
 
-#if BLFM_ENABLED_DISPLAY
-static void uint_to_str(char *buf, uint16_t value) {
-  if (value >= 100) {
-    buf[0] = '0' + (value / 100) % 10;
-    buf[1] = '0' + (value / 10) % 10;
-    buf[2] = '0' + value % 10;
-    buf[3] = '\0';
-  } else if (value >= 10) {
-    buf[0] = '0' + (value / 10) % 10;
-    buf[1] = '0' + value % 10;
-    buf[2] = '\0';
-  } else {
-    buf[0] = '0' + value;
-    buf[1] = '\0';
-  }
-}
-#endif
 
 /* -------------------- Motion Helpers -------------------- */
 #if BLFM_ENABLED_IR_REMOTE
@@ -276,33 +253,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 
 // Multiple servos - no default behavior needed, will be controlled by IR commands
 
-#if BLFM_ENABLED_DISPLAY
-  char buf1[17];
-  char num_buf[12];
-
-  lcd_counter++;
-  if (lcd_counter >= LCD_CYCLE_COUNT) {
-    lcd_counter = 0;
-    lcd_mode = (lcd_mode + 1) % 3;
-  }
-
-  if (lcd_mode == 0) {
-    strcpy(buf1, "Dist: ");
-    uint_to_str(num_buf, in->ultrasonic.distance_mm);
-    strcat(buf1, num_buf);
-    strcat(buf1, " mm");
-  } else if (lcd_mode == 1) {
-    strcpy(buf1, "Speed: ");
-    // uint_to_str(num_buf, in->imu.speed_cm_s);
-    strcat(buf1, num_buf);
-    strcat(buf1, " cm/s");
-  } else {
-    strcpy(buf1, "Status: OK");
-  }
-
-  strcpy(out->display.line1, buf1);
-  strcpy(out->display.line2, num_buf);
-#endif
 
 #if BLFM_ENABLED_OLED
   out->oled.icon1 = BLFM_OLED_ICON_NONE;
