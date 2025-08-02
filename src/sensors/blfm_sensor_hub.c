@@ -16,9 +16,6 @@
 #endif
 
 
-#if BLFM_ENABLED_TEMPERATURE
-#include "blfm_temperature.h"
-#endif
 
 #include <stdbool.h>
 
@@ -28,9 +25,6 @@ void blfm_sensor_hub_init(void) {
 #endif
 
 
-#if BLFM_ENABLED_TEMPERATURE
-  blfm_temperature_init();
-#endif
 }
 
 bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
@@ -45,9 +39,6 @@ bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
 #endif
 
 
-#if BLFM_ENABLED_TEMPERATURE
-  ok &= blfm_temperature_read(&out->temperature);
-#endif
 
   return ok;
 }

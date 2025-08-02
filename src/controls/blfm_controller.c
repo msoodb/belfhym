@@ -297,10 +297,7 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
     strcat(buf1, num_buf);
     strcat(buf1, " cm/s");
   } else {
-    strcpy(buf1, "Temp: ");
-    uint_to_str(num_buf, in->temperature.temperature_mc);
-    strcat(buf1, num_buf);
-    strcat(buf1, " C");
+    strcpy(buf1, "Status: OK");
   }
 
   strcpy(out->display.line1, buf1);

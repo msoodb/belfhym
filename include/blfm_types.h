@@ -73,9 +73,6 @@ typedef struct {
 } blfm_ultrasonic_data_t;
 
 
-typedef struct {
-  int32_t temperature_mc;
-} blfm_temperature_data_t;
 
 typedef enum {
   BLFM_IR_CMD_NONE = 0,
@@ -109,7 +106,6 @@ typedef struct {
 typedef struct {
   blfm_ultrasonic_data_t ultrasonic;
   blfm_imu_data_t imu;
-  blfm_temperature_data_t temperature;
 } blfm_sensor_data_t;
 
 //==============================================================================
