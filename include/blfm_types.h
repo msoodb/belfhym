@@ -191,16 +191,11 @@ typedef struct {
       brightness; // brightness level (0-255), optional if hardware supports PWM
 } blfm_led_command_t;
 
-typedef struct {
-  uint8_t data[64];
-  uint8_t length;
-} blfm_radio_command_t;
 
 typedef struct {
   blfm_motor_command_t motor;
   blfm_oled_command_t oled;
   blfm_led_command_t led;
-  blfm_radio_command_t radio;
   blfm_servomotor_command_t servo1;
   blfm_servomotor_command_t servo2;
   blfm_servomotor_command_t servo3;

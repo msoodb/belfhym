@@ -25,7 +25,6 @@
 #define BLFM_ENABLED_SERVO3 1  // PA2
 #define BLFM_ENABLED_SERVO4 1  // PA3
 
-#define BLFM_ENABLED_RADIO 0
 #define BLFM_ENABLED_OLED 0
 
 /* === input/event features === */

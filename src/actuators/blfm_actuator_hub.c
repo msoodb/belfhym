@@ -24,9 +24,6 @@
 #endif
 
 
-#if BLFM_ENABLED_RADIO
-#include "blfm_radio.h"
-#endif
 
 #if BLFM_ENABLED_SERVO
 #include "blfm_servomotor.h"
@@ -67,9 +64,6 @@ void blfm_actuator_hub_init(void) {
 #endif
 
 
-#if BLFM_ENABLED_RADIO
-  blfm_radio_init();
-#endif
 }
 
 void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
@@ -106,7 +100,4 @@ void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
 #endif
 
 
-#if BLFM_ENABLED_RADIO
-  blfm_radio_apply(&cmd->radio);
-#endif
 }
