@@ -234,16 +234,6 @@ void blfm_controller_process(const blfm_sensor_data_t *in,
 
 #endif /* BLFM_ENABLED_ULTRASONIC */
 
-#if BLFM_ENABLED_ALARM
-  if (in->ultrasonic.distance_mm < 100) {
-    out->alarm.active = true;
-    out->alarm.pattern_id = 1;
-    out->alarm.duration_ms = 500;
-    out->alarm.volume = 10;
-  } else {
-    out->alarm.active = false;
-  }
-#endif /* BLFM_ENABLED_ALARM */
 
 
 #if BLFM_ENABLED_LED

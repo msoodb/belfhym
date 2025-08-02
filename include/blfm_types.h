@@ -193,12 +193,6 @@ typedef struct {
 
 } blfm_oled_command_t;
 
-typedef struct {
-  bool active;
-  uint8_t pattern_id;
-  uint16_t duration_ms;
-  uint8_t volume;
-} blfm_alarm_command_t;
 
 typedef enum {
   BLFM_LED_MODE_OFF = 0,
@@ -224,7 +218,6 @@ typedef struct {
   blfm_motor_command_t motor;
   blfm_oled_command_t oled;
   blfm_led_command_t led;
-  blfm_alarm_command_t alarm;
   blfm_radio_command_t radio;
   blfm_servomotor_command_t servo1;
   blfm_servomotor_command_t servo2;

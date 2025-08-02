@@ -17,7 +17,6 @@
 /* === Actuators presence flags === */
 #define BLFM_ENABLED_LED 1
 #define BLFM_ENABLED_MOTOR 0
-#define BLFM_ENABLED_ALARM 0
 #define BLFM_ENABLED_SERVO 1
 
 // Individual servo channel control - only servo1 for testing

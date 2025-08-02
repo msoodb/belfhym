@@ -23,9 +23,6 @@
 #include "blfm_oled.h"
 #endif
 
-#if BLFM_ENABLED_ALARM
-#include "blfm_alarm.h"
-#endif
 
 #if BLFM_ENABLED_RADIO
 #include "blfm_radio.h"
@@ -69,9 +66,6 @@ void blfm_actuator_hub_init(void) {
 #endif
 #endif
 
-#if BLFM_ENABLED_ALARM
-  blfm_alarm_init();
-#endif
 
 #if BLFM_ENABLED_RADIO
   blfm_radio_init();
@@ -111,9 +105,6 @@ void blfm_actuator_hub_apply(const blfm_actuator_command_t *cmd) {
 #endif
 #endif
 
-#if BLFM_ENABLED_ALARM
-  blfm_alarm_apply(&cmd->alarm);
-#endif
 
 #if BLFM_ENABLED_RADIO
   blfm_radio_apply(&cmd->radio);
