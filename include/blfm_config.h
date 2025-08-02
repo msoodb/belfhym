@@ -13,7 +13,6 @@
 
 /* === Sensors presence flags === */
 #define BLFM_ENABLED_ULTRASONIC 0
-#define BLFM_ENABLED_POTENTIOMETER 0
 #define BLFM_ENABLED_TEMPERATURE 0
 
 /* === Actuators presence flags === */

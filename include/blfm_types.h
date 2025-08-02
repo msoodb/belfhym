@@ -72,9 +72,6 @@ typedef struct {
   uint16_t distance_mm;
 } blfm_ultrasonic_data_t;
 
-typedef struct {
-  uint16_t raw_value;  // raw ADC reading from potentiometer (0-4095)
-} blfm_potentiometer_data_t;
 
 typedef struct {
   int32_t temperature_mc;
@@ -113,7 +110,6 @@ typedef struct {
   blfm_ultrasonic_data_t ultrasonic;
   blfm_imu_data_t imu;
   blfm_temperature_data_t temperature;
-  blfm_potentiometer_data_t potentiometer;
 } blfm_sensor_data_t;
 
 //==============================================================================

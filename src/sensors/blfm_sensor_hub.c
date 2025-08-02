@@ -15,9 +15,6 @@
 #include "blfm_ultrasonic.h"
 #endif
 
-#if BLFM_ENABLED_POTENTIOMETER
-#include "blfm_potentiometer.h"
-#endif
 
 #if BLFM_ENABLED_TEMPERATURE
 #include "blfm_temperature.h"
@@ -30,9 +27,6 @@ void blfm_sensor_hub_init(void) {
   blfm_ultrasonic_init();
 #endif
 
-#if BLFM_ENABLED_POTENTIOMETER
-  blfm_potentiometer_init();
-#endif
 
 #if BLFM_ENABLED_TEMPERATURE
   blfm_temperature_init();
@@ -50,9 +44,6 @@ bool blfm_sensor_hub_read(blfm_sensor_data_t *out) {
   ok &= blfm_ultrasonic_read(&out->ultrasonic);
 #endif
 
-#if BLFM_ENABLED_POTENTIOMETER
-  ok &= blfm_potentiometer_read(&out->potentiometer);
-#endif
 
 #if BLFM_ENABLED_TEMPERATURE
   ok &= blfm_temperature_read(&out->temperature);
