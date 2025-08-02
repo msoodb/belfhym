@@ -29,9 +29,7 @@
 #define BLFM_ENABLED_OLED 0
 
 /* === input/event features === */
-#define BLFM_ENABLED_BIGSOUND 0
 #define BLFM_ENABLED_IR_REMOTE 1
 #define BLFM_ENABLED_MODE_BUTTON 1
-#define BLFM_ENABLED_ESP32 0
 
 #endif /* BLFM_CONFIG_H */

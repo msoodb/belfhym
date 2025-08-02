@@ -61,12 +61,6 @@ void blfm_controller_process_mode_button(const blfm_mode_button_event_t *event,
  */
 bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out);
 
-/**
- * Handle ESP32 command events.
- * Sets motor commands directly from remote input.
- */
-void blfm_controller_process_esp32(const blfm_esp32_event_t *event,
-                                   blfm_actuator_command_t *out);
 
 
 

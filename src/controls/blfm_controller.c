@@ -392,35 +392,3 @@ bool blfm_controller_check_ir_timeout(blfm_actuator_command_t *out) {
 #endif /* BLFM_ENABLED_IR_REMOTE */
 
 
-#if BLFM_ENABLED_ESP32
-void blfm_controller_process_esp32(const blfm_esp32_event_t *event,
-                                   blfm_actuator_command_t *out) {
-  memset(out, 0, sizeof(*out));
-  if (!event || !out)
-    return;
-
-  int angle = 0;
-  int speed = event->speed;
-
-  switch (event->command) {
-  case BLFM_ESP32_CMD_UP:
-    angle = 0;
-    break;
-  case BLFM_ESP32_CMD_DOWN:
-    angle = 180;
-    break;
-  case BLFM_ESP32_CMD_LEFT:
-    angle = -90;
-    break;
-  case BLFM_ESP32_CMD_RIGHT:
-    angle = 90;
-    break;
-  default:
-    angle = 0;
-    speed = 0;
-    break;
-  }
-
-  set_motor_motion_by_angle(angle, speed, &out->motor);
-}
-#endif /* BLFM_ENABLED_ESP32 */
