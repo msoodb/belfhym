@@ -48,33 +48,7 @@ typedef struct {
   uint16_t distance_mm;
 } blfm_ultrasonic_data_t;
 
-typedef enum {
-  BLFM_IR_CMD_NONE = 0,
-  BLFM_IR_CMD_1 = 0x45,
-  BLFM_IR_CMD_2 = 0x46,
-  BLFM_IR_CMD_3 = 0x47,
-  BLFM_IR_CMD_4 = 0x44,
-  BLFM_IR_CMD_5 = 0x40,
-  BLFM_IR_CMD_6 = 0x43,
-  BLFM_IR_CMD_7 = 0x07,
-  BLFM_IR_CMD_8 = 0x15,
-  BLFM_IR_CMD_9 = 0x09,
-  BLFM_IR_CMD_0 = 0x19,
-  BLFM_IR_CMD_STAR = 0x16,
-  BLFM_IR_CMD_HASH = 0x0D,
-  BLFM_IR_CMD_UP = 0x18,
-  BLFM_IR_CMD_DOWN = 0x52,
-  BLFM_IR_CMD_LEFT = 0x08,
-  BLFM_IR_CMD_RIGHT = 0x5A,
-  BLFM_IR_CMD_OK = 0x1C,
-  BLFM_IR_CMD_REPEAT = 0xFFFFFFFF
-} blfm_ir_command_t;
-
-typedef struct {
-  uint32_t timestamp;        // Tick count at event
-  uint32_t pulse_us;         // Raw IR code received
-  blfm_ir_command_t command; // Decoded command
-} blfm_ir_remote_event_t;
+/* IR remote functionality removed from Belfhym */
 
 typedef struct {
   int16_t x_normalized;   /* X value (-1000 to +1000) from hermes joystick */
@@ -280,7 +254,6 @@ typedef struct {
 typedef enum {
   BLFM_INPUT_SENSOR,      // Sensor data update
   BLFM_INPUT_BUTTON,      // Button event
-  BLFM_INPUT_IR_REMOTE,   // IR remote event
   BLFM_INPUT_NRF24,       // NRF24 received data
   BLFM_INPUT_JOYSTICK     // Joystick data from hermes
 } blfm_input_type_t;
@@ -290,7 +263,6 @@ typedef struct {
   union {
     blfm_sensor_data_t sensor;
     blfm_button_event_t button;
-    blfm_ir_remote_event_t ir_remote;
     blfm_nrf24_event_t nrf24;
     blfm_joystick_event_t joystick;
   } data;

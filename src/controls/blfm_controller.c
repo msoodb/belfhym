@@ -25,8 +25,6 @@
 /* Static function declarations - internal use only */
 static void blfm_controller_process(const blfm_sensor_data_t *in,
                                     blfm_controller_output_t *out);
-static void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
-                                              blfm_controller_output_t *out);
 static void blfm_controller_process_button(const blfm_button_event_t *event,
                                            blfm_controller_output_t *command);
 static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
@@ -63,11 +61,6 @@ void blfm_controller_process_input(const blfm_controller_input_t *input,
     case BLFM_INPUT_BUTTON:
       /* Button events can override current state */
       blfm_controller_process_button(&input->data.button, command);
-      break;
-      
-    case BLFM_INPUT_IR_REMOTE:
-      /* IR remote for manual control and mode changes */
-      blfm_controller_process_ir_remote(&input->data.ir_remote, command);
       break;
       
     case BLFM_INPUT_NRF24:
@@ -210,185 +203,6 @@ static void blfm_controller_process(const blfm_sensor_data_t *in,
       default:
         /* Motors already cleared above */
         break;
-    }
-  }
-}
-
-static void blfm_controller_process_ir_remote(const blfm_ir_remote_event_t *in,
-                                               blfm_controller_output_t *out) {
-  if (!in || !out)
-    return;
-
-  /* Clear motor commands */
-  out->motor.left.speed = 0;
-  out->motor.left.direction = 0;
-  out->motor.right.speed = 0;
-  out->motor.right.direction = 0;
-  
-  /* Initialize servo commands - no change by default */
-  out->servo1.proportional_input = 0x7FFF;  /* Special value: no change */
-  out->servo2.proportional_input = 0x7FFF;  /* Special value: no change */
-  out->servo3.proportional_input = 0x7FFF;  /* Special value: no change */
-  out->servo4.proportional_input = 0x7FFF;  /* Special value: no change */
-  
-  /* Initialize NRF24 command - no broadcast by default */
-  out->nrf24.should_broadcast = false;
-  out->nrf24.length = 0;
-
-  /* Mode changes: 1, 2, 3 keys */
-  switch (in->command) {
-  case BLFM_IR_CMD_1:
-    blfm_system_state.current_mode = BLFM_MODE_MANUAL;
-    blfm_system_state.motion_state = BLFM_MOTION_STOP;
-    out->led.mode = BLFM_LED_MODE_BLINK;
-    out->led.on_time = 100;   /* Manual: quick flash - 100ms on */
-    out->led.off_time = 900;  /* Manual: quick flash - 900ms off */
-    return;
-
-  case BLFM_IR_CMD_2:
-    blfm_system_state.current_mode = BLFM_MODE_AUTO;
-    blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
-    out->led.mode = BLFM_LED_MODE_BLINK;
-    out->led.on_time = 250;   /* Auto: medium blink - 250ms on */
-    out->led.off_time = 250;  /* Auto: medium blink - 250ms off */
-    return;
-
-  case BLFM_IR_CMD_3:
-    blfm_system_state.current_mode = BLFM_MODE_EMERGENCY;
-    blfm_system_state.motion_state = BLFM_MOTION_STOP;
-    out->led.mode = BLFM_LED_MODE_ON;
-    return;
-    
-  default:
-    break;
-  }
-
-  /* Manual mode movement control with arrow keys */
-  if (blfm_system_state.current_mode == BLFM_MODE_MANUAL) {
-    switch (in->command) {
-    case BLFM_IR_CMD_UP:
-      blfm_system_state.motion_state = BLFM_MOTION_FORWARD;
-      break;
-
-    case BLFM_IR_CMD_DOWN:
-      blfm_system_state.motion_state = BLFM_MOTION_BACKWARD;
-      break;
-
-    case BLFM_IR_CMD_LEFT:
-      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_LEFT;
-      break;
-
-    case BLFM_IR_CMD_RIGHT:
-      blfm_system_state.motion_state = BLFM_MOTION_ROTATE_RIGHT;
-      break;
-
-    case BLFM_IR_CMD_OK:
-      blfm_system_state.motion_state = BLFM_MOTION_STOP;
-      break;
-      
-    default:
-      break;
-    }
-    
-    /* Apply the motion state to motors */
-    switch (blfm_system_state.motion_state) {
-      case BLFM_MOTION_FORWARD:
-        out->motor.left.direction = 0;   /* Forward */
-        out->motor.right.direction = 0;  /* Forward */
-        out->motor.left.speed = MOTOR_DEFAULT_SPEED;
-        out->motor.right.speed = MOTOR_DEFAULT_SPEED;
-        break;
-        
-      case BLFM_MOTION_BACKWARD:
-        out->motor.left.direction = 1;   /* Backward */
-        out->motor.right.direction = 1;  /* Backward */
-        out->motor.left.speed = MOTOR_DEFAULT_SPEED;
-        out->motor.right.speed = MOTOR_DEFAULT_SPEED;
-        break;
-        
-      case BLFM_MOTION_ROTATE_LEFT:
-        out->motor.left.direction = 1;   /* Left motor backward */
-        out->motor.right.direction = 0;  /* Right motor forward */
-        out->motor.left.speed = MOTOR_DEFAULT_SPEED;
-        out->motor.right.speed = MOTOR_DEFAULT_SPEED;
-        break;
-        
-      case BLFM_MOTION_ROTATE_RIGHT:
-        out->motor.left.direction = 0;   /* Left motor forward */
-        out->motor.right.direction = 1;  /* Right motor backward */
-        out->motor.left.speed = MOTOR_DEFAULT_SPEED;
-        out->motor.right.speed = MOTOR_DEFAULT_SPEED;
-        break;
-        
-      case BLFM_MOTION_STOP:
-      default:
-        /* Motors already cleared above */
-        break;
-    }
-  }
-
-  /* Servo control: Individual and all servo control - disabled in emergency mode */
-  if (blfm_system_state.current_mode != BLFM_MODE_EMERGENCY) {
-    switch (in->command) {
-    /* Servo 1 control: 4, 5, 6 */
-    case BLFM_IR_CMD_4:
-      /* 4 key - Servo 1 LEFT position */
-      out->servo1.proportional_input = -1000;  /* Full left */
-      break;
-      
-    case BLFM_IR_CMD_5:
-      /* 5 key - Servo 1 CENTER position */
-      out->servo1.proportional_input = 0;      /* Center */
-      break;
-      
-    case BLFM_IR_CMD_6:
-      /* 6 key - Servo 1 RIGHT position */
-      out->servo1.proportional_input = 1000;   /* Full right */
-      break;
-      
-    /* Servo 2 control: 7, 8, 9 */
-    case BLFM_IR_CMD_7:
-      /* 7 key - Servo 2 LEFT position */
-      out->servo2.proportional_input = -1000;  /* Full left */
-      break;
-      
-    case BLFM_IR_CMD_8:
-      /* 8 key - Servo 2 CENTER position */
-      out->servo2.proportional_input = 0;      /* Center */
-      break;
-      
-    case BLFM_IR_CMD_9:
-      /* 9 key - Servo 2 RIGHT position */
-      out->servo2.proportional_input = 1000;   /* Full right */
-      break;
-      
-    /* All servos control: *, 0, # */
-    case BLFM_IR_CMD_STAR:
-      /* * key - All servos LEFT position */
-      out->servo1.proportional_input = -1000;  /* Full left */
-      out->servo2.proportional_input = -1000;  /* Full left */
-      out->servo3.proportional_input = -1000;  /* Full left */
-      out->servo4.proportional_input = -1000;  /* Full left */
-      break;
-      
-    case BLFM_IR_CMD_0:
-      /* 0 key - All servos CENTER position */
-      out->servo1.proportional_input = 0;      /* Center */
-      out->servo2.proportional_input = 0;      /* Center */
-      out->servo3.proportional_input = 0;      /* Center */
-      out->servo4.proportional_input = 0;      /* Center */
-      break;
-      
-    case BLFM_IR_CMD_HASH:
-      /* # key - All servos RIGHT position */
-      out->servo1.proportional_input = 1000;   /* Full right */
-      out->servo2.proportional_input = 1000;   /* Full right */
-      out->servo3.proportional_input = 1000;   /* Full right */
-      out->servo4.proportional_input = 1000;   /* Full right */
-      break;
-      
-    default:
-      break;
     }
   }
 }

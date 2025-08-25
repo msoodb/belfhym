@@ -12,7 +12,6 @@
 #include "blfm_controller.h"
 #include "blfm_sensors.h"
 #include "blfm_button.h"
-#include "blfm_ir_remote.h"
 #include "blfm_led.h"
 #include "S17.h"  /* Use S17 module instead of direct NRF24 */
 #include "s17_security.h"  /* For key generation */
@@ -46,7 +45,6 @@ static QueueHandle_t xControllerOutputQueue = NULL;  /* Controller output/actuat
 
 /* Device interface queues - provide clean abstraction for device drivers */
 static QueueHandle_t xButtonEventQueue = NULL;
-static QueueHandle_t xIRRemoteEventQueue = NULL;
 static QueueHandle_t xS17EventQueue = NULL;  /* S17 communication events */
 
 void blfm_taskmanager_setup(void) {
@@ -61,8 +59,6 @@ void blfm_taskmanager_setup(void) {
   xButtonEventQueue = xQueueCreate(10, sizeof(blfm_button_event_t));
   configASSERT(xButtonEventQueue != NULL);
   
-  xIRRemoteEventQueue = xQueueCreate(10, sizeof(blfm_ir_remote_event_t));
-  configASSERT(xIRRemoteEventQueue != NULL);
   
   xS17EventQueue = xQueueCreate(10, sizeof(blfm_nrf24_event_t));  /* S17 uses same event structure */
   configASSERT(xS17EventQueue != NULL);
@@ -72,7 +68,6 @@ void blfm_taskmanager_setup(void) {
   blfm_actuator_hub_init();
   blfm_controller_init();
   blfm_button_init(xButtonEventQueue);
-  blfm_ir_remote_init(xIRRemoteEventQueue);
   
   /* Initialize S17 communication module */
   /* Initialize S17 with our device ID and generated network key */
@@ -125,7 +120,6 @@ void blfm_taskmanager_start(void) {
 static void vEventProcTask(void *pvParameters) {
   (void)pvParameters;
   blfm_button_event_t button_event;
-  blfm_ir_remote_event_t ir_event;
   blfm_nrf24_event_t s17_event;  /* S17 uses same event structure */
   blfm_controller_input_t controller_input;
 
@@ -138,12 +132,6 @@ static void vEventProcTask(void *pvParameters) {
       xQueueSendToBack(xControllerInputQueue, &controller_input, 0);
     }
     
-    /* Forward IR remote events to controller */
-    if (xQueueReceive(xIRRemoteEventQueue, &ir_event, 0) == pdPASS) {
-      controller_input.type = BLFM_INPUT_IR_REMOTE;
-      controller_input.data.ir_remote = ir_event;
-      xQueueSendToBack(xControllerInputQueue, &controller_input, 0);
-    }
     
     /* Forward S17 communication events to controller */
     if (xQueueReceive(xS17EventQueue, &s17_event, 0) == pdPASS) {
