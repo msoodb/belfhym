@@ -1,0 +1,3 @@
+[submodule "S17"]
+	path = S17
+	url = git@github.com:msoodb/S17.git
