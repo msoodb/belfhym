@@ -37,7 +37,10 @@
 #define configKERNEL_INTERRUPT_PRIORITY         255
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY    191
 
-#define configUSE_TIMERS                        0
+#define configUSE_TIMERS                        1
+#define configTIMER_TASK_PRIORITY               2
+#define configTIMER_QUEUE_LENGTH                10
+#define configTIMER_TASK_STACK_DEPTH            256
 #define configUSE_QUEUE_SETS 1
 
 /* Required for CMSIS-style interrupt names */
@@ -50,5 +53,6 @@
 #define INCLUDE_xSemaphoreGetMutexHolder 1
 #define INCLUDE_vTaskSuspend 1
 #define INCLUDE_xTaskGetSchedulerState    1
+#define INCLUDE_vTaskDelayUntil 1
 
 #endif /* FREERTOS_CONFIG_H */

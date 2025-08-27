@@ -31,12 +31,20 @@ SRC_SUBDIRS := board controls devices drivers system utils
 SRC_DIRS := $(addprefix $(SRC_DIR)/,$(SRC_SUBDIRS))
 USER_SRCS := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
 USER_SRCS += $(wildcard $(SRC_DIR)/*.c)
-# Add S17 sources
+# Add S17 sources - Updated with latest S17 integration
 USER_SRCS += S17/src/S17_core.c
-USER_SRCS += S17/src/protocols/s17_spi.c
-USER_SRCS += S17/src/drivers/s17_nrf24l01.c
-USER_SRCS += S17/src/security/s17_security.c
-USER_SRCS += S17/src/security/s17_aes.c
+USER_SRCS += S17/src/S17_devices.c
+USER_SRCS += S17/src/S17_timing.c
+USER_SRCS += S17/src/S17_frequency.c
+USER_SRCS += S17/src/protocols/S17_spi.c
+USER_SRCS += S17/src/drivers/S17_nrf24l01.c
+USER_SRCS += S17/src/security/S17_security.c
+USER_SRCS += S17/src/security/S17_aes.c
+USER_SRCS += S17/src/security/S17_aes_common.c
+USER_SRCS += S17/src/security/S17_aes_gcm.c
+USER_SRCS += S17/src/security/S17_hkdf.c
+# USER_SRCS += S17/src/security/S17_joinptcl.c  # Disabled - needs more work
+# USER_SRCS += S17/src/S17_noc.c  # Disabled - needs more work
 
 FREERTOS_SRCS := \
     $(FREERTOS_DIR)/event_groups.c \

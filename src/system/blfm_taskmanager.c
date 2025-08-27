@@ -13,9 +13,10 @@
 #include "blfm_sensors.h"
 #include "blfm_button.h"
 #include "blfm_led.h"
-#include "S17.h"  /* Use S17 module instead of direct NRF24 */
-#include "s17_security.h"  /* For key generation */
-#include "blfm_types.h"  /* For event types */
+#include "S17.h"
+#include "S17_config.h"
+#include "blfm_types.h"
+#include <string.h>
 
 
 /* Task declarations */
@@ -24,8 +25,10 @@ static void vControllerTask(void *pvParameters);
 static void vActuatorHubTask(void *pvParameters);
 static void vEventProcTask(void *pvParameters);
 
-/* S17 message callback */
-static void s17_message_handler(const uint8_t *data, uint8_t length);
+/* S17 callback functions for modern API */
+static void s17_message_handler(s17_msg_type_t type, uint16_t sender_id, const uint8_t *data, uint8_t length);
+static void s17_telemetry_handler(uint16_t sender_id, const s17_msg_status_t *status);
+static void s17_error_handler(s17_result_t error_code, uint32_t info);
 
 /* Task and queue settings - Reduced for memory constraints */
 #define SENSOR_HUB_TASK_STACK 384
@@ -70,19 +73,21 @@ void blfm_taskmanager_setup(void) {
   blfm_button_init(xButtonEventQueue);
   
   /* Initialize S17 communication module */
-  /* Initialize S17 with our device ID and generated network key */
-  uint8_t network_key[16];  /* 128-bit network key */
+  static uint8_t mission_nmk[] = S17_MISSION_NMK;
+  s17_config_t s17_config = {
+    .node_id = S17_DEVICE_ID,
+    .role = S17_IS_NOC() ? S17_TIMING_MASTER : S17_TIMING_SLAVE
+  };
+  memcpy(s17_config.network_key, mission_nmk, sizeof(s17_config.network_key));
   
-  /* Generate secure network key based on configuration */
-  if (s17_security_generate_key(network_key) != S17_SEC_OK) {
-    configASSERT(0);  /* Force system halt - NEVER operate without encryption */
-  }
-  
-  /* Initialize with generated key - encryption is MANDATORY */
-  if (s17_init(S17_THIS_DEVICE_ID, network_key) != S17_OK) {
+  if (s17_init(&s17_config) != S17_OK) {
     configASSERT(0);
   }
-  s17_listen(s17_message_handler);  /* Register message callback */
+  
+  /* Register S17 callbacks */
+  s17_set_message_callback(s17_message_handler);
+  s17_set_telemetry_callback(s17_telemetry_handler);
+  s17_set_error_callback(s17_error_handler);
 
   /* Create all tasks */
   xTaskCreate(vEventProcTask, "EventProc", EVENT_PROCESSING_TASK_STACK, NULL,
@@ -102,13 +107,6 @@ void blfm_taskmanager_setup(void) {
 }
 
 void blfm_taskmanager_start(void) {
-
-  /* Start S17 communication task now that scheduler is running */
-  if (s17_start() != S17_OK) {
-    /* S17 task creation failed - system cannot operate without communication */
-    configASSERT(0);
-  }
-
   /* Start FreeRTOS scheduler */
   vTaskStartScheduler();
   
@@ -204,14 +202,15 @@ static void vActuatorHubTask(void *pvParameters) {
   }
 }
 
-/* S17 message callback - called from S17 task when data is received */
-static void s17_message_handler(const uint8_t *data, uint8_t length) {
+/* S17 callback implementations for modern API */
+static void s17_message_handler(s17_msg_type_t type, uint16_t sender_id, const uint8_t *data, uint8_t length) {
   if (!data || length == 0) return;
 
   /* Create NRF24 event from received S17 data */
   blfm_nrf24_event_t nrf24_event;
   
-  /* Copy data to event structure (respecting size limits) */
+  /* S17 callback has already filtered and parsed the message */
+  /* sender_id contains the sender, data contains clean payload */
   nrf24_event.length = (length > S17_MAX_PAYLOAD_SIZE) ? S17_MAX_PAYLOAD_SIZE : length;
   for (uint8_t i = 0; i < nrf24_event.length; i++) {
     nrf24_event.data[i] = data[i];
@@ -224,8 +223,19 @@ static void s17_message_handler(const uint8_t *data, uint8_t length) {
     xQueueSendToBack(xS17EventQueue, &nrf24_event, 0);  /* Don't block */
   }
   
-  /* Quick blink to indicate data received */
-  blfm_led_onboard_on();
-  vTaskDelay(pdMS_TO_TICKS(25));
-  blfm_led_onboard_off();
+  /* Suppress unused parameter warnings */
+  (void)type;
+  (void)sender_id;
+}
+
+static void s17_telemetry_handler(uint16_t sender_id, const s17_msg_status_t *status) {
+  /* Handle S17 telemetry data if needed */
+  (void)sender_id;
+  (void)status;
+}
+
+static void s17_error_handler(s17_result_t error_code, uint32_t info) {
+  /* Handle S17 errors - could log or take corrective action */
+  (void)error_code;
+  (void)info;
 }

@@ -60,6 +60,7 @@
 #define S17_NRF24_SCK_PIN         5     /* PA5 - SPI1_SCK */
 #define S17_NRF24_MOSI_PIN        7     /* PA7 - SPI1_MOSI */
 #define S17_NRF24_MISO_PIN        6     /* PA6 - SPI1_MISO */
+#define S17_NRF24_IRQ_PIN         1     /* PA1 - IRQ (optional interrupt) */
 
 /* Hardware Capabilities */
 #define S17_HW_VERSION            0x0103        /* Hardware revision */

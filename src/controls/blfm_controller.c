@@ -9,9 +9,8 @@
 #include "blfm_types.h"
 #include "blfm_gpio.h"
 #include "blfm_pins.h"
-#include "S17_config.h"  /* Use S17 config instead */
-#include "s17_protocol.h"  /* S17 standardized packet format */
-#include "s17_security.h"  /* For S17_MAX_PLAINTEXT_SIZE */
+#include "S17.h"
+#include "S17_config.h"
 #include "task.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -229,45 +228,29 @@ static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
                                            blfm_controller_output_t *command) {
   if (!event || !command) return;
   
-  /* Verify packet has minimum size for S17 header */
-  if (event->length < S17_HEADER_SIZE) {
-    return; /* Invalid packet - too small */
-  }
-  
-  /* Use standardized S17 header for self-filtering */
-  if (s17_packet_is_from_us(event->data, S17_THIS_DEVICE_ID)) {
-    return; /* Ignore our own broadcast */
-  }
-  
-  /* Check if packet is addressed to us or broadcast */
-  if (!s17_packet_is_for_us(event->data, S17_THIS_DEVICE_ID)) {
-    return; /* Not for us */
-  }
-  
-  /* Extract S17 header for logging/debugging */
-  s17_header_t header = s17_unpack_header(event->data);
+  /* S17 callback has already filtered and parsed the message */
+  /* event->sender_id contains the sender, event->data contains clean payload */
   
   /* Check application payload for joystick messages */
-  if (event->length >= S17_PAYLOAD_OFFSET + 8 && 
-      event->data[S17_PAYLOAD_OFFSET] == 0x4A) {  /* 'J' for Joystick */
+  if (event->length >= 8 && event->data[0] == 0x4A) {  /* 'J' for Joystick */
     
     /* Decode joystick packet from hermes */
     blfm_joystick_event_t joystick_event;
     
     /* Extract X coordinate (little-endian) */
     joystick_event.x_normalized = (int16_t)(
-      (uint16_t)event->data[S17_PAYLOAD_OFFSET + 2] | 
-      ((uint16_t)event->data[S17_PAYLOAD_OFFSET + 3] << 8)
+      (uint16_t)event->data[2] | 
+      ((uint16_t)event->data[3] << 8)
     );
     
     /* Extract Y coordinate (little-endian) */
     joystick_event.y_normalized = (int16_t)(
-      (uint16_t)event->data[S17_PAYLOAD_OFFSET + 4] | 
-      ((uint16_t)event->data[S17_PAYLOAD_OFFSET + 5] << 8)
+      (uint16_t)event->data[4] | 
+      ((uint16_t)event->data[5] << 8)
     );
     
     /* Extract button state */
-    joystick_event.button_pressed = (event->data[S17_PAYLOAD_OFFSET + 6] == 0x01);
+    joystick_event.button_pressed = (event->data[6] == 0x01);
     joystick_event.timestamp = xTaskGetTickCount();
     
     /* Process decoded joystick data */
@@ -282,17 +265,13 @@ static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
   }
   
   /* Check application payload for test messages */
-  if (event->length >= S17_PAYLOAD_OFFSET + 1 && 
-      event->data[S17_PAYLOAD_OFFSET] == 0x77) {
+  if (event->length >= 1 && event->data[0] == 0x77) {
     
     /* Test broadcast packet received - single slow blink */
     blfm_gpio_clear_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);  /* ON (active LOW) */
     for (uint32_t j = 0; j < 200000; j++) __NOP();  /* ~100ms on */
     blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);    /* OFF (active LOW) */
   }
-  
-  /* Suppress unused variable warning */
-  (void)header;
 }
 
 static void blfm_controller_process_joystick(const blfm_joystick_event_t *event,
