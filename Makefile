@@ -36,6 +36,7 @@ USER_SRCS += S17/src/S17_core.c
 USER_SRCS += S17/src/protocols/s17_spi.c
 USER_SRCS += S17/src/drivers/s17_nrf24l01.c
 USER_SRCS += S17/src/security/s17_security.c
+USER_SRCS += S17/src/security/s17_aes.c
 
 FREERTOS_SRCS := \
     $(FREERTOS_DIR)/event_groups.c \
