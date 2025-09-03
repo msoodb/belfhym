@@ -8,7 +8,7 @@ Belfhym is a FreeRTOS-based tactical battle rover control system for the STM32F1
 - **MCU**: STM32F103C8T6 (Blue Pill)
 - **RTOS**: FreeRTOS
 - **Communication**: S17 protocol over NRF24L01+
-- **Device ID**: `S17_NODE_BELFHYM` (0x3C95)
+- **Device ID**: `S17_TN_BELFHYM` (0x2002)
 
 ## Key Features
 
@@ -85,7 +85,7 @@ git submodule update --init
 ## Differences from Homa
 
 - All prefixes changed from `homa_`/`HOMA_` to `blfm_`/`BLFM_`
-- Device ID: `S17_NODE_BELFHYM` instead of `S17_NODE_HOMA`
+- Device ID: `S17_TN_BELFHYM` instead of `S17_TN_HOMA`
 - Configured as a separate robot in the S17 network
 
 ## License

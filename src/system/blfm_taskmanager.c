@@ -30,11 +30,11 @@ static void s17_message_handler(s17_msg_type_t type, uint16_t sender_id, const u
 static void s17_telemetry_handler(uint16_t sender_id, const s17_msg_status_t *status);
 static void s17_error_handler(s17_result_t error_code, uint32_t info);
 
-/* Task and queue settings - Reduced for memory constraints */
-#define SENSOR_HUB_TASK_STACK 384
-#define CONTROLLER_TASK_STACK 768  
-#define ACTUATOR_HUB_TASK_STACK 384
-#define EVENT_PROCESSING_TASK_STACK 384
+/* Task and queue settings - Optimized for S17 memory requirements */
+#define SENSOR_HUB_TASK_STACK 256      /* Reduced from 384 */
+#define CONTROLLER_TASK_STACK 512      /* Reduced from 768 */
+#define ACTUATOR_HUB_TASK_STACK 256    /* Reduced from 384 */
+#define EVENT_PROCESSING_TASK_STACK 256 /* Reduced from 384 */
 
 /* Task priorities - Controller highest for real-time control */
 #define CONTROLLER_TASK_PRIORITY 4      /* Highest - critical control loop */

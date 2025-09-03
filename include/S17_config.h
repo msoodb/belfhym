@@ -22,17 +22,17 @@
 #define S17_NOC_BACKUP            0x1002    /* Backup NOC (if needed) */
 
 /* Tactical Nodes - Range 0x2000-0x2FFF */  
-#define S17_NODE_HOMA             0x2001    /* Homa - RC Plane */
-#define S17_NODE_BELFHYM          0x2002    /* Belfhym - Battle Rover */
-#define S17_NODE_DELTA            0x2003    /* Delta - Additional Node */
-#define S17_NODE_ECHO             0x2004    /* Echo - Additional Node */
-#define S17_NODE_FOXTROT          0x2005    /* Foxtrot - Additional Node */
-#define S17_NODE_GOLF             0x2006    /* Golf - Additional Node */
-#define S17_NODE_HOTEL            0x2007    /* Hotel - Additional Node */
+#define S17_TN_HOMA               0x2001    /* Homa - RC Plane */
+#define S17_TN_BELFHYM            0x2002    /* Belfhym - Battle Rover */
+#define S17_TN_DELTA              0x2003    /* Delta - Additional Node */
+#define S17_TN_ECHO               0x2004    /* Echo - Additional Node */
+#define S17_TN_FOXTROT            0x2005    /* Foxtrot - Additional Node */
+#define S17_TN_GOLF               0x2006    /* Golf - Additional Node */
+#define S17_TN_HOTEL              0x2007    /* Hotel - Additional Node */
 
 /* Device Types */
 #define S17_TYPE_NOC              1         /* Net Operations Controller */
-#define S17_TYPE_TACTICAL         2         /* Tactical Node */
+#define S17_TYPE_TN               2         /* Tactical Node */
 
 /* Special Network IDs */
 #define S17_BROADCAST             0xFFFF    /* Broadcast to all devices */
@@ -42,8 +42,8 @@
 /* ========================================================================== */
 
 /* Device Identity - BELFHYM TACTICAL NODE CONFIGURATION */
-#define S17_DEVICE_ID             S17_NODE_BELFHYM  /* Belfhym Tactical Node ID */
-#define S17_DEVICE_TYPE           S17_TYPE_TACTICAL /* Tactical Node */
+#define S17_DEVICE_ID             S17_TN_BELFHYM    /* Belfhym Tactical Node ID */
+#define S17_DEVICE_TYPE           S17_TYPE_TN       /* Tactical Node */
 #define S17_DEVICE_SERIAL         "BELFHYM-001"     /* Belfhym serial number */
 
 /* Root Master Key (RMK) - UNIQUE per device, permanent */
@@ -150,7 +150,7 @@
 
 /* Device role detection */
 #define S17_IS_NOC()              (S17_DEVICE_TYPE == S17_TYPE_NOC)
-#define S17_IS_TACTICAL_NODE()    (S17_DEVICE_TYPE == S17_TYPE_TACTICAL)
+#define S17_IS_TACTICAL_NODE()    (S17_DEVICE_TYPE == S17_TYPE_TN)
 
 /* Network address calculation */
 #define S17_NETWORK_ADDRESS       {0xE7, 0xE7, 0xE7, 0xE7, (S17_MISSION_NET_ID & 0xFF)}
