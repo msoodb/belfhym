@@ -76,7 +76,7 @@ void blfm_taskmanager_setup(void) {
   static uint8_t mission_nmk[] = S17_MISSION_NMK;
   s17_config_t s17_config = {
     .node_id = S17_DEVICE_ID,
-    .role = S17_IS_NOC() ? S17_TIMING_MASTER : S17_TIMING_SLAVE
+    .role = S17_DEVICE_ROLE
   };
   memcpy(s17_config.network_key, mission_nmk, sizeof(s17_config.network_key));
   

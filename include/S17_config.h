@@ -148,9 +148,10 @@
 /* CONVENIENCE MACROS                                                        */
 /* ========================================================================== */
 
-/* Device role detection */
-#define S17_IS_NOC()              (S17_DEVICE_TYPE == S17_TYPE_NOC)
-#define S17_IS_TACTICAL_NODE()    (S17_DEVICE_TYPE == S17_TYPE_TN)
+/* Device role detection - Belfhym is always TN */
+#define S17_IS_NOC()              (false)  /* Belfhym is never NOC */
+#define S17_IS_TACTICAL_NODE()    (true)   /* Belfhym is always TN */
+#define S17_DEVICE_ROLE           S17_TIMING_SLAVE   /* Always slave */
 
 /* Network address calculation */
 #define S17_NETWORK_ADDRESS       {0xE7, 0xE7, 0xE7, 0xE7, (S17_MISSION_NET_ID & 0xFF)}
