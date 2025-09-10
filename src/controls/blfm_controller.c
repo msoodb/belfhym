@@ -231,29 +231,50 @@ static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
   /* S17 callback has already filtered and parsed the message */
   /* event->sender_id contains the sender, event->data contains clean payload */
   
-  /* Check application payload for joystick messages */
-  if (event->length >= 8 && event->data[0] == 0x4A) {  /* 'J' for Joystick */
+  if (event->length >= 8 && event->data[0] == 0x4A && event->data[1] == 0x01) {
     
-    /* Decode joystick packet from hermes */
     blfm_joystick_event_t joystick_event;
     
-    /* Extract X coordinate (little-endian) */
     joystick_event.x_normalized = (int16_t)(
       (uint16_t)event->data[2] | 
       ((uint16_t)event->data[3] << 8)
     );
     
-    /* Extract Y coordinate (little-endian) */
     joystick_event.y_normalized = (int16_t)(
       (uint16_t)event->data[4] | 
       ((uint16_t)event->data[5] << 8)
     );
     
-    /* Extract button state */
     joystick_event.button_pressed = (event->data[6] == 0x01);
     joystick_event.timestamp = xTaskGetTickCount();
     
-    /* Process decoded joystick data */
+    blfm_controller_process_joystick(&joystick_event, command);
+
+    blfm_gpio_clear_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
+    for (uint32_t j = 0; j < 100000; j++)
+      __NOP();
+    blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
+    
+    return;
+  }
+
+  if (event->length >= 12 && event->data[0] == 0x4A && event->data[1] == 0x02) {
+    
+    blfm_joystick_event_t joystick_event;
+    
+    joystick_event.x_normalized = (int16_t)(
+      (uint16_t)event->data[2] | 
+      ((uint16_t)event->data[3] << 8)
+    );
+    
+    joystick_event.y_normalized = (int16_t)(
+      (uint16_t)event->data[4] | 
+      ((uint16_t)event->data[5] << 8)
+    );
+    
+    joystick_event.button_pressed = (event->data[10] & 0x01) != 0;
+    joystick_event.timestamp = xTaskGetTickCount();
+    
     blfm_controller_process_joystick(&joystick_event, command);
     
     /* Visual feedback: blink onboard LED when joystick data received */

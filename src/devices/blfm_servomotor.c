@@ -9,47 +9,42 @@
 #include "stm32f1xx.h"
 #include <stdbool.h>
 
-/* Servo Hardware Configuration - Uses TIM1 for dedicated servo control */
 #define SERVO_TIMER TIM1
-#define SERVO_FREQUENCY_HZ 50           /* Standard servo frequency */
-#define SERVO_PERIOD_US 20000           /* 20ms period for 50Hz */
-#define SERVO_TIMER_CLOCK_HZ 1000000    /* 1MHz for microsecond precision */
+#define SERVO_FREQUENCY_HZ 50
+#define SERVO_PERIOD_US 20000
+#define SERVO_TIMER_CLOCK_HZ 1000000
 
-/* Servo pulse specifications - match working code */
-#define SERVO_MIN_PULSE_US 500          /* Working code minimum */
-#define SERVO_MAX_PULSE_US 2500         /* Working code maximum */
-#define SERVO_CENTER_PULSE_US 1500      /* Working code center */
-#define SERVO_PULSE_RANGE_US 1000       /* ±1000us from center */
+#define SERVO_MIN_PULSE_US 500
+#define SERVO_MAX_PULSE_US 2500
+#define SERVO_CENTER_PULSE_US 1500
+#define SERVO_PULSE_RANGE_US 1000
 
-/* Safety and performance parameters */
 #define SERVO_MAX_CHANNELS 4
-#define SERVO_MIN_ANGLE_X10 -900        /* Minimum angle * 10 (-90.0 degrees) */
-#define SERVO_MAX_ANGLE_X10 900         /* Maximum angle * 10 (90.0 degrees) */
-#define SERVO_DEADBAND_X10 20           /* Deadband * 10 (2.0 degrees) */
-#define SERVO_MAX_SPEED_X10_MS 5        /* Maximum speed * 10 (0.5 deg/ms) */
-#define SERVO_UPDATE_RATE_MS 20         /* Update rate for smooth movement */
+#define SERVO_MIN_ANGLE_X10 -900
+#define SERVO_MAX_ANGLE_X10 900
+#define SERVO_DEADBAND_X10 20
+#define SERVO_MAX_SPEED_X10_MS 5
+#define SERVO_UPDATE_RATE_MS 20
 
-/* Servo channel to pin mapping (TIM1 channels) */
 typedef struct {
     GPIO_TypeDef *port;
     uint8_t pin;
-    uint8_t af_config;  /* Alternate function config bits */
+    uint8_t af_config;
 } servo_pin_t;
 
 static const servo_pin_t servo_pins[SERVO_MAX_CHANNELS] = {
-    {GPIOA, 8,  0xB},  /* TIM1_CH1 -> PA8  */
-    {GPIOA, 9,  0xB},  /* TIM1_CH2 -> PA9  */
-    {GPIOA, 10, 0xB},  /* TIM1_CH3 -> PA10 */
-    {GPIOA, 11, 0xB}   /* TIM1_CH4 -> PA11 */
+    {GPIOA, 8,  0xB},
+    {GPIOA, 9,  0xB},
+    {GPIOA, 10, 0xB},
+    {GPIOA, 11, 0xB}
 };
 
-/* Servo state tracking (using fixed-point math, angle * 10) */
 typedef struct {
     blfm_servo_type_t type;
-    int16_t current_angle_x10;  /* Current position * 10 (decidegrees) */
-    int16_t target_angle_x10;   /* Target position * 10 (decidegrees) */
-    int16_t trim_us;           /* Trim adjustment in microseconds */
-    uint16_t current_pulse_us; /* Current pulse width */
+    int16_t current_angle_x10;
+    int16_t target_angle_x10;
+    int16_t trim_us;
+    uint16_t current_pulse_us;
     bool enabled;
     bool reverse_direction;
     bool smooth_enabled;
@@ -60,7 +55,6 @@ static servo_state_t servo_states[SERVO_MAX_CHANNELS];
 static bool servo_system_initialized = false;
 static uint32_t system_time_ms = 0;
 
-/* Internal function declarations */
 static void configure_servo_timer(void);
 static void configure_servo_gpio(void);
 static uint16_t angle_x10_to_pulse_us(int16_t angle_x10, int16_t trim_us);
@@ -69,9 +63,7 @@ static void set_servo_pulse_direct(uint8_t channel, uint16_t pulse_us);
 static int16_t apply_smooth_movement(servo_state_t *servo, int16_t target_angle_x10, uint32_t delta_ms);
 static bool is_pulse_valid(uint16_t pulse_us);
 
-/* Initialize servo control system */
 void blfm_servomotor_init(void) {
-    /* Reset all servo states */
     for (uint8_t i = 0; i < SERVO_MAX_CHANNELS; i++) {
         servo_states[i] = (servo_state_t) {
             .type = BLFM_SERVO_TYPE_MANUAL,
@@ -86,11 +78,9 @@ void blfm_servomotor_init(void) {
         };
     }
     
-    /* Configure hardware */
     configure_servo_gpio();
     configure_servo_timer();
     
-    /* Set all servos to center position initially */
     for (uint8_t i = 0; i < SERVO_MAX_CHANNELS; i++) {
         set_servo_pulse_direct(i, SERVO_CENTER_PULSE_US);
     }
@@ -99,22 +89,16 @@ void blfm_servomotor_init(void) {
     system_time_ms = 0;
 }
 
-/* Configure GPIO pins for servo PWM output */
 static void configure_servo_gpio(void) {
-    /* Enable required clocks */
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_AFIOEN;
     
-    /* Configure servo pins as alternate function push-pull */
     for (uint8_t i = 0; i < SERVO_MAX_CHANNELS; i++) {
         const servo_pin_t *pin = &servo_pins[i];
         
-        /* Configure pin as AF push-pull, 50MHz */
         if (pin->pin < 8) {
-            /* CRL register for pins 0-7 */
             pin->port->CRL &= ~(0xF << (pin->pin * 4));
             pin->port->CRL |= (pin->af_config << (pin->pin * 4));
         } else {
-            /* CRH register for pins 8-15 */
             uint8_t pin_offset = pin->pin - 8;
             pin->port->CRH &= ~(0xF << (pin_offset * 4));
             pin->port->CRH |= (pin->af_config << (pin_offset * 4));
@@ -122,31 +106,25 @@ static void configure_servo_gpio(void) {
     }
 }
 
-/* Configure TIM1 for servo PWM generation */
 static void configure_servo_timer(void) {
-    /* Enable TIM1 clock */
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
     
-    /* Calculate prescaler for 1MHz timer clock (72MHz / 72 = 1MHz) */
-    uint32_t prescaler = 71;  /* Fixed prescaler for 1MHz from 72MHz system clock */
+    uint32_t prescaler = 71;
     
-    /* Stop timer during configuration */
     SERVO_TIMER->CR1 = 0;
     
-    /* Configure timer */
-    SERVO_TIMER->PSC = prescaler;                    /* 1MHz timer clock */
-    SERVO_TIMER->ARR = SERVO_PERIOD_US - 1;         /* 20ms period for 50Hz */
-    SERVO_TIMER->CCR1 = SERVO_CENTER_PULSE_US;      /* Channel 1 center */
-    SERVO_TIMER->CCR2 = SERVO_CENTER_PULSE_US;      /* Channel 2 center */
-    SERVO_TIMER->CCR3 = SERVO_CENTER_PULSE_US;      /* Channel 3 center */
-    SERVO_TIMER->CCR4 = SERVO_CENTER_PULSE_US;      /* Channel 4 center */
+    SERVO_TIMER->PSC = prescaler;
+    SERVO_TIMER->ARR = SERVO_PERIOD_US - 1;
+    SERVO_TIMER->CCR1 = SERVO_CENTER_PULSE_US;
+    SERVO_TIMER->CCR2 = SERVO_CENTER_PULSE_US;
+    SERVO_TIMER->CCR3 = SERVO_CENTER_PULSE_US;
+    SERVO_TIMER->CCR4 = SERVO_CENTER_PULSE_US;
     
-    /* Configure PWM mode 1 for all channels */
     SERVO_TIMER->CCMR1 = (6 << TIM_CCMR1_OC1M_Pos) | TIM_CCMR1_OC1PE |  /* CH1 PWM1 + preload */
-                         (6 << TIM_CCMR1_OC2M_Pos) | TIM_CCMR1_OC2PE;   /* CH2 PWM1 + preload */
+                         (6 << TIM_CCMR1_OC2M_Pos) | TIM_CCMR1_OC2PE;
     
     SERVO_TIMER->CCMR2 = (6 << TIM_CCMR2_OC3M_Pos) | TIM_CCMR2_OC3PE |  /* CH3 PWM1 + preload */
-                         (6 << TIM_CCMR2_OC4M_Pos) | TIM_CCMR2_OC4PE;   /* CH4 PWM1 + preload */
+                         (6 << TIM_CCMR2_OC4M_Pos) | TIM_CCMR2_OC4PE;
     
     /* Configure output compare and enable channels (disabled initially) */
     SERVO_TIMER->CCER = 0;  /* All channels disabled initially */

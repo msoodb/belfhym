@@ -18,16 +18,15 @@ void blfm_led_init(void) {
   blfm_gpio_config_output((uint32_t)BLFM_LED_EXTERNAL_PORT, BLFM_LED_EXTERNAL_PIN);
   blfm_gpio_config_output((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
   
-  /* Ensure onboard LED is OFF by default (active LOW) */
   blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
 }
 
 void blfm_led_onboard_on(void) {
-  blfm_gpio_clear_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);  /* Active LOW */
+  blfm_gpio_clear_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
 }
 
 void blfm_led_onboard_off(void) {
-  blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);    /* Active LOW */
+  blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
 }
 
 void blfm_led_external_on(void) {

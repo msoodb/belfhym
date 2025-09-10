@@ -10,20 +10,14 @@
 
 static blfm_exti_callback_t exti_callbacks[MAX_EXTI_LINES] = {0};
 
-/* Initialize EXTI for a GPIO pin with interrupt */
 void blfm_exti_init(uint8_t gpio_port, uint8_t pin, blfm_exti_trigger_t trigger, blfm_exti_callback_t callback) {
   if (pin >= MAX_EXTI_LINES) return;
   
-  /* Enable AFIO clock */
   RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
-  
-  /* Map GPIO port to EXTI line */
   uint8_t exti_idx = pin / 4;
   uint8_t exti_shift = (pin % 4) * 4;
   AFIO->EXTICR[exti_idx] &= ~(0xFU << exti_shift);
   AFIO->EXTICR[exti_idx] |= (gpio_port << exti_shift);
-  
-  /* Configure trigger */
   if (trigger & BLFM_EXTI_TRIGGER_RISING) {
     EXTI->RTSR |= (1U << pin);
   } else {
@@ -35,14 +29,8 @@ void blfm_exti_init(uint8_t gpio_port, uint8_t pin, blfm_exti_trigger_t trigger,
   } else {
     EXTI->FTSR &= ~(1U << pin);
   }
-  
-  /* Enable EXTI interrupt */
   EXTI->IMR |= (1U << pin);
-  
-  /* Register callback */
   exti_callbacks[pin] = callback;
-  
-  /* Enable NVIC interrupt */
   if (pin == 0) {
     NVIC_EnableIRQ(EXTI0_IRQn);
   } else if (pin == 1) {
@@ -60,14 +48,12 @@ void blfm_exti_init(uint8_t gpio_port, uint8_t pin, blfm_exti_trigger_t trigger,
   }
 }
 
-/* Register EXTI callback */
 void blfm_exti_register_callback(uint8_t exti_line, blfm_exti_callback_t callback) {
   if (exti_line < MAX_EXTI_LINES) {
     exti_callbacks[exti_line] = callback;
   }
 }
 
-/* EXTI interrupt handlers */
 void EXTI0_IRQHandler(void) {
   if (EXTI->PR & (1U << 0)) {
     EXTI->PR = (1U << 0);

@@ -36,7 +36,7 @@ static void button_exti_handler(void) {
   
   uint32_t now = xTaskGetTickCountFromISR();
   if ((now - last_interrupt_tick) < BUTTON_DEBOUNCE_TICKS) {
-    return; /* Debounce */
+    return;
   }
   last_interrupt_tick = now;
   
@@ -53,8 +53,7 @@ void blfm_button_init(QueueHandle_t event_queue) {
   button_event_queue = event_queue;
   blfm_gpio_config_input_pullup((uint32_t)BLFM_BUTTON_PORT, BLFM_BUTTON_PIN);
   
-  /* GPIO port A = 0, B = 1, C = 2, etc. */
-  uint8_t gpio_port = 0; /* Port A */
+  uint8_t gpio_port = 0;
   blfm_exti_init(gpio_port, BLFM_BUTTON_PIN, BLFM_EXTI_TRIGGER_BOTH, button_exti_handler);
 }
 

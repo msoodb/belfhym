@@ -7,25 +7,11 @@
  * See LICENSE file for details.
  */
 
-/**
- * @file blfm_timer.c
- * @brief STM32F103C8T6 Timer Driver
- * 
- * Complete timer driver for general-purpose timing functions:
- * - Microsecond precision timing
- * - Periodic interrupt generation  
- * - PWM output generation
- * - Input capture for frequency measurement
- * - Encoder interface
- */
 
 #include "blfm_timer.h"
 #include "stm32f1xx.h"
 #include <stddef.h>
 
-/* ========================================================================== */
-/*                          PRIVATE DATA STRUCTURES                          */
-/* ========================================================================== */
 
 typedef struct {
     TIM_TypeDef *instance;
@@ -34,23 +20,14 @@ typedef struct {
     uint32_t frequency;
     uint32_t period;
     
-    /* Callback for interrupt mode */
     void (*callback)(void);
-    
-    /* PWM channels state */
     bool pwm_channels[4];
     
 } timer_handle_t;
 
-/* ========================================================================== */
-/*                          PRIVATE VARIABLES                                */
-/* ========================================================================== */
 
 static timer_handle_t timer_handles[TIMER_MAX_INSTANCES] = {0};
 
-/* ========================================================================== */
-/*                          PRIVATE FUNCTION PROTOTYPES                      */
-/* ========================================================================== */
 
 static timer_handle_t* get_timer_handle(blfm_timer_instance_t instance);
 static void timer_clock_enable(blfm_timer_instance_t instance);
@@ -58,13 +35,7 @@ static void timer_gpio_config(blfm_timer_instance_t instance, uint8_t channel, b
 static void timer_interrupt_config(blfm_timer_instance_t instance);
 static uint32_t timer_get_clock_frequency(blfm_timer_instance_t instance);
 
-/* ========================================================================== */
-/*                          PUBLIC FUNCTIONS                                 */
-/* ========================================================================== */
 
-/**
- * @brief Initialize timer instance
- */
 blfm_timer_status_t blfm_timer_init(blfm_timer_instance_t instance, const blfm_timer_config_t *config) {
     if (instance >= TIMER_MAX_INSTANCES || !config) {
         return BLFM_TIMER_ERROR_INVALID_PARAM;
@@ -75,12 +46,9 @@ blfm_timer_status_t blfm_timer_init(blfm_timer_instance_t instance, const blfm_t
         return BLFM_TIMER_ERROR_ALREADY_INITIALIZED;
     }
     
-    /* Enable peripheral clock */
     timer_clock_enable(instance);
     
     TIM_TypeDef *timer = handle->instance;
-    
-    /* Reset timer */
     timer->CR1 = 0;
     timer->CR2 = 0;
     timer->SMCR = 0;
@@ -93,21 +61,17 @@ blfm_timer_status_t blfm_timer_init(blfm_timer_instance_t instance, const blfm_t
     timer->CNT = 0;
     timer->PSC = 0;
     timer->ARR = 0;
-    
-    /* Calculate prescaler and period */
     uint32_t timer_clock = timer_get_clock_frequency(instance);
     uint32_t prescaler = 0;
     uint32_t period = 0;
     
     switch (config->mode) {
         case BLFM_TIMER_MODE_BASIC:
-            /* Basic timer mode - configured by user */
             prescaler = config->prescaler;
             period = config->period;
             break;
             
         case BLFM_TIMER_MODE_PWM:
-            /* PWM mode - calculate for desired frequency */
             if (config->frequency > 0) {
                 uint32_t total_counts = timer_clock / config->frequency;
                 if (total_counts > 65535) {
@@ -124,50 +88,36 @@ blfm_timer_status_t blfm_timer_init(blfm_timer_instance_t instance, const blfm_t
             break;
             
         case BLFM_TIMER_MODE_INPUT_CAPTURE:
-            /* Input capture mode */
             prescaler = config->prescaler;
-            period = 0xFFFF;  /* Maximum period for capture */
+            period = 0xFFFF;
             break;
             
         case BLFM_TIMER_MODE_ENCODER:
-            /* Encoder mode */
-            prescaler = 0;    /* No prescaler for encoder */
+            prescaler = 0;
             period = config->period > 0 ? config->period : 0xFFFF;
             break;
     }
-    
-    /* Configure prescaler and period */
     timer->PSC = prescaler - 1;
     timer->ARR = period - 1;
-    
-    /* Configure timer based on mode */
     switch (config->mode) {
         case BLFM_TIMER_MODE_BASIC:
-            /* Basic timer configuration */
             break;
             
         case BLFM_TIMER_MODE_PWM:
-            /* PWM mode configuration done in channel setup */
             break;
             
         case BLFM_TIMER_MODE_INPUT_CAPTURE:
-            /* Input capture configuration done in channel setup */
             break;
             
         case BLFM_TIMER_MODE_ENCODER:
-            /* Encoder mode configuration */
-            timer->SMCR = TIM_SMCR_SMS_0 | TIM_SMCR_SMS_1;  /* Encoder mode 3 */
+            timer->SMCR = TIM_SMCR_SMS_0 | TIM_SMCR_SMS_1;
             break;
     }
-    
-    /* Configure interrupt if callback provided */
     if (config->callback) {
         handle->callback = config->callback;
         timer_interrupt_config(instance);
-        timer->DIER |= TIM_DIER_UIE;  /* Update interrupt enable */
+        timer->DIER |= TIM_DIER_UIE;
     }
-    
-    /* Generate update event to load prescaler */
     timer->EGR |= TIM_EGR_UG;
     
     handle->mode = config->mode;
@@ -178,9 +128,6 @@ blfm_timer_status_t blfm_timer_init(blfm_timer_instance_t instance, const blfm_t
     return BLFM_TIMER_OK;
 }
 
-/**
- * @brief Deinitialize timer instance
- */
 blfm_timer_status_t blfm_timer_deinit(blfm_timer_instance_t instance) {
     if (instance >= TIMER_MAX_INSTANCES) {
         return BLFM_TIMER_ERROR_INVALID_PARAM;
@@ -191,7 +138,6 @@ blfm_timer_status_t blfm_timer_deinit(blfm_timer_instance_t instance) {
         return BLFM_TIMER_ERROR_NOT_INITIALIZED;
     }
     
-    /* Stop timer */
     handle->instance->CR1 = 0;
     
     handle->initialized = false;
@@ -226,7 +172,6 @@ blfm_timer_status_t blfm_timer_stop(blfm_timer_instance_t instance) {
         return BLFM_TIMER_ERROR_NOT_INITIALIZED;
     }
     
-    /* Stop timer */
     handle->instance->CR1 &= ~TIM_CR1_CEN;
     
     return BLFM_TIMER_OK;
