@@ -7,7 +7,7 @@
 #define BLFM_SPI_H
 
 #include <stdint.h>
-#include "stm32f1xx.h"
+#include "stm32f4xx.h"
 #include "blfm_pins.h"
 
 /* SPI helper macros for NRF24 control pins */

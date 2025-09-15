@@ -6,7 +6,7 @@
 #include "blfm_servomotor.h"
 #include "blfm_gpio.h"
 #include "blfm_pins.h"
-#include "stm32f1xx.h"
+#include "stm32f4xx.h"
 #include <stdbool.h>
 
 #define SERVO_TIMER TIM1
@@ -90,26 +90,19 @@ void blfm_servomotor_init(void) {
 }
 
 static void configure_servo_gpio(void) {
-    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_AFIOEN;
-    
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
     for (uint8_t i = 0; i < SERVO_MAX_CHANNELS; i++) {
         const servo_pin_t *pin = &servo_pins[i];
-        
-        if (pin->pin < 8) {
-            pin->port->CRL &= ~(0xF << (pin->pin * 4));
-            pin->port->CRL |= (pin->af_config << (pin->pin * 4));
-        } else {
-            uint8_t pin_offset = pin->pin - 8;
-            pin->port->CRH &= ~(0xF << (pin_offset * 4));
-            pin->port->CRH |= (pin->af_config << (pin_offset * 4));
-        }
+        blfm_gpio_config_peripheral((uint32_t)pin->port, pin->pin, 1);
     }
 }
 
 static void configure_servo_timer(void) {
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
-    
-    uint32_t prescaler = 71;
+
+    uint32_t prescaler = 95;
     
     SERVO_TIMER->CR1 = 0;
     
@@ -371,16 +364,20 @@ static int16_t pulse_us_to_angle_x10(uint16_t pulse_us) {
 static int16_t apply_smooth_movement(servo_state_t *servo, int16_t target_angle_x10, uint32_t delta_ms) {
     int16_t current = servo->current_angle_x10;
     int16_t difference = target_angle_x10 - current;
-    
-    /* Check if already close enough (deadband) */
+
+
     if (difference < SERVO_DEADBAND_X10 && difference > -SERVO_DEADBAND_X10) {
         return target_angle_x10;
     }
-    
-    /* Calculate maximum movement for this time step */
+
+
+    if (delta_ms == 0) {
+        return current;
+    }
+
     int16_t max_movement = (int16_t)(SERVO_MAX_SPEED_X10_MS * delta_ms);
-    
-    /* Limit movement speed */
+
+
     if (difference > max_movement) {
         return current + max_movement;
     } else if (difference < -max_movement) {

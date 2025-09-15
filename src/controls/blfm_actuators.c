@@ -13,6 +13,8 @@
 #include "blfm_pins.h"
 #include "S17.h"
 #include "S17_config.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 void blfm_actuator_hub_init(void) {
   blfm_led_init();
@@ -36,10 +38,11 @@ void blfm_actuator_hub_apply(const blfm_controller_output_t *cmd) {
   if (!cmd)
     return;
 
+  blfm_servomotor_update_time(xTaskGetTickCount());
+
   blfm_led_apply(&cmd->led);
   blfm_motor_apply(&cmd->motor);
 
-  // Apply commands to all 4 servos
   blfm_servomotor_apply(0, &cmd->servo1);
   blfm_servomotor_apply(1, &cmd->servo2);
   blfm_servomotor_apply(2, &cmd->servo3);
@@ -73,17 +76,9 @@ void blfm_actuator_hub_apply_periodic(uint32_t current_time_ms) {
     };
     
     /* Send using modern S17 API - handles all packet formatting, encryption, etc. */
-    s17_result_t result = s17_broadcast(S17_MSG_STATUS, test_payload, sizeof(test_payload));
+    s17_result_t result = s17_broadcast(0, test_payload, sizeof(test_payload));
     
     /* Check send result */
     (void)result;  /* For now, just continue even if send fails */
-    
-    /* Blink onboard LED 3 times fast when sending broadcast */
-    for (int i = 0; i < 3; i++) {
-      blfm_gpio_clear_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);  /* ON (active LOW) */
-      for (volatile uint32_t j = 0; j < 500000; j++) __NOP();  /* ~25ms on */
-      blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);    /* OFF (active LOW) */
-      for (volatile uint32_t j = 0; j < 500000; j++) __NOP();  /* ~25ms off */
-    }
   }
 }

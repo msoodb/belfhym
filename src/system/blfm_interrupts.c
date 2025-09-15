@@ -1,23 +1,25 @@
-/**
- * Copyright (C) 2025 Masoud Bolhassani <masoud.bolhassani@gmail.com>
- * This file is part of Belfhym.
- */
 
 #include "blfm_interrupts.h"
-#include "stm32f1xx.h" /* IWYU pragma: keep */
+#include "stm32f4xx.h" 
 
 #define MAX_EXTI_LINES 16
 
 static blfm_exti_callback_t exti_callbacks[MAX_EXTI_LINES] = {0};
 
+
 void blfm_exti_init(uint8_t gpio_port, uint8_t pin, blfm_exti_trigger_t trigger, blfm_exti_callback_t callback) {
   if (pin >= MAX_EXTI_LINES) return;
   
-  RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
+  
+  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+  
+  
   uint8_t exti_idx = pin / 4;
   uint8_t exti_shift = (pin % 4) * 4;
-  AFIO->EXTICR[exti_idx] &= ~(0xFU << exti_shift);
-  AFIO->EXTICR[exti_idx] |= (gpio_port << exti_shift);
+  SYSCFG->EXTICR[exti_idx] &= ~(0xFU << exti_shift);
+  SYSCFG->EXTICR[exti_idx] |= (gpio_port << exti_shift);
+  
+  
   if (trigger & BLFM_EXTI_TRIGGER_RISING) {
     EXTI->RTSR |= (1U << pin);
   } else {
@@ -29,8 +31,14 @@ void blfm_exti_init(uint8_t gpio_port, uint8_t pin, blfm_exti_trigger_t trigger,
   } else {
     EXTI->FTSR &= ~(1U << pin);
   }
+  
+  
   EXTI->IMR |= (1U << pin);
+  
+  
   exti_callbacks[pin] = callback;
+  
+  
   if (pin == 0) {
     NVIC_EnableIRQ(EXTI0_IRQn);
   } else if (pin == 1) {
@@ -48,11 +56,13 @@ void blfm_exti_init(uint8_t gpio_port, uint8_t pin, blfm_exti_trigger_t trigger,
   }
 }
 
+
 void blfm_exti_register_callback(uint8_t exti_line, blfm_exti_callback_t callback) {
   if (exti_line < MAX_EXTI_LINES) {
     exti_callbacks[exti_line] = callback;
   }
 }
+
 
 void EXTI0_IRQHandler(void) {
   if (EXTI->PR & (1U << 0)) {

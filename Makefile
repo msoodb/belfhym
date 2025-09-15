@@ -11,7 +11,7 @@ BIN_DIR       := bin
 INCLUDE_DIR   := include
 FREERTOS_DIR  := FreeRTOS
 CMSIS_DIR     := CMSIS
-LD_SCRIPT     := ld/stm32f103.ld
+LD_SCRIPT     := ld/stm32f411.ld
 
 # Toolchain
 CC      := arm-none-eabi-gcc
@@ -20,31 +20,21 @@ SIZE    := arm-none-eabi-size
 
 # Flags
 OPTIMIZATION ?= -O2
-CFLAGS := -Wall -Wextra $(OPTIMIZATION) -mcpu=cortex-m3 -mthumb -nostdlib -ffreestanding
-CFLAGS += -DSTM32F103xB -I$(INCLUDE_DIR) -I$(CMSIS_DIR)
-CFLAGS += -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM3
+CFLAGS := -Wall -Wextra $(OPTIMIZATION) -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -nostdlib -ffreestanding
+FREERTOS_CFLAGS := $(CFLAGS) -Wno-unused-variable
+FREERTOS_CFLAGS += -DSTM32F411xE -DHSI_VALUE=16000000 -DHSE_VALUE=25000000 -I$(INCLUDE_DIR) -I$(CMSIS_DIR)
+FREERTOS_CFLAGS += -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM4F
+FREERTOS_CFLAGS += -IS17/include
+CFLAGS += -DSTM32F411xE -DHSI_VALUE=16000000 -DHSE_VALUE=25000000 -I$(INCLUDE_DIR) -I$(CMSIS_DIR)
+CFLAGS += -I$(FREERTOS_DIR)/include -I$(FREERTOS_DIR)/portable/GCC/ARM_CM4F
 CFLAGS += -IS17/include  # Add S17 headers
-LDFLAGS := -T$(LD_SCRIPT) -nostdlib -ffreestanding -mcpu=cortex-m3 -mthumb
+LDFLAGS := -T$(LD_SCRIPT) -nostdlib -ffreestanding -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 # Sources
 SRC_SUBDIRS := board controls devices drivers system utils
 SRC_DIRS := $(addprefix $(SRC_DIR)/,$(SRC_SUBDIRS))
 USER_SRCS := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
 USER_SRCS += $(wildcard $(SRC_DIR)/*.c)
-# Add S17 sources - Updated with latest S17 integration
-USER_SRCS += S17/src/S17_core.c
-USER_SRCS += S17/src/S17_devices.c
-USER_SRCS += S17/src/S17_timing.c
-USER_SRCS += S17/src/S17_frequency.c
-USER_SRCS += S17/src/protocols/S17_spi.c
-USER_SRCS += S17/src/drivers/S17_nrf24l01.c
-USER_SRCS += S17/src/security/S17_security.c
-USER_SRCS += S17/src/security/S17_aes.c
-USER_SRCS += S17/src/security/S17_aes_common.c
-USER_SRCS += S17/src/security/S17_aes_gcm.c
-USER_SRCS += S17/src/security/S17_hkdf.c
-# USER_SRCS += S17/src/security/S17_joinptcl.c  # Disabled - needs more work
-# USER_SRCS += S17/src/S17_noc.c  # Disabled - needs more work
 
 FREERTOS_SRCS := \
     $(FREERTOS_DIR)/event_groups.c \
@@ -54,13 +44,16 @@ FREERTOS_SRCS := \
     $(FREERTOS_DIR)/tasks.c \
     $(FREERTOS_DIR)/timers.c \
     $(FREERTOS_DIR)/portable/MemMang/heap_4.c \
-    $(FREERTOS_DIR)/portable/GCC/ARM_CM3/port.c
+    $(FREERTOS_DIR)/portable/GCC/ARM_CM4F/port.c
 
 CMSIS_SRCS := \
-    $(CMSIS_DIR)/startup_stm32f103xb.s \
-    $(CMSIS_DIR)/system_stm32f1xx.c
+    $(CMSIS_DIR)/startup_stm32f411xe.s \
+    $(CMSIS_DIR)/system_stm32f4xx.c
 
-SRCS := $(USER_SRCS) $(FREERTOS_SRCS) $(CMSIS_SRCS)
+# Add S17 sources - Simple communication (core only)
+S17_SRCS := $(wildcard S17/src/*.c)
+
+SRCS := $(USER_SRCS) $(FREERTOS_SRCS) $(CMSIS_SRCS) $(S17_SRCS)
 
 # Object files
 OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(filter %.c,$(SRCS)))
@@ -83,10 +76,15 @@ $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Compile FreeRTOS .c files with suppressed warnings
+$(BUILD_DIR)/FreeRTOS/%.o: FreeRTOS/%.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) $(FREERTOS_CFLAGS) -c $< -o $@
+
 # Compile .s files
 $(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
-	$(CC) -mcpu=cortex-m3 -mthumb -c $< -o $@
+	$(CC) -mcpu=cortex-m4 -mthumb -c $< -o $@
 
 # Ensure build and bin directories
 $(BUILD_DIR):

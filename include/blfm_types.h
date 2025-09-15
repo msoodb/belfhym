@@ -27,15 +27,6 @@
 //==============================================================================
 
 // Event definitions
-typedef enum {
-  BLFM_BUTTON_EVENT_PRESSED,
-  BLFM_BUTTON_EVENT_RELEASED
-} blfm_button_event_type_t;
-
-typedef struct {
-  blfm_button_event_type_t event_type;
-  uint32_t timestamp;
-} blfm_button_event_t;
 
 typedef struct {
   uint8_t data[S17_MAX_PAYLOAD_SIZE];
@@ -253,7 +244,6 @@ typedef struct {
 /* Unified controller input event */
 typedef enum {
   BLFM_INPUT_SENSOR,      // Sensor data update
-  BLFM_INPUT_BUTTON,      // Button event
   BLFM_INPUT_NRF24,       // NRF24 received data
   BLFM_INPUT_JOYSTICK     // Joystick data from hermes
 } blfm_input_type_t;
@@ -262,7 +252,6 @@ typedef struct {
   blfm_input_type_t type;
   union {
     blfm_sensor_data_t sensor;
-    blfm_button_event_t button;
     blfm_nrf24_event_t nrf24;
     blfm_joystick_event_t joystick;
   } data;

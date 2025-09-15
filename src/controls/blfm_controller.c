@@ -24,8 +24,6 @@
 /* Static function declarations - internal use only */
 static void blfm_controller_process(const blfm_sensor_data_t *in,
                                     blfm_controller_output_t *out);
-static void blfm_controller_process_button(const blfm_button_event_t *event,
-                                           blfm_controller_output_t *command);
 static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
                                           blfm_controller_output_t *command);
 static void blfm_controller_process_joystick(const blfm_joystick_event_t *event,
@@ -57,10 +55,6 @@ void blfm_controller_process_input(const blfm_controller_input_t *input,
       blfm_controller_process(&input->data.sensor, command);
       break;
       
-    case BLFM_INPUT_BUTTON:
-      /* Button events can override current state */
-      blfm_controller_process_button(&input->data.button, command);
-      break;
       
     case BLFM_INPUT_NRF24:
       /* NRF24 for remote commands */
@@ -109,27 +103,8 @@ static void blfm_controller_process(const blfm_sensor_data_t *in,
   out->nrf24.should_broadcast = false;
   out->nrf24.length = 0;
   
-  /* Set LED based on current mode */
-  switch (blfm_system_state.current_mode) {
-    case BLFM_MODE_MANUAL:
-      out->led.mode = BLFM_LED_MODE_BLINK;
-      out->led.on_time = 100;   /* Manual: quick flash - 100ms on */
-      out->led.off_time = 900;  /* Manual: quick flash - 900ms off */
-      break;
-    case BLFM_MODE_AUTO:
-      out->led.mode = BLFM_LED_MODE_BLINK;
-      out->led.on_time = 250;   /* Auto: medium blink - 250ms on */
-      out->led.off_time = 250;  /* Auto: medium blink - 250ms off */
-      break;
-    case BLFM_MODE_EMERGENCY:
-      out->led.mode = BLFM_LED_MODE_ON; /* Emergency: solid on */
-      /* Emergency mode: Stop all servos at center position for safety */
-      out->servo1.proportional_input = 0;  /* Center position */
-      out->servo2.proportional_input = 0;  /* Center position */
-      out->servo3.proportional_input = 0;  /* Center position */
-      out->servo4.proportional_input = 0;  /* Center position */
-      break;
-  }
+  /* LED disabled - no blinking */
+  out->led.mode = BLFM_LED_MODE_OFF;
 
   if (blfm_system_state.current_mode == BLFM_MODE_AUTO) {
     /* Auto mode: Simple obstacle avoidance */
@@ -206,23 +181,6 @@ static void blfm_controller_process(const blfm_sensor_data_t *in,
   }
 }
 
-static void blfm_controller_process_button(const blfm_button_event_t *event,
-                                            blfm_controller_output_t *command) {
-  if (!event || !command) return;
-  
-  /* Simple button press = toggle DEBUG LED */
-  if (event->event_type == BLFM_BUTTON_EVENT_PRESSED) {
-    /* Toggle DEBUG LED */
-    static bool debug_led_state = false;
-    debug_led_state = !debug_led_state;
-    
-    if (debug_led_state) {
-      blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-    } else {
-      blfm_gpio_clear_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
-    }
-  }
-}
 
 static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
                                            blfm_controller_output_t *command) {
@@ -250,11 +208,6 @@ static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
     
     blfm_controller_process_joystick(&joystick_event, command);
 
-    blfm_gpio_clear_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
-    for (uint32_t j = 0; j < 100000; j++)
-      __NOP();
-    blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
-    
     return;
   }
 
@@ -276,22 +229,13 @@ static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
     joystick_event.timestamp = xTaskGetTickCount();
     
     blfm_controller_process_joystick(&joystick_event, command);
-    
-    /* Visual feedback: blink onboard LED when joystick data received */
-    blfm_gpio_clear_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);  /* ON (active LOW) */
-    for (uint32_t j = 0; j < 100000; j++) __NOP();  /* ~50ms on */
-    blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);    /* OFF (active LOW) */
-    
+
     return;  /* Exit early, joystick data processed */
   }
   
   /* Check application payload for test messages */
   if (event->length >= 1 && event->data[0] == 0x77) {
-    
-    /* Test broadcast packet received - single slow blink */
-    blfm_gpio_clear_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);  /* ON (active LOW) */
-    for (uint32_t j = 0; j < 200000; j++) __NOP();  /* ~100ms on */
-    blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);    /* OFF (active LOW) */
+    /* Test broadcast packet received - no visual indication */
   }
 }
 
@@ -315,10 +259,8 @@ static void blfm_controller_process_joystick(const blfm_joystick_event_t *event,
     command->motor.right.speed = 0;
     command->motor.right.direction = 0;
     
-    /* Set LED to indicate joystick input received but mode not manual */
-    command->led.mode = BLFM_LED_MODE_BLINK;
-    command->led.on_time = 300;   /* Long slow blink = wrong mode */
-    command->led.off_time = 300;
+    /* LED disabled */
+    command->led.mode = BLFM_LED_MODE_OFF;
     return;
   }
   
@@ -405,15 +347,6 @@ static void blfm_controller_process_joystick(const blfm_joystick_event_t *event,
   }
   
   /* Debug: Visual indication of motor commands via LED timing */
-  if (command->motor.left.speed > 0 || command->motor.right.speed > 0) {
-    /* Motor commands are being sent - faster blink */
-    command->led.mode = BLFM_LED_MODE_BLINK;
-    command->led.on_time = 50;   
-    command->led.off_time = 50;
-  } else {
-    /* No motor commands - slower blink */
-    command->led.mode = BLFM_LED_MODE_BLINK;
-    command->led.on_time = 200;   
-    command->led.off_time = 200;
-  }
+  /* LED disabled */
+  command->led.mode = BLFM_LED_MODE_OFF;
 }

@@ -10,18 +10,18 @@
 #include "blfm_debug.h"
 #include "blfm_gpio.h"
 #include "blfm_pins.h"
-#include "stm32f1xx.h"
+#include "stm32f4xx.h"
 
 //==============================================================================
 // Private functions
 //==============================================================================
 
 static void led_on(void) {
-  blfm_gpio_set_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  blfm_gpio_clear_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
 }
 
 static void led_off(void) {
-  blfm_gpio_clear_pin((uint32_t)BLFM_LED_DEBUG_PORT, BLFM_LED_DEBUG_PIN);
+  blfm_gpio_set_pin((uint32_t)BLFM_LED_ONBOARD_PORT, BLFM_LED_ONBOARD_PIN);
 }
 
 static void delay_ms(uint32_t ms) {

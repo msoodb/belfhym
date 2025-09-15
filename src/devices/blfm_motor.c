@@ -6,7 +6,7 @@
 #include "blfm_motor.h"
 #include "blfm_gpio.h"
 #include "blfm_pins.h"
-#include "stm32f1xx.h"
+#include "stm32f4xx.h"
 #include <stdbool.h>
 
 #define PWM_FREQUENCY 1000
@@ -19,8 +19,8 @@ void blfm_motor_init(void) {
     blfm_gpio_config_output((uint32_t)BLFM_MOTOR_IN3_PORT, BLFM_MOTOR_IN3_PIN);
     blfm_gpio_config_output((uint32_t)BLFM_MOTOR_IN4_PORT, BLFM_MOTOR_IN4_PIN);
     
-    blfm_gpio_config_peripheral((uint32_t)GPIOB, BLFM_MOTOR_ENA_PIN);
-    blfm_gpio_config_peripheral((uint32_t)GPIOB, BLFM_MOTOR_ENB_PIN);
+    blfm_gpio_config_peripheral((uint32_t)GPIOB, BLFM_MOTOR_ENA_PIN, 2);  // AF2 for TIM4_CH1
+    blfm_gpio_config_peripheral((uint32_t)GPIOB, BLFM_MOTOR_ENB_PIN, 2);  // AF2 for TIM4_CH2
     
     blfm_gpio_clear_pin((uint32_t)BLFM_MOTOR_IN1_PORT, BLFM_MOTOR_IN1_PIN);
     blfm_gpio_clear_pin((uint32_t)BLFM_MOTOR_IN2_PORT, BLFM_MOTOR_IN2_PIN);
@@ -29,7 +29,7 @@ void blfm_motor_init(void) {
     
     RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
     
-    TIM4->PSC = 71;
+    TIM4->PSC = 95;
     TIM4->ARR = PWM_PERIOD - 1;
     TIM4->CCR1 = 0;
     TIM4->CCR2 = 0;
