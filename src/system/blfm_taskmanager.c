@@ -143,16 +143,22 @@ static void vActuatorHubTask(void *pvParameters) {
 }
 
 static void s17_message_handler(const uint8_t *data, uint8_t length) {
-  
-  if (!data || length == 0) return;
-  
+
+  if (!data || length < 2) return;
+
+  uint16_t target_node = *(uint16_t*)(data);
+  if (target_node != S17_NODE_BELFHYM) {
+    return;
+  }
+
   blfm_nrf24_event_t s17_event = {
-    .length = length,
-    .pipe = 0,    
-    .rssi = -50   
+    .length = length - 2,
+    .pipe = 0,
+    .rssi = -50
   };
-  
-  uint8_t copy_len = (length > sizeof(s17_event.data)) ? sizeof(s17_event.data) : length;
-  memcpy(s17_event.data, data, copy_len);
+
+  uint8_t effective_length = length - 2;
+  uint8_t copy_len = (effective_length > sizeof(s17_event.data)) ? sizeof(s17_event.data) : effective_length;
+  memcpy(s17_event.data, data + 2, copy_len);
   xQueueSendToBack(xS17EventQueue, &s17_event, 0);
 }

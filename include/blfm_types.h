@@ -48,6 +48,18 @@ typedef struct {
   uint32_t timestamp;     /* Received timestamp */
 } blfm_joystick_event_t;
 
+typedef struct {
+  int16_t x_normalized;   /* X value (-1000 to +1000) from single joystick */
+  int16_t y_normalized;   /* Y value (-1000 to +1000) from single joystick */
+  bool button_pressed;    /* Button state from single joystick */
+} blfm_single_joystick_t;
+
+typedef struct {
+  blfm_single_joystick_t left;    /* Left joystick data (for motors) */
+  blfm_single_joystick_t right;   /* Right joystick data (for servos) */
+  uint32_t timestamp;             /* Received timestamp */
+} blfm_dual_joystick_event_t;
+
 
 /* RC Plane Sensor Data Structures */
 typedef struct {
@@ -245,7 +257,8 @@ typedef struct {
 typedef enum {
   BLFM_INPUT_SENSOR,      // Sensor data update
   BLFM_INPUT_NRF24,       // NRF24 received data
-  BLFM_INPUT_JOYSTICK     // Joystick data from hermes
+  BLFM_INPUT_JOYSTICK,    // Single joystick data from hermes (legacy)
+  BLFM_INPUT_DUAL_JOYSTICK // Dual joystick data from hermes (motors + servos)
 } blfm_input_type_t;
 
 typedef struct {
@@ -254,6 +267,7 @@ typedef struct {
     blfm_sensor_data_t sensor;
     blfm_nrf24_event_t nrf24;
     blfm_joystick_event_t joystick;
+    blfm_dual_joystick_event_t dual_joystick;
   } data;
 } blfm_controller_input_t;
 

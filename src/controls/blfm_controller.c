@@ -28,6 +28,8 @@ static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
                                           blfm_controller_output_t *command);
 static void blfm_controller_process_joystick(const blfm_joystick_event_t *event,
                                              blfm_controller_output_t *command);
+static void blfm_controller_process_dual_joystick(const blfm_dual_joystick_event_t *event,
+                                                  blfm_controller_output_t *command);
 
 static int motor_backward_ticks = 0;
 static int motor_rotate_ticks = 0;
@@ -65,7 +67,12 @@ void blfm_controller_process_input(const blfm_controller_input_t *input,
       /* Joystick for motor control from hermes */
       blfm_controller_process_joystick(&input->data.joystick, command);
       break;
-      
+
+    case BLFM_INPUT_DUAL_JOYSTICK:
+      /* Dual joystick for motor and servo control from hermes */
+      blfm_controller_process_dual_joystick(&input->data.dual_joystick, command);
+      break;
+
     default:
       /* Initialize safe defaults */
       command->motor.left.speed = 0;
@@ -212,23 +219,36 @@ static void blfm_controller_process_nrf24(const blfm_nrf24_event_t *event,
   }
 
   if (event->length >= 12 && event->data[0] == 0x4A && event->data[1] == 0x02) {
-    
-    blfm_joystick_event_t joystick_event;
-    
-    joystick_event.x_normalized = (int16_t)(
-      (uint16_t)event->data[2] | 
+
+    blfm_dual_joystick_event_t dual_joystick_event;
+
+    // Left joystick (for motors)
+    dual_joystick_event.left.x_normalized = (int16_t)(
+      (uint16_t)event->data[2] |
       ((uint16_t)event->data[3] << 8)
     );
-    
-    joystick_event.y_normalized = (int16_t)(
-      (uint16_t)event->data[4] | 
+
+    dual_joystick_event.left.y_normalized = (int16_t)(
+      (uint16_t)event->data[4] |
       ((uint16_t)event->data[5] << 8)
     );
-    
-    joystick_event.button_pressed = (event->data[10] & 0x01) != 0;
-    joystick_event.timestamp = xTaskGetTickCount();
-    
-    blfm_controller_process_joystick(&joystick_event, command);
+
+    // Right joystick (for servos)
+    dual_joystick_event.right.x_normalized = (int16_t)(
+      (uint16_t)event->data[6] |
+      ((uint16_t)event->data[7] << 8)
+    );
+
+    dual_joystick_event.right.y_normalized = (int16_t)(
+      (uint16_t)event->data[8] |
+      ((uint16_t)event->data[9] << 8)
+    );
+
+    dual_joystick_event.left.button_pressed = (event->data[10] & 0x01) != 0;
+    dual_joystick_event.right.button_pressed = (event->data[10] & 0x02) != 0;
+    dual_joystick_event.timestamp = xTaskGetTickCount();
+
+    blfm_controller_process_dual_joystick(&dual_joystick_event, command);
 
     return;  /* Exit early, joystick data processed */
   }
@@ -347,6 +367,128 @@ static void blfm_controller_process_joystick(const blfm_joystick_event_t *event,
   }
   
   /* Debug: Visual indication of motor commands via LED timing */
+  /* LED disabled */
+  command->led.mode = BLFM_LED_MODE_OFF;
+}
+
+static void blfm_controller_process_dual_joystick(const blfm_dual_joystick_event_t *event,
+                                                  blfm_controller_output_t *command) {
+  if (!event || !command) return;
+
+  /* Initialize all command fields to safe defaults */
+  command->servo1.proportional_input = 0x7FFF;  /* Servo neutral position */
+  command->servo2.proportional_input = 0x7FFF;
+  command->servo3.proportional_input = 0x7FFF;
+  command->servo4.proportional_input = 0x7FFF;
+  command->nrf24.should_broadcast = false;
+  command->nrf24.length = 0;
+
+  /* Only allow joystick control in MANUAL mode */
+  if (blfm_system_state.current_mode != BLFM_MODE_MANUAL) {
+    /* Not in manual mode - don't control motors or servos */
+    command->motor.left.speed = 0;
+    command->motor.left.direction = 0;
+    command->motor.right.speed = 0;
+    command->motor.right.direction = 0;
+    command->led.mode = BLFM_LED_MODE_OFF;
+    return;
+  }
+
+  /* LEFT JOYSTICK: Motor control (same as before) */
+  int16_t left_x = event->left.x_normalized;  /* Steering */
+  int16_t left_y = event->left.y_normalized;  /* Throttle */
+
+  /* Deadband to prevent oscillation from small joystick movements */
+  if (left_y > -100 && left_y < 100 && left_x > -100 && left_x < 100) {
+    /* Left joystick in center deadband - stop motors */
+    command->motor.left.speed = 0;
+    command->motor.left.direction = 0;
+    command->motor.right.speed = 0;
+    command->motor.right.direction = 0;
+  } else {
+    /* Apply motor control based on left joystick */
+    if (left_y > 100) {
+      /* Forward movement */
+      command->motor.left.direction = 0;   /* Forward */
+      command->motor.right.direction = 0;  /* Forward */
+      command->motor.left.speed = 255;
+      command->motor.right.speed = 255;
+
+      /* Apply steering - reduce speed on one side */
+      if (left_x > 100) {
+        /* Turn right - slow down right motor */
+        command->motor.right.speed = 100;
+      } else if (left_x < -100) {
+        /* Turn left - slow down left motor */
+        command->motor.left.speed = 100;
+      }
+
+    } else if (left_y < -100) {
+      /* Backward movement */
+      command->motor.left.direction = 1;   /* Backward */
+      command->motor.right.direction = 1;  /* Backward */
+      command->motor.left.speed = 255;
+      command->motor.right.speed = 255;
+
+      /* Apply steering - reduce speed on one side */
+      if (left_x > 100) {
+        /* Turn right - slow down right motor */
+        command->motor.right.speed = 100;
+      } else if (left_x < -100) {
+        /* Turn left - slow down left motor */
+        command->motor.left.speed = 100;
+      }
+
+    } else {
+      /* Only steering (Y near zero) */
+      if (left_x > 100) {
+        /* Rotate right */
+        command->motor.left.direction = 0;   /* Forward */
+        command->motor.right.direction = 1;  /* Backward */
+        command->motor.left.speed = 255;
+        command->motor.right.speed = 255;
+      } else if (left_x < -100) {
+        /* Rotate left */
+        command->motor.left.direction = 1;   /* Backward */
+        command->motor.right.direction = 0;  /* Forward */
+        command->motor.left.speed = 255;
+        command->motor.right.speed = 255;
+      } else {
+        /* Stop */
+        command->motor.left.speed = 0;
+        command->motor.right.speed = 0;
+      }
+    }
+  }
+
+  /* RIGHT JOYSTICK: Servo control (new functionality) */
+  int16_t right_x = event->right.x_normalized;
+  int16_t right_y = event->right.y_normalized;
+
+  /* Fast servo X control (aileron-like) */
+  if (right_x > 50 || right_x < -50) {
+    command->servo1.proportional_input = right_x;
+    command->servo3.proportional_input = -right_x;
+  } else {
+    command->servo1.proportional_input = 0;
+    command->servo3.proportional_input = 0;
+  }
+
+  /* Fast servo Y control (elevator-like) */
+  if (right_y > 50 || right_y < -50) {
+    command->servo2.proportional_input = right_y;
+    command->servo4.proportional_input = right_y;
+  } else {
+    command->servo2.proportional_input = 0;
+    command->servo4.proportional_input = 0;
+  }
+
+  /* Emergency stop if left joystick button is pressed */
+  if (event->left.button_pressed) {
+    command->motor.left.speed = 0;
+    command->motor.right.speed = 0;
+  }
+
   /* LED disabled */
   command->led.mode = BLFM_LED_MODE_OFF;
 }
