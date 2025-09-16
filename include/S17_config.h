@@ -32,7 +32,7 @@
 #define S17_TX_BUFFER_SIZE    8
 #define S17_RX_BUFFER_SIZE    8
 #define S17_UPDATE_RATE_MS    50
-#define S17_TASK_STACK_SIZE   512    /* Increased for encryption operations */
+#define S17_STACK_SIZE   512    /* Increased for encryption operations */
 #define S17_SYSTEM_CLOCK_MHZ  84    /* STM32F411 typical system clock */
 #define S17_USE_SOFTWARE_SPI  0     /* 0=Hardware SPI1, 1=Software SPI */
 
