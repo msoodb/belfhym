@@ -47,7 +47,6 @@
 
 /* System Settings */
 #define S17_MAX_PAYLOAD_SIZE  32    /* Must match between TX and RX */
-#define S17_MAX_APP_PAYLOAD   10    /* Application data per packet */
 #define S17_TX_BUFFER_SIZE    8
 #define S17_RX_BUFFER_SIZE    8
 #define S17_UPDATE_RATE_MS    50
